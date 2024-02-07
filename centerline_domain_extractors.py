@@ -178,20 +178,23 @@ class Seekers:
 
             p.subplot(0, 2)
             p.add_mesh(self.mesh, opacity=0.3)
-            p.add_mesh(self.seekers)#, style='points', render_points_as_spheres=True, point_size=5, color='b')
+            p.add_mesh(self.seekers, style='points', render_points_as_spheres=True, point_size=5, color='b')
             p.link_views()
             p.show()
+
+        return self.seekers
     #
 #
 
 
-class DivergenceFlux:
+class Flux:
 
     """
-    Centerline domain extractor based on the divergence and flux approach.
-    Theoretically the centerline locus corresponds with the divergence null
-    region for the flux defined by the gradient of the function distance to
-    boundary or wall.
+    Centerline domain extractor based on the flux approach. Theoretically
+    the centerline geometric locus corresponds with the divergence null
+    region of the gradient of the function distance to boundary or wall.
+    Which is approximated by a flux estimation following:
+    http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf
 
     Caveats: The surface must be a closed surface!
 
@@ -273,27 +276,16 @@ class DivergenceFlux:
         msg.computing_message("volume KDTree")
     #
 
-    def run(self):
+    def run(self, thrs=0.0):
         """
-        Given the discretization of the inner volume of the mesh attribute, this method
-        removes the inner points where
-
-
-        and a set of seed points.
-        This method computes the centerlines from each seed s_i to s_end, being
-        s_end = seed_points[out_point_id]. The centerline is computed by means of the
-        A* algorithm solving the problem of finding the minimum cost path. We consider
-        each inner node connected to its Moore neighborhood (cellullar automata jargon).
-        Then the cost of a the vertex from pi to pj is computed as the inverse exponential of
-        the distance between pj and the boundary, i.e. v_{ij} = exp(d(j,B)). If use_divergence
-        is set to True, the inner volume is reduced to points where the divergence of the gradient
-        of the distance function is negative (See http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf).
+        This method runs the centerline domain extraction based on a threshold over
+        the flux (http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf) computed
+        over a voxelization of the vascular volume.
 
         Arguments:
         ------------
-            use_divergence : bool, optional.
-                Default false. Whether to restric the domain to points with negative divergence
-                for the gradient of the distance function.
+            thrs : float, optional.
+                Default 0.0. The higher bound for the flux thresholding.
 
         """
 
@@ -310,16 +302,9 @@ class DivergenceFlux:
         if self.volume_kdt is None:
             self.compute_volume_kdt()
 
-        msg.computing_message('divergence of the distance')
-        thrs= 0.0
+        msg.computing_message("flux field")
         self.volume['distance'] = self.mesh_kdt.query(self.volume.points)[0]
         self.volume = self.volume.compute_derivative(scalars='distance')
-        self.volume = self.volume.compute_derivative(scalars='gradient', gradient=False, divergence=True, preference='point')
-        msg.done_message('divergence of the distance')
-
-        normalize_field = lambda arr: arr / np.abs(arr).min() + 1
-        # Normalize and make it positive
-        self.volume['divergence'] = normalize_field(self.volume['divergence'])
 
         r = np.max((self.dx, self.dy, self.dz))*1.2
         def net_flux(p):
@@ -328,11 +313,11 @@ class DivergenceFlux:
             fluxes = list(map(flux,neighs))
             return np.sum(fluxes)
 
-        msg.computing_message("flux field")
         self.volume['flux'] = list(map(net_flux, self.volume.points))
         msg.done_message("flux field")
 
         # Normalize and make it positive
+        normalize_field = lambda arr: arr / np.abs(arr).min() + 1
         self.volume['flux'] = normalize_field(self.volume['flux'])
         self.volume = self.volume.extract_points(self.volume['flux'] < thrs, adjacent_cells=True)
         self.volume = self.volume.connectivity(extraction_mode='largest')
@@ -342,42 +327,8 @@ class DivergenceFlux:
         if self.debug:
             p = pv.Plotter()
             p.add_mesh(self.mesh, opacity=0.5)
-            p.add_mesh(self.volume, scalars='divergence')
+            p.add_mesh(self.volume, scalars='flux')
             p.show()
+        return self.volume
     #
 #
-
-
-
-
-
-
-
-    """
-    def show(self):
-
-    #####################################################
-    # Vessel Tree
-    #####################################################
-
-        def run_vessel_tree(flag):
-            t = VTree(seeks.inlet, np.array(seeks.outlets), seeks.seekers, seeks.dwall, seeks.dwall_outlets)
-            t.build_tree()
-            self.Ptree = t.tree
-
-            for i in range(len(self.Ptree.tree)):
-                if 'path_'+str(i) in self.Plott.actors:
-                    self.Plott.remove_actor('path_'+str(i))
-
-            for i, node in enumerate(self.Ptree.tree):
-                print(node, self.Ptree.tree[node])
-                tube = pv.Spline(t.domain[self.Ptree.tree[node][0]], 400)
-                c = np.random.rand(3)
-                self.Plott.actors['path_'+str(i)] = self.Plott.add_mesh(tube, opacity=1,color=c, line_width=6)#)
-
-
-            self.Plott.actors['joints'] = self.Plott.add_points(t.domain[t.tree.joints], render_points_as_spheres = True, point_size = 15, color='white') #
-
-            return
-
-    """
