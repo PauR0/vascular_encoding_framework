@@ -212,6 +212,9 @@ class Flux:
         self.dy = None
         self.dz = None
 
+        #Setting this to true may help in bad connectivity scenarios.
+        self.relax : bool = False
+
         self.debug  : bool = False
     #
 
@@ -319,7 +322,7 @@ class Flux:
         # Normalize and make it positive
         normalize_field = lambda arr: arr / np.abs(arr).min() + 1
         self.volume['flux'] = normalize_field(self.volume['flux'])
-        self.volume = self.volume.extract_points(self.volume['flux'] < thrs, adjacent_cells=True)
+        self.volume = self.volume.extract_points(self.volume['flux'] < thrs, adjacent_cells=self.relax)
         self.volume = self.volume.connectivity(extraction_mode='largest')
 
         msg.done_message("centerline domain extraction using the flux...")
