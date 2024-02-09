@@ -89,7 +89,7 @@ class VascularMesh:
             self.mesh = mesh
 
             if triangulate_wall:
-                self.triangulate_wall()
+                self.triangulate_mesh()
 
             if kdt:
                 self.kdt = kdt
