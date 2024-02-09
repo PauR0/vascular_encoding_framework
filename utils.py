@@ -106,10 +106,71 @@ def sort_glob_ids_by_angle(gids, points, c, v1, v2):
     return gids[ids]
 #
 
-def triangulate_cross_section(cross_section, n=None):
+def triangulate_cross_section(cross_section, method='connected', n=None):
+    """
+    This function triangulare a cross section list of points.
+
+    Arguments:
+    -----------
+
+        cs : pv.PolyData
+            The object containing the cross section to be triangulated.
+
+        method : str {'connected', 'unconnected'}
+
+        n : np.ndarray, optional
+            The normal of the best fitting plane. If not provided, a PCA is
+            used to compute it as the component of least variance.
+
+    """
+
+    new_cs=None
+    if method == 'connected':
+        new_cs = triangulate_connected_cross_section(cs=cross_section)
+
+    elif method == 'unconnected':
+        new_cs = triangulate_unconnected_cross_section(cs=cross_section, n=n)
+    else:
+        msg.error_message(f"Cannot triangulate cross section with unknown method {method}."+\
+                            "Available options are {'connected', 'unconnected'}.")
+
+    return new_cs
+
+
+#
+
+def triangulate_unconnected_cross_section(cs, n=None):
+    """
+    This function builds the triangulation of a cross section PolyData
+    without requiring lines connecting the points. It assumes points can be
+    projected onto the best fitting plane and ordered by a given angular origin
+    arbitrarily defined.
+
+    Caveats: There are no warranties that the triangulation
+    has the same orientation as the mesh the cross section was extracted from.
+
+    Arguments:
+    -----------
+
+        cs : pv.PolyData (or simmilar)
+            The object containing the attributes points and n_points of the
+            cross section to be triangulated.
+
+        n : np.ndarray, optional
+            The normal of the best fitting plane. If not provided, a PCA is
+            used to compute it as the component of least variance.
+
+    Returns:
+    ---------
+
+        new_cs : pv.PolyData
+            The PolyData containing the points of the given cross section
+            with the faces defined.
+
+    """
 
     if n is None:
-        pca = PCA(n_components=3).fit(cross_section.points)
+        pca = PCA(n_components=3).fit(cs.points)
         n = normalize(pca.components_[2])
     else:
         n = normalize(n)
@@ -122,16 +183,49 @@ def triangulate_cross_section(cross_section, n=None):
     v1 = normalize(np.cross(n, E[i]))
     v2 = normalize(np.cross(n, v1))
 
-    n_pts_range = np.arange(cross_section.n_points, dtype=int)
+    n_pts_range = np.arange(cs.n_points, dtype=int)
     sorted_ids = sort_glob_ids_by_angle(n_pts_range,
-                                        cross_section.points,
-                                        np.array(cross_section.center),
+                                        cs.points,
+                                        np.array(cs.center),
                                         v1, v2)
 
-    sorted_points = cross_section.points[sorted_ids]
-    faces = np.array([cross_section.n_points] + list(range(cross_section.n_points)), dtype=int)
+    sorted_points = cs.points[sorted_ids]
+    faces = np.array([cs.n_points] + list(range(cs.n_points)), dtype=int)
 
-    return pv.PolyData(sorted_points, faces=faces).triangulate()
+    new_cs = pv.PolyData(sorted_points, faces=faces).triangulate()
+    return new_cs
+#
+
+def triangulate_connected_cross_section(cs):
+    """
+    Triangulate a cross section using the lines defining it to
+    build triangle faces using the center of de cs. This way
+    geometrical orientation should be preserved.
+
+    Arguments:
+    ------------
+
+        cs : pv.PolyData
+            The cross section with topology defined by using lines.
+
+    Returns:
+    ----------
+        new_cs : pv.Polydata
+            The new triangulated cross section
+    """
+
+    if cs.lines.size == 0:
+        msg.error_message("Cannot triangulate cross section with connected method."+\
+                          "The given cross section has no lines. Try unconnected method instead...")
+
+    new_cs = cs.copy(deep=True)
+    new_cs.points = np.vstack([cs.points, cs.center])
+    lines = cs.lines.reshape(-1, 3)
+    lines[:, 0] = cs.n_points-1
+    faces = np.full(shape=(lines.shape[0], 4), fill_value=4, dtype=int)
+    faces[:, 1:] = lines
+    cs.faces = faces
+    return cs
 #
 
 def knots_list(s0, s1, n, mode='complete', ext=None, k=3):
