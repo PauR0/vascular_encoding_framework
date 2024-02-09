@@ -73,7 +73,7 @@ def normalize(v):
     """ Normalize a vector """
     norm = np.linalg.norm(v)
     if norm == 0:
-       return v
+        return v
     return v / norm
 #
 
@@ -176,7 +176,7 @@ def triangulate_unconnected_cross_section(cs, n=None):
     i = 0
     E = np.eye(3)
     while np.cross(n, E[i]).sum() == 0:
-        i+1
+        i += 1
 
     v1 = normalize(np.cross(n, E[i]))
     v2 = normalize(np.cross(n, v1))
