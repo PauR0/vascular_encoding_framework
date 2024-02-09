@@ -222,3 +222,12 @@ def attribute_checker(obj, atts, extra_info=''):
             return False
 
     return True
+#
+
+def attribute_setter(obj, **kwargs):
+    """
+    Function to set attributes passed in a dict-way.
+    """
+    for k, v in kwargs.items():
+        setattr(obj, k, v)
+#
