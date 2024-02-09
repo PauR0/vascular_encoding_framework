@@ -216,14 +216,15 @@ def triangulate_connected_cross_section(cs):
         msg.error_message("Cannot triangulate cross section with connected method."+\
                           "The given cross section has no lines. Try unconnected method instead...")
 
-    new_cs = cs.copy(deep=True)
-    new_cs.points = np.vstack([cs.points, cs.center])
-    lines = cs.lines.reshape(-1, 3)
-    lines[:, 0] = cs.n_points-1
-    faces = np.full(shape=(lines.shape[0], 4), fill_value=4, dtype=int)
-    faces[:, 1:] = lines
-    cs.faces = faces
-    return cs
+    #Append the center at the end of the point array
+    points = np.vstack([cs.points, cs.center])
+    faces  = np.full(shape=(cs.lines.shape[0]//3, 4), fill_value=3, dtype=int)
+    faces[:, 1] = cs.n_points #The first id of all the triangles is the center
+    faces[:, 2:] = cs.lines.reshape(-1, 3)[:, 1:]
+
+    new_cs = pv.PolyData(points, faces)
+
+    return new_cs
 #
 
 def knots_list(s0, s1, n, mode='complete', ext=None, k=3):
