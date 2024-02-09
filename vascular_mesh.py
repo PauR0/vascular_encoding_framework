@@ -230,7 +230,7 @@ class VascularMesh:
             bnds = bnds.connectivity()
             meshes = []
             for i in np.unique(bnds['RegionId']):
-                b = bnds.extract_cells(bnds['RegionId'] == i)
+                b = bnds.extract_cells(bnds['RegionId'] == i).extract_surface(pass_pointid=False, pass_cellid=False)
                 meshes.append(triangulate_cross_section(b))
             self.closed_mesh = self.mesh.append_polydata(*meshes, inplace=False)
             self.closed_mesh.clean(inplace=True)
