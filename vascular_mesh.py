@@ -371,8 +371,8 @@ class VascularMesh:
         """
 
         msg.computing_message('vascular mesh translation')
-        self.wall.translate(t)
-        self.center = np.array(self.wall.center)
+        self.mesh.translate(t)
+        self.center = np.array(self.mesh.center)
         #TODO: Apply translation to boundaries.
         #TODO: Apply translation to boundaries.
         msg.done_message('vascular mesh translation')
@@ -402,8 +402,10 @@ class VascularMesh:
         """
 
         msg.computing_message('vascular mesh rotation')
-        self.wall.rotate_vector(normalize(r.as_rotvec()), np.linalg.norm(r.as_rotvec(degrees=True)), **kwargs)
-        self.center = np.array(self.wall.center)
+        if inverse:
+            r = r.inv()
+        self.mesh.rotate_vector(normalize(r.as_rotvec()), np.linalg.norm(r.as_rotvec(degrees=True)), **kwargs)
+        self.center = np.array(self.mesh.center)
         #TODO: Apply rotation to boundaries.
         #TODO: Apply rotation to boundaries.
 
@@ -431,8 +433,8 @@ class VascularMesh:
                 Arguments to be passed to pyvista's translate method.
         """
         msg.computing_message('vascular mesh scaling.')
-        self.wall.scale(s, inplace=True, **kwargs)
-        self.center = np.array(self.wall.center)
+        self.mesh.scale(s, inplace=True, **kwargs)
+        self.center = np.array(self.mesh.center)
         #TODO: Apply scale to boundaries.
         #TODO: Apply scale to boundaries.
         if update_kdt:
