@@ -135,8 +135,6 @@ def triangulate_cross_section(cross_section, method='connected', n=None):
                             "Available options are {'connected', 'unconnected'}.")
 
     return new_cs
-
-
 #
 
 def triangulate_unconnected_cross_section(cs, n=None):
