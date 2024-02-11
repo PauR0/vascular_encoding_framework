@@ -65,35 +65,41 @@ class VascularMesh(pv.PolyData):
 
     """
     The class to contain the triangle mesh representation of a Vascular
-    structure with its attributes such as boundary data.
+    structure with its attributes such as boundary data. The mesh is expected
+    to be open only at the inlet/outlet boundaries. This is a child class
+    of pyvista (vtk) PolyData. Note that in contrast with pyvista where the
+    standard is that __inplace__ argument is generally False, here is otherwise.
+    Furthermore, it is usually not in the method's signature.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, p:pv.PolyData=None) -> None:
 
-        #For saving and loading
-        self.path   : str  = None
-        self.f_type : str  = 'vtk'
-        self.binary : bool = False
 
-        self.mesh : pv.PolyData = None
-        self.boundaries : dict = None
-        self.closed_mesh : pv.PolyData = None
+        self.boundaries : Boundaries = None
+        self.closed : pv.PolyData = None
 
         #To query distances
         self.kdt : KDTree = None
 
         #Spatial alignment
-        self.center : np.ndarray = None
+        self.mass_center : np.ndarray = None
         self.e1 : np.ndarray     = None
         self.e2 : np.ndarray     = None
         self.e3 : np.ndarray     = None
+
+        super().__init__(p)
+        if p is not None:
+            self.triangulate()
+            self.compute_kdt()
+            self.compute_local_ref()
+            self.compute_normals()
     #
 
     def compute_kdt(self):
         """ Compute the KDTree for the points in the wall mesh """
-        msg.computing_message(task="KDTree")
-        self.kdt = KDTree(self.mesh.points)
-        msg.done_message(task="KDTree")
+        msg.computing_message(info="KDTree")
+        self.kdt = KDTree(self.points)
+        msg.done_message(info="KDTree")
     #
 
     def compute_local_ref(self):
@@ -101,7 +107,7 @@ class VascularMesh(pv.PolyData):
         Compute the object oriented frame by means of a PCA.
         """
 
-        c, e1, e2, e3 = compute_ref_from_points(self.mesh.points)
+        c, e1, e2, e3 = compute_ref_from_points(self.points)
         self.set_local_ref(c, e1, e2, e3)
         return c, e1, e2, e3
     #
@@ -111,300 +117,159 @@ class VascularMesh(pv.PolyData):
         Set the objet oriented frame.
         """
 
-        self.center = center
-        self.e1     = e1
-        self.e2     = e2
-        self.e3     = e3
+        self.mass_center = center
+        self.e1          = e1
+        self.e2          = e2
+        self.e3          = e3
     #
 
-    def set_data(self, mesh=None, kdt=None, boundaries=None,
-                       local_ref=None, triangulate_wall=False):
+    def set_data(self, **kwargs):
         """
-        Set the data of the vascular mesh.
-
-        Set the polydata and geometric information of the aorta mesh.
+        Set the data of the vascular mesh. Usefull to set a bunch at once.
 
         Parameters
         ----------
-        mesh  : vtkPolyData, optional
-            Polydata representing the wall of the vascular mesh.
-        boundaries : dict, optional
-            The dictionary containing the boundary information.
-        triangulate : bool, optional
-            Whether to triangulate the wall polydata.
-        local_ref : tuple of 3 floats, optional
-            Local reference point for the aorta mesh.
+            **kwargs : Any
+                keyboard arguments to be set as attributes.
+
         """
-
-        if mesh:
-            self.mesh = mesh
-
-            if triangulate_wall:
-                self.triangulate_mesh()
-
-            if kdt:
-                self.kdt = kdt
-            else:
-                self.compute_kdt()
-
-            if not local_ref:
-                self.compute_local_ref()
-
-            self.compute_wall_normals()
-
-        if boundaries:
-            self.boundaries = boundaries
-
-        if local_ref:
-            self.set_local_ref(local_ref[0],local_ref[1],local_ref[2], local_ref[3])
+        attribute_setter(self, **kwargs)
     #
 
-    def save(self, suffix=""):
+    def save(self, filename, binary=True, boundaries_fname=None, **kwargs):
         """
-        Save the vascular mesh.
+        Save the vascular mesh. kwargs are passed to PolyData.save method.
 
-        TODO: Save inlet/outlet data
+        Arguments:
+        ------------
+            filename : str
+                The name of the file to store the polydata.
+
+            binary : bool, opt
+                Default is True. Whether to save in binary from.
+
+            boundaries_fname : str, opt.
+                Default is None. If passed boundaries are saved with at the given path.
+
         """
 
-        if self.mesh is not None:
-            fname = os.path.join(self.path, 'meshes', f'mesh{suffix}.{self.f_type}')
-            self.mesh.save(filename=fname, binary=self.binary)
+        if self.n_points is not None:
+            super().save(filename=filename, binary=binary, **kwargs)
+
+        if self.boundaries is not None and boundaries_fname is not None:
+            self.boundaries.save(boundaries_fname)
 
         if self.boundaries is None and self.mesh is None:
-            print("There is no data to be saved....")
+            msg.error_message("There is no data to be saved....")
     #
 
-    def load(self, path=None, suffix="", abs_path=False):
+    @staticmethod
+    def read(filename=None, boundaries_fname=None):
         """
         Load a vascular mesh with all the available data at a given
         case path, with the given suffix.
 
         Parameters
         ----------
-        path : string
-            The path to the wall mesh. TODO: Work about boundary format (inlet/outlet)
+        filename : string
+            The path to the wall mesh.
 
-        suffix : string
-            A string indicating a suffix in the mesh name. E.g. suffix="_orig"
-            means wall_orig.stl
-
-        abs_path : bool, optional
-            If true, the path passed must be the path to the file containing
-            the vascular mesh wall. If true, no inlet/outlet information will
-            be written. If True, suffix is ignored.
+        boundaries_fname : string, opt
+            Default is None. If passed boundaries are loaded from given path.
 
         """
 
-        wall_fname=None
-        if abs_path:
-            wall_fname = path
+        p = pv.read(filename)
+        vmesh = VascularMesh(p=p)
+        if boundaries_fname is not None:
+            vmesh.boundaries = Boundaries.read(boundaries_fname)
 
-        elif os.path.isdir(path):
-            self.path = path
-            wall_fname = os.path.join(self.path, 'meshes', f'mesh{suffix}.{self.f_type}')
-            #inlets_fname  = os.path.join(self.path, 'meshes', f'inlets{suffix}.json')
-            #outlets_fname = os.path.join(self.path, 'meshes', f'outlets{suffix}.json')
-
-        self.mesh = pv.read(wall_fname)
-        self.triangulate_mesh()
-        self.compute_kdt()
-        self.compute_local_ref()
-        self.compute_wall_normals()
-
-        #TODO: self.inlets  !!!!!!
-        #TODO: self.outlets !!!!!!
-
-        self.compute_bounds()
-
-        return True
+        return vmesh
     #
 
-    def save_boundaries(self):
+    def triangulate(self,inplace=True, **kwargs):
         """
-        #TODO
-        Saves the boundaries geometric information
-        """
-
-        if self.boundaries is None:
-            msg.error_message(info=f"Can't save VascularMesh boundaries. The boundaries attributes is {self.boundaries}")
-    #
-
-    def compute_bounds(self):
-        """
-        Returns the bounding box of the mesh.
-        The form is: (xmin, xmax, ymin, ymax, zmin, zmax)
-        """
-        # bounding box
-        self.bounds = self.mesh.bounds
-        return self.bounds
-    #
-
-    def triangulate_mesh(self):
-        """
-        Triangulate the wall mesh.
+        Triangulate the mesh. This is better performed after instantiation to
+        prevent possible crashes with other methods and modules. Non triangular
+        meshes are not supported in this library. Although pyvista does support
+        them.
         """
         msg.computing_message("mesh triangulation")
-        self.mesh.triangulate(inplace=True)
+        m = super().triangulate(inplace=inplace, **kwargs)
         msg.done_message("mesh triangulation")
-        #
+        return m
     #
 
-    def compute_wall_normals(self, **kwargs):
+    def compute_normals(self, inplace=True, **kwargs):
         """
-        Compute the normals of the mesh. Following pyvista's default
-        where normals point "outwards".
-
+        Compute the normals of the mesh. Note that contrarily to pyvista, in
+        this library inplace is set to True.
         """
 
         msg.computing_message("mesh normals")
-        self.mesh.compute_normals(cell_normals=True, point_normals=True, inplace=True, **kwargs)
+        m = super().compute_normals(cell_normals=True, point_normals=True, inplace=True, **kwargs)
         msg.done_message("mesh normals")
+        return m
     #
 
     def compute_closed_mesh(self):
 
         """
-        Method to get a polydata with the bounds closed.
+        Method to get a polydata with the boundaries closed. It is also set in the closed
+        attribute.
+
+        Returns:
+        -----------
+            self.closed : pv.PolyData
+                The closed mesh.
+        """
+
+
+        meshes = []
+        if self.boundaries is None:
+            self.compute_boundaries()
+
+        for _, b in self.boundaries.items():
+            p = pv.PolyData(b.points)
+            method = 'unconnected'
+            if b.faces.size > 0:
+                p.faces = b.faces
+                p = p.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=True)
+                method = 'connected'
+            p = triangulate_cross_section(p, method=method, n=b.normal)
+            meshes.append(p)
+
+        self.closed = pv.PolyData(self.append_polydata(*meshes, inplace=False))
+        self.closed.clean(inplace=True)
+
+        return self.closed
+    #
+
+    def compute_boundaries(self, interactive=False):
+        """
+        Method to build the boundaries dictionary based on the boundary edges
+        on the mesh attribute.
 
         Arguments:
-        -----------
+        ------------
+
+            interactive : bool, opt
+                Default False. TODO: Make the user able to provide an id for
+                each boundary.
+
         """
 
+        self.boundaries = Boundaries()
+        bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
+        bnds = bnds.connectivity()
 
-        if self.boundaries is not None:
-            #TODO:Implement the alternative with more info available.
-            pass
-
-        else:
-            self.closed_mesh = self.mesh.copy(deep=True)
-            bnds = self.mesh.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
-            bnds = bnds.connectivity()
-            meshes = []
-            for i in np.unique(bnds['RegionId']):
-                b = bnds.extract_cells(bnds['RegionId'] == i).extract_surface(pass_pointid=False, pass_cellid=False)
-                meshes.append(triangulate_cross_section(b))
-            self.closed_mesh = self.mesh.append_polydata(*meshes, inplace=False)
-            self.closed_mesh.clean(inplace=True)
+        for i in np.unique(bnds['RegionId']):
+            b = bnds.extract_cells(bnds['RegionId'] == i).extract_surface(pass_pointid=False, pass_cellid=False)
+            b = triangulate_cross_section(b)
+            self.boundaries[i] = Boundary.from_polydata(b)
     #
 
-    def compute_inlet_normal(self, inlet_pca):
-        """
-        This method computes the inlet normal fitting a plane to a set of points
-        then, for ensuring the normal direction it computes a auxiliar centroid
-        which is assumed to be inside the aorta.
-        """
-        inlet_normal = normalize(inlet_pca.components_[2])
-        aux_radius,_ = self.kdt.query(inlet_pca.mean_)
-        aux_ids = self.kdt.query_ball_point(inlet_pca.mean_, 4*aux_radius)
-        aux_ball = self.wall_points[aux_ids]
-        aux_centroid = np.mean(aux_ball, axis = 0)
-        right_dir = normalize(aux_centroid - inlet_pca.mean_)
-        if inlet_normal.dot(right_dir) < 0:
-            inlet_normal *=-1
-
-        return normalize(inlet_normal)
-    #
-
-    def compute_outlet_normal(self, outlet_pca):
-        """
-        This method computes the outlet normal fitting a plane to a set of points
-        and, then, ensures the normal direction consistency
-        """
-        outlet_normal = normalize(outlet_pca.components_[2])
-
-        # the normal must be pointing outwards
-        if np.dot(outlet_normal, self.center - outlet_pca.mean_ ) > 0:
-            outlet_normal *= -1
-
-        return outlet_normal
-    #
-
-    def compute_inlet_geometry(self, normal = None,center = None):
-        """ Compute the inlet geometry from the mesh """
-
-        print("Computing inlet geometry...")
-        inlet_pca = PCA(n_components=3)
-        inlet_pca.fit(self.inlet_points)
-
-        if normal is not None:
-            self.inlet_normal = normal
-        else:
-            self.inlet_normal = self.compute_inlet_normal(inlet_pca)
-
-        v1 = np.cross(self.inlet_normal, self.e3)
-        if v1.dot(inlet_pca.mean_- self.center) > 0:
-            v1*=-1
-
-        self.inlet_v1 = normalize(v1)
-        v2 = np.cross(self.inlet_normal, self.inlet_v1)
-        self.inlet_v2 = normalize(v2)
-
-        c, _, _, a, b, phi, err = fit_ellipse3d(self.inlet_points.T,
-                                                inlet_pca.mean_,
-                                                self.inlet_normal,
-                                                self.inlet_v1,
-                                                self.inlet_v2 )
-        self.inlet_ellipse_center = c
-        if center is not None:
-            self.inlet_center = center
-        else:
-            self.inlet_center = c
-        #
-        self.inlet_a = a
-        self.inlet_b = b
-        self.inlet_phi = phi
-        self.inlet_err = err
-
-        print("\t\t\t\t ...........done")
-        print("   Valve center: {}".format(self.inlet_center))
-        print("   Valve normal direction: {}".format(self.inlet_normal))
-        print("   v1={}".format(self.inlet_v1) + "\n   v2={}".format(self.inlet_v2))
-    #
-
-    def compute_outlet_geometry(self, normal = None,center = None):
-        """ Compute the oulet geometry from the mesh """
-
-        print("Computing outlet geometry...")
-        outlet_pca = PCA(n_components=3)
-        outlet_pca.fit(self.outlet_points)
-
-        if normal is not None:
-            self.outlet_normal = normal
-        else:
-            self.outlet_normal = self.compute_outlet_normal(outlet_pca)
-
-        v1 = np.cross(self.outlet_normal, self.e3)
-        if v1.dot(outlet_pca.mean_- self.center) > 0:
-            v1*=-1
-        self.outlet_v1 = normalize(v1)
-
-        v2 = np.cross(self.outlet_normal, self.outlet_v1)
-        self.outlet_v2 = normalize(v2)
-
-        c, _, _, a, b, phi, err = fit_ellipse3d(self.outlet_points.T,
-                                                outlet_pca.mean_,
-                                                self.outlet_normal,
-                                                self.outlet_v1,
-                                                self.outlet_v2)
-
-        self.outlet_ellipse_center = c
-        if center is not None:
-            self.outlet_center = center
-        else:
-            self.outlet_center = c
-        #
-        self.outlet_a = a
-        self.outlet_b = b
-        self.outlet_phi = phi
-        self.outlet_err = err
-
-        print("\t\t\t\t ...........done")
-        print("   Outlet center: {}".format(self.outlet_center))
-        print("   Outlet normal direction: {}".format(self.outlet_normal))
-        print("   v1={}".format(self.outlet_v1) + "\n   v2={}".format(self.outlet_v2))
-    #
-
-    def translate(self, t, update_kdt=True, **kwargs):
+    def translate(self, t, update_kdt=True):
         """
         Apply a translation to the mesh and boundaries.
 
@@ -416,23 +281,19 @@ class VascularMesh(pv.PolyData):
             update_kdt : bool, optional.
                 Default True. Whether to update the kdt for query distances on
                 mesh points.
-
-            **kwargs : any
-                Arguments to be passed to pyvista's translate method.
         """
 
         msg.computing_message('vascular mesh translation')
-        self.mesh.translate(t)
-        self.center = np.array(self.mesh.center)
-        #TODO: Apply translation to boundaries.
-        #TODO: Apply translation to boundaries.
+        super().translate(t, inplace=True)
+        self.closed.translate(t)
+        self.boundaries.translate(t)
         msg.done_message('vascular mesh translation')
 
         if update_kdt:
             self.compute_kdt()
     #
 
-    def rotate(self, r, inverse=False, update_kdt=True, **kwargs):
+    def rotate(self, r, inverse=False, update_kdt=True):
         """
         Apply a rotation to the mesh and boundaries.
 
@@ -447,25 +308,22 @@ class VascularMesh(pv.PolyData):
             update_kdt : bool, optional.
                 Default True. Whether to update the kdt for query distances on
                 mesh points
-
-            **kwargs : any
-                Arguments to be passed to pyvista's scale method.
         """
 
         msg.computing_message('vascular mesh rotation')
         if inverse:
             r = r.inv()
-        self.mesh.rotate_vector(normalize(r.as_rotvec()), np.linalg.norm(r.as_rotvec(degrees=True)), **kwargs)
-        self.center = np.array(self.mesh.center)
-        #TODO: Apply rotation to boundaries.
-        #TODO: Apply rotation to boundaries.
+        v, d = normalize(r.as_rotvec()), np.linalg.norm(r.as_rotvec(degrees=True))
+        self.rotate_vector(vector=v, angle=d, inplace=True)
+        self.closed.rotate_vector(vector=v, angle=d, inplace=True)
+        self.boundaries.rotate(r)
 
         if update_kdt:
             self.compute_kdt()
         msg.done_message('vascular mesh rotation')
     #
 
-    def scale(self, s, update_kdt=True, **kwargs):
+    def scale(self, s, update_kdt=True):
         """
         Function to scale vascular mesh. kwargs can be passed to pyvista
         scaling method.
@@ -479,15 +337,11 @@ class VascularMesh(pv.PolyData):
             update_kdt : bool, optional.
                 Default True. Whether to update the kdt for query distances on
                 mesh points
-
-            **kwargs : any
-                Arguments to be passed to pyvista's translate method.
         """
         msg.computing_message('vascular mesh scaling.')
-        self.mesh.scale(s, inplace=True, **kwargs)
-        self.center = np.array(self.mesh.center)
-        #TODO: Apply scale to boundaries.
-        #TODO: Apply scale to boundaries.
+        super().scale(s, inplace=True)
+        self.closed.scale(s, inplace=True)
+        self.boundaries.scale(s)
         if update_kdt:
             self.compute_kdt()
         msg.done_message('vascular mesh scaling.')
