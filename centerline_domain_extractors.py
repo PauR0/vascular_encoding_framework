@@ -5,11 +5,43 @@ from scipy.spatial import KDTree
 import numpy as np
 import pyvista as pv
 
-from utils import attribute_checker
+from vascular_mesh import VascularMesh
 import messages as msg
 from utils._code import attribute_checker, attribute_setter
 
-class Seekers:
+class CenterlineDomainExtractor:
+    """
+    Base class for centerline domain extractors. This method has the minimum
+    requirements for centerline domain extractors.
+    """
+
+    def __init__(self):
+
+        self.mesh          = None
+        self.output_domain = None
+    #
+
+    def set_mesh(self, m):
+        """
+        Method to be overwritten, but must accept a mesh of surface definig de
+        boundary.
+        """
+        self.mesh = m
+    #
+
+    def set_parameters(self, **kwargs):
+        """
+        Method to set parameters as attributes of the objects.
+        """
+        attribute_setter(self, **kwargs)
+    #
+
+    def get_output(self):
+        return self.output_domain
+    #
+#
+
+class Seekers(CenterlineDomainExtractor):
     """
     Centerline domain extractor based on the seekers approach.
     According to the grass fire equation the surface inward normal
@@ -25,17 +57,26 @@ class Seekers:
 
     def __init__(self):
 
-        self.mesh : pv.PolyData = None
-        self.reduction_rate     = 0.66
-        self.smooth_iters       = 100
+        super().__init__()
+
+        self.mesh          : pv.PolyData = None
+        self.output_domain : pv.PolyData = None
+
         self.seekers : pv.Polydata = None
-        self.eps = 1e-3
+
+        #Parameters
+        self.reduction_rate  : float = 0.66
+        self.smooth_iters    : int   = 100
+        self.eps             : float = 1e-3
+        self.check_dirs      : bool  = False,
+        self.check_inside    : bool  = False,
+        self.multi_ray_trace : bool  = False
 
         self.debug : bool = False
     #
 
     def set_mesh(self, m, update=True):
-        self.mesh = m
+        super().set_mesh(m)
 
         if update:
             self.compute_seekers_initial_positions()
@@ -81,7 +122,7 @@ class Seekers:
 
         eps = self.mesh.length * self.eps
         ids = np.random.randint(low=0, high=self.seekers.n_points-1, size=n_tests)
-        dirs = self.seekers['Normals'][ids]
+        dirs = self.seekers.get_array('Normals', preference='point')[ids]
         #The initial position is moved an epsilon inwards to prevent capturing the initial intersection.
         start = self.seekers.points[ids] + dirs * eps
         stop  = self.seekers.points[ids] + dirs * self.mesh.length
@@ -95,11 +136,11 @@ class Seekers:
 
         pts = pv.PolyData((start+intersection)/2)
         pts = pts.select_enclosed_points(self.mesh)
-        if not pts["SelectedPoints"].sum() > pts.n_points * 0.5:
+        if pts["SelectedPoints"].sum() < n_tests * (2/3):
             self.flip_seekers_directions()
     #
 
-    def run(self, check_dirs=False, check_inside=False, multi_ray_trace=False):
+    def run(self):
         """
         Run the algorithm and move seekers positions to its seeked position.
 
@@ -132,7 +173,7 @@ class Seekers:
         if self.seekers is None:
             self.compute_seekers_initial_positions()
 
-        if check_dirs:
+        if self.check_dirs:
             self.check_seekers_direction()
 
 
@@ -144,7 +185,7 @@ class Seekers:
         eps = d * 1e-4
         start = self.seekers.points + dirs*eps #The initial position is moved an epsilon inwards to prevent capturing the initial intersection.
 
-        if multi_ray_trace:
+        if self.multi_ray_trace:
             intersection, _, _ = self.mesh.multi_ray_trace(origins=start, directions=dirs, first_point=True, retry=True)
 
         else:
@@ -158,12 +199,11 @@ class Seekers:
 
         intersection = np.vstack(intersection)
 
-        self.seekers = pv.PolyData((start+intersection) / 2)
+        self.output_domain = pv.PolyData((start+intersection) / 2)
 
 
-        if check_inside:
-            self.seekers = self.seekers.select_enclosed_points(self.mesh)
-            self.seekers = self.seekers.extract_points(self.seekers['SelectedPoints'], adjacent_cells=True)
+        if self.check_inside:
+            self.output_domain = self.output_domain.select_enclosed_points(self.mesh).threshold(value=0.5, scalars='SelectedPoints', all_scalars=False, method='upper')
 
 
         if self.debug:
@@ -179,16 +219,16 @@ class Seekers:
 
             p.subplot(0, 2)
             p.add_mesh(self.mesh, opacity=0.3)
-            p.add_mesh(self.seekers, style='points', render_points_as_spheres=True, point_size=5, color='b')
+            p.add_mesh(self.output_domain, style='points', render_points_as_spheres=True, point_size=5, color='b')
             p.link_views()
             p.show()
 
-        return self.seekers
+        return self.output_domain
     #
 #
 
 
-class Flux:
+class Flux(CenterlineDomainExtractor):
 
     """
     Centerline domain extractor based on the flux approach. Theoretically
@@ -203,18 +243,21 @@ class Flux:
 
     def __init__(self) -> None:
 
-        self.mesh     : pv.PolyData = None
-        self.mesh_kdt : KDTree
-        self.volume   : pv.UnstructuredGrid = None
+        super().__init__()
+
+        self.mesh              : pv.PolyData = None
+        self.output_domain     : pv.PolyData = None
+
+        self.volume     : pv.UnstructuredGrid = None
+        self.mesh_kdt   : KDTree
         self.volume_kdt : KDTree
 
-        # Discretization deltas
-        self.dx = None
-        self.dy = None
-        self.dz = None
-
-        #Setting this to true may help in bad connectivity scenarios.
-        self.relax : bool = False
+        # Parameters
+        self.dx    : float = None
+        self.dy    : float = None
+        self.dz    : float = None
+        self.thrs  : float = 0.0
+        self.relax : bool  = False #Setting this to true may help in bad connectivity scenarios.
 
         self.debug  : bool = False
     #
@@ -233,7 +276,7 @@ class Flux:
                 Default True. If true, the KDTree is computed using the new
                 mesh.
         """
-        self.mesh = m
+        super().set_mesh(m=m)
 
         if update:
             self.compute_mesh_kdt()
@@ -280,7 +323,7 @@ class Flux:
         msg.computing_message("volume KDTree")
     #
 
-    def run(self, thrs=0.0):
+    def run(self):
         """
         This method runs the centerline domain extraction based on a threshold over
         the flux (http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf) computed
@@ -307,8 +350,8 @@ class Flux:
             self.compute_volume_kdt()
 
         msg.computing_message("flux field")
-        self.volume['distance'] = self.mesh_kdt.query(self.volume.points)[0]
-        self.volume = self.volume.compute_derivative(scalars='distance')
+        self.volume['radius'] = self.mesh_kdt.query(self.volume.points)[0]
+        self.volume = self.volume.compute_derivative(scalars='radius')
 
         r = np.max((self.dx, self.dy, self.dz))*1.2
         def net_flux(p):
@@ -323,16 +366,78 @@ class Flux:
         # Normalize and make it positive
         normalize_field = lambda arr: arr / np.abs(arr).min() + 1
         self.volume['flux'] = normalize_field(self.volume['flux'])
-        self.volume = self.volume.extract_points(self.volume['flux'] < thrs, adjacent_cells=self.relax)
-        self.volume = self.volume.connectivity(extraction_mode='largest')
+        self.output_domain  = self.volume.threshold(value=self.thrs, scalars='flux', all_scalars=self.relax, method='lower').connectivity(extraction_mode='largest')
 
         msg.done_message("centerline domain extraction using the flux...")
 
         if self.debug:
             p = pv.Plotter()
             p.add_mesh(self.mesh, opacity=0.5)
-            p.add_mesh(self.volume, scalars='flux')
+            p.add_mesh(self.output_domain, scalars='flux')
             p.show()
-        return self.volume
+
+        return self.output_domain
     #
+#
+
+
+
+def extract_centerline_domain(mesh, method='seekers', method_params=None, debug=False):
+    """
+    Function to extract the centerline domain. The centerline domain extraction is the
+    first step to compute the centerline. Here an unordered discrete representation of
+    the centerline locus is computed. It can be tougher or finner, the optimum path
+    is computed by means of the centerline path extactor.
+
+    Arguments:
+    -----------
+
+        vmesh : VascularMesh | pv.PolyData
+            The surface defining the vascular domain where centerline is to be
+            computed.
+
+        method : {'seekers', 'flux'}, opt
+            Defaulting to seekers. The algorithm used for the domain extraction.
+
+        method_params : dict, opt
+            A dictionary containing parameters of the chosen method.
+
+        debug : bool, opt
+            Defaulting to False. Running in debug mode shows some plots at certain steps.
+
+    """
+
+    if method not in ['seekers', 'flux']:
+        msg.error_message(f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {method}.")
+        return False
+
+    if method == 'seekers':
+        alg = Seekers()
+    elif method == 'flux':
+        alg = Flux()
+    else:
+        print("How the hell have we arrived here?")
+        return False
+    alg.debug = debug
+
+    input_mesh = mesh
+    if isinstance(mesh, VascularMesh):
+        mesh.compute_closed_mesh()
+        input_mesh = mesh.closed.compute_normals(cell_normals=False, point_normals=True)#, flip_normals=True)
+
+    update=True
+    if mesh.kdt is not None and method == 'flux':
+        update=False
+
+    alg.set_mesh(m=input_mesh, update=update)
+
+    if mesh.kdt is not None and method == 'flux':
+        alg.mesh_kdt = mesh.kdt
+
+    if method_params is not None:
+        alg.set_parameters(**method_params)
+
+    alg.run()
+
+    return alg.output_domain
 #
