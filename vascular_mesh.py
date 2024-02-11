@@ -12,7 +12,7 @@ from utils.spatial  import compute_ref_from_points, normalize
 from utils._code    import attribute_setter
 
 
-class VascularMesh:
+class VascularMesh(pv.PolyData):
 
     """
     The class to contain the triangle mesh representation of a Vascular
