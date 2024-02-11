@@ -1,8 +1,10 @@
 #! /usr/bin/env python3
 
+import os
 
+LENGTH = os.get_terminal_size()[0]
 
-def split_and_pad(input_string, max_length=80, pad_direction='right', pad_symb='.'):
+def split_and_pad(input_string, max_length=LENGTH, pad_direction='right', pad_symb='.'):
 
     if not input_string:
         return []
@@ -28,26 +30,22 @@ def split_and_pad(input_string, max_length=80, pad_direction='right', pad_symb='
         return [last_chunk] + split_and_pad(input_string[max_length:], max_length, pad_direction)
 #
 
-def computing_message(task='', prnt=True):
-    comp_msg = f"Computing {task} "
-    strout = '\n'.join(split_and_pad(comp_msg, pad_direction='right'))
-    if prnt:
-        print(strout)
-    return strout
+def get_message_maker(main_message, pad_direction='right'):
+
+    def message_maker(info='', prnt=True):
+        if pad_direction == 'right':
+            message = f"{main_message} {info}"
+        else:
+            message = f" {info} {main_message}"
+        strout = '\n'.join(split_and_pad(message, pad_direction=pad_direction))
+        if prnt:
+            print(strout)
+        return strout
+    #
+    return message_maker
 #
 
-def done_message(task='', prnt=True):
-    done_msg = f" {task} done!"
-    strout = '\n'.join(split_and_pad(done_msg, pad_direction='left'))
-    if prnt:
-        print(strout)
-    return strout
-#
-
-def error_message(info, prnt=True):
-    err_msg = f"ERROR: {info}"
-    strout = '\n'.join(split_and_pad(err_msg, pad_direction='right'))
-    if prnt:
-        print(strout)
-    return strout
-#
+computing_message = get_message_maker(main_message="Computing")
+done_message      = get_message_maker(main_message='done!', pad_direction='left')
+error_message     = get_message_maker(main_message="ERROR: ")
+warning_message   = get_message_maker("WARNING: ")
