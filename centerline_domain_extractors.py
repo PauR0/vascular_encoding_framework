@@ -7,6 +7,7 @@ import pyvista as pv
 
 from utils import attribute_checker
 import messages as msg
+from utils._code import attribute_checker, attribute_setter
 
 class Seekers:
     """
