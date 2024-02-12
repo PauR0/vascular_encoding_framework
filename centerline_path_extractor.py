@@ -119,7 +119,7 @@ def build_path(current_node, pointers, reverse_path=False):
 
     while previous is not None:
         path.append(previous)
-        previous =  pointers[previous]
+        previous = pointers[previous]
     if reverse_path:
         path.reverse()
 
