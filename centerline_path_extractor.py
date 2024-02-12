@@ -58,7 +58,7 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
     pointers={}
     pointers[initial] = None
     n_expl = 0
-    while OpenList != []:
+    while OpenList:
 
         _, current_node = hp.heappop(OpenList)
         OpenSet.remove(current_node)
