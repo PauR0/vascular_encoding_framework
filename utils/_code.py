@@ -1,7 +1,7 @@
 
 import messages as msg
 
-def attribute_checker(obj, atts, extra_info=''):
+def attribute_checker(obj, atts, extra_info='', opts=None):
     """
     Function to check if attribute has been set and print error message.
 
@@ -18,14 +18,21 @@ def attribute_checker(obj, atts, extra_info=''):
             An extra information string to be added to error message befor
             'Attribute {att} is None....'
 
+        opts : List[Any], optional.
+            Default None. A list containing accepted values for attribute.
+
     Returns:
     --------
-        True if all the attributes are different to None. False otherwise.
+        True if all the attributes are different to None or in provided options.
+        False otherwise.
     """
 
+    check = lambda at: getattr(obj, at) is None
+    if opts is not None:
+        check = lambda at: getattr(obj, at) not in opts
 
     for att in atts:
-        if getattr(obj, att) is None:
+        if check(att) is None:
             msg.error_message(info=f"{extra_info}. Attribute {att} is None....")
             return False
 
