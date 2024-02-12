@@ -107,11 +107,6 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
                 OpenSet.add(s)
         n_expl += 1
 
-        #if n_expl%1000 == 0:
-            #print("     A*   ->   Evaluated nodes:",n_expl,"  Open list has ",len(OpenList)," nodes.")
-
-    # end while
-
     if current_node in ends:
         return build_path(current_node,pointers)
     else:
