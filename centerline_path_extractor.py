@@ -142,6 +142,7 @@ class CenterlinePathExtractor:
         self.inverse_radius     : np.ndarray   = None
         self.adjacency_factor   : float = 0.33
 
+        self.mode    : str              = 'i2o' #TODO: Implement j2o (junction to outlets, hierarchical tree)
         self.inlet   : np.ndarray       = None
         self.outlets : np.ndarray       = None
         self.paths   : list[np.ndarray] = None
@@ -351,6 +352,59 @@ class CenterlinePathExtractor:
             self.outlets = self.add_point_to_centerline_domain(p=outlt, where='end')
     #
 
+    def compose_paths(self, raw_paths):
+        """
+        Compose the path attribute according to the policy established in the
+        mode attribute.
+
+        Arguments:
+        ----------
+
+            raw_paths : list[[ids]]
+                The raw paths extracted using the A* algorithm.
+
+        Returns:
+        --------
+
+            paths : list[[ids]]
+                The list of paths meeting the mode criteria.
+        """
+
+        if not attribute_checker(self, ['mode'], extra_info="wrong mode chosen to extract centerline paths...", opts=['i2o', 'j2o']):
+            return False
+
+        paths = []
+
+        if self.mode in ['i2o', 'o2i']:
+            for i, path in enumerate(raw_paths):
+                if i == 0 and self.inlet not in path:
+                    msg.error_message("Can't find inlet in the first path provided...")
+                    return False
+
+                if i == 0:
+                    paths.append(path)
+
+                else:
+                    j, joint = 0, path[0] #id of the path, and id of the joint.
+                    while joint not in paths[j] and j < len(paths)-1:
+                        j += 1
+                    if joint not in paths[j]:
+                        msg.error_message(f"Unable to find the joint for the branch at outlet {path[0]}")
+                        paths.append(path)
+                    else:
+                        jid = paths[j].index(joint)
+                        paths.append(paths[j][:jid] + path)
+
+            if self.mode == 'o2i':
+                paths = map(lambda l: list(reversed(l)), paths)
+
+            return paths
+
+        if self.mode in ['j2o', 'o2j']:
+            msg.error_message("Not implemented yet....") #TODO: Implement! (requires hierarchy)
+            return None
+    #
+
     def compute_paths(self):
         """
         Compute the paths from each outlet to the inlet. The path computation
@@ -360,7 +414,8 @@ class CenterlinePathExtractor:
         previously transited path.
         """
 
-        self.paths = []
+        msg.computing_message("centerline paths")
+        raw_paths = []
         end_points = [self.inlet]
         for out in self.outlets:
             new_path = minimum_cost_path(heuristic = self._heuristic,
@@ -368,8 +423,11 @@ class CenterlinePathExtractor:
                                          adjacency = self._adjacency,
                                          initial=out,
                                          ends=end_points)
-            self.paths.append(new_path)
             end_points += new_path
+            raw_paths.append(new_path)
+
+        self.paths = self.compose_paths(raw_paths)
+        msg.done_message("centerline paths")
 
         return self.paths
     #
