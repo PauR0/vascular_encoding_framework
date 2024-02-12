@@ -140,12 +140,14 @@ class CenterlinePathExtractor:
         self.domain_kdt         : KDTree       = None
         self.radius             : np.ndarray   = None
         self.inverse_radius     : np.ndarray   = None
-        self.adjacency_factor   : float = 0.33
+        self.inlet              : list         = None
+        self.outlets            : list         = None
 
-        self.mode    : str              = 'i2o' #TODO: Implement j2o (junction to outlets, hierarchical tree)
-        self.inlet   : np.ndarray       = None
-        self.outlets : np.ndarray       = None
-        self.paths   : list[np.ndarray] = None
+        self.mode             : str   = 'i2o' #TODO: Implement j2o (junction to outlets, hierarchical tree)
+        self.adjacency_factor : float = 0.33
+
+        self.id_paths : list[list[int]]  = None
+        self.paths    : pv.PolyData      = None
     #
 
     def set_vascular_mesh(self, vm, check_radius=True):
@@ -352,7 +354,7 @@ class CenterlinePathExtractor:
             self.outlets = self.add_point_to_centerline_domain(p=outlt, where='end')
     #
 
-    def compose_paths(self, raw_paths):
+    def compose_id_paths(self, raw_paths):
         """
         Compose the path attribute according to the policy established in the
         mode attribute.
@@ -396,7 +398,7 @@ class CenterlinePathExtractor:
                         paths.append(paths[j][:jid] + path)
 
             if self.mode == 'o2i':
-                paths = map(lambda l: list(reversed(l)), paths)
+                for p in paths: p.reverse()
 
             return paths
 
@@ -426,10 +428,44 @@ class CenterlinePathExtractor:
             end_points += new_path
             raw_paths.append(new_path)
 
-        self.paths = self.compose_paths(raw_paths)
+        self.id_paths = self.compose_id_paths(raw_paths)
+        self.make_polydata_path()
+
         msg.done_message("centerline paths")
 
-        return self.paths
+        return
+    #
+
+    def make_polydata_path(self):
+        """
+        Build a pyvista(vtk) PolyData with the already computed id_path.
+
+        Returns:
+        ----------
+            self.path : pyvista.PolyData
+                The PolyData with the centerline path
+        """
+
+        if not attribute_checker(self, ['id_paths']):
+            return
+
+        pids = np.concatenate(self.id_paths, dtype=int)
+        inv_pids = {}
+        for i, p in enumerate(pids):
+            if p not in inv_pids:
+                inv_pids[p] = i
+        points = self.centerline_domain[pids]
+
+        n=0
+        lines = []
+        for idp in self.id_paths:
+            lines += [[2, n+j, n+j+1] for j in range(len(idp)-1)]
+            n+=len(idp)
+        self.paths = pv.PolyData(points, lines=lines).clean()
+
+        for i, idp in enumerate(self.id_paths):
+            self.paths[f'B{i}'] = np.zeros((self.paths.n_points,))
+            self.paths[f'B{i}'][[inv_pids[k] for k in idp]] = 1
     #
 
     def _heuristic(self, n):
