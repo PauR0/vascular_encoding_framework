@@ -108,9 +108,9 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
         n_expl += 1
 
     if current_node in ends:
-        return build_path(current_node,pointers)
-    else:
-        return []
+        return build_path(current_node, pointers)
+
+    return []
 #
 
 def build_path(current_node, pointers, reverse_path=False):
