@@ -518,3 +518,36 @@ class Centerline(Spline):
         return velocity
     #
 
+    def get_arc_length(self, b=1, a=0):
+        """
+        Compute the arclength of the centerline, with the formula:
+
+                    L_c(h) = int_0^h ||C'(t)|| dt.
+
+        Since the centerline is a piecewise polynomial (spline curve)
+        each integration is carried out in each polynomial segment
+        to improve accuracy.
+
+        Arguments:
+        -----------
+
+            b : float
+                Default 1. The upper parameter to compute length
+            a : float
+                Default 0. The lower parameter to compute length
+
+        Returns:
+        --------
+        l : float
+            centerline arc length
+        """
+
+        segments = self.get_knot_segments(a=a, b=b)
+
+        #Compute the length at the segments
+        l = 0
+        for i in range(len(segments)-1):
+            l += quad(self.get_parametrization_velocity, segments[i], segments[i+1])[0]
+
+        return l
+    #
