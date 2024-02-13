@@ -372,7 +372,7 @@ class CenterlinePathExtractor:
                 The list of paths meeting the mode criteria.
         """
 
-        if not attribute_checker(self, ['mode'], extra_info="wrong mode chosen to extract centerline paths...", opts=['i2o', 'j2o']):
+        if not attribute_checker(self, ['mode'], extra_info="wrong mode chosen to extract centerline paths...", opts=['i2o', 'o2i', 'j2o', 'o2j']):
             return False
 
         paths = []
