@@ -153,15 +153,14 @@ class Spline:
             segments : np.ndarray
                 The partition of the interval with a and b as inferior and superior limits.
         """
-        #Extract the knots
-        t = self._spline.get_knots()
 
         #Compute the polynomial segments
-        min_id = np.argmax(t > a)
-        max_id = np.argmax(t > b)
-        if max_id == 0: max_id = -1
+        min_id = np.argmax(self._spline.t > a)
+        max_id = np.argmax(self._spline.t > b)
+        if max_id == 0:
+            max_id = -1
 
-        segments = np.concatenate(([a], t[min_id:max_id], [b]))
+        segments = np.concatenate(([a], self._spline.t[min_id:max_id], [b]))
 
         return segments
     #
