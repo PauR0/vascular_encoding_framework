@@ -125,8 +125,6 @@ class Boundary:
 
         if build_splines:
             self.build_rho_spline()
-
-        #
     #
 
     def from_3D_to_2D(self, pts=None):
@@ -313,4 +311,5 @@ class Boundary:
                    faces  = pdt.faces
                   )
         return b
+    #
 #
