@@ -495,3 +495,26 @@ class Centerline(Spline):
 
         return normalize(b)
     #
+
+    def get_parametrization_velocity(self, t):
+        """
+        Compute the velocity of the centerline parametrization, C(t), as ||C'(t)||.
+
+        Arguments:
+        -----------
+            t : float, array-like
+                The parameter where velocity is to be computed.
+
+        Returns:
+        --------
+            velocity : float, np.ndarray
+        """
+
+        if isinstance(t, (float, int)):
+            velocity = np.linalg.norm(self.get_tangent(t, normalized=False))
+        else:
+            velocity = np.linalg.norm(self.get_tangent(t, normalized=False), axis=1)
+
+        return velocity
+    #
+
