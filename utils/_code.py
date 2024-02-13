@@ -32,7 +32,7 @@ def attribute_checker(obj, atts, extra_info='', opts=None):
         check = lambda at: getattr(obj, at) not in opts
 
     for att in atts:
-        if check(att) is None:
+        if check(att):
             msg.error_message(info=f"{extra_info}. Attribute {att} is None....")
             return False
 
