@@ -551,3 +551,107 @@ class Centerline(Spline):
 
         return l
     #
+
+    def get_curvature(self, t):
+        """
+        Get the curvature of the centerline at a given parameter value.
+        The curvature is computed assuming the general formula,
+
+                    k = || C' x C''|| / ||C'||^3,
+
+        where C is the parametrization of the centerline.
+
+        Arguments:
+        -----------
+
+            t : float
+                Parameter on the centerline domain.
+
+        Returns:
+        --------
+
+            k : float
+                Curvature of the centerline at given parameter.
+        """
+
+        C_p = self.get_tangent(t)
+        C_pp = self.tangent(t, nu=1)
+        num = np.linalg.norm(np.cross(C_p, C_pp))
+        den = np.linalg.norm(C_p)**3
+        k = num / den
+        return k
+    #
+
+    def get_torsion(self, t, dt=1e-4):
+        """
+        Get the torsion of the centerline at a certain distance from the valve.
+        The torsion is computed by numerical differentiation of the binormal
+        vector of the Frenet frame,
+
+                    t = ||b'||,
+
+        where b is the binormal vector.
+
+        Arguments:
+        -----------
+        height : float
+            Distance from the valve or in other words, point on the centerline domain.
+
+        Returns:
+        --------
+        t : float
+            torsion of the centerline at height point.
+        """
+
+        t = - np.linalg.norm(derivative(self.get_frenet_binormal, t, dx=dt, n=1))
+        return t
+    #
+
+    def get_mean_curvature(self, a=0, b=1):
+        """
+        Get the mean curavture of the centerline in the segment
+        defined from a to b. The mean curvature is computed as the
+        defined integral of the curvature from a to b, divided by the
+        arc length of the centerline from a to b.
+
+                bar{k}_a^b = L_c([a,b]) * int_a^b k(t)dt.
+
+        Since the centerline is a piecewise
+        polynomial (spline curve) each integration is carried out
+        in each polynomial segment to improve accuracy.
+
+
+        Arguments:
+        ----------
+        a : float
+            Default 0. The lower bound of the interval.
+            Must be greater than or equal to 0 and lower than b.
+        b : Default 1. The upper bound of the interval.
+            Must be lower than or equal to 1 and greater than a.
+
+        Returns:
+        ---------
+        k : float
+            The mean curvature estimated.
+
+        """
+
+        if a < 0:
+            raise ValueError(f'Value of a {a} is lower than 0')
+        if b < 0:
+            raise ValueError(f'Value of b {b} is greater than 0')
+        if b < a:
+            raise ValueError(f'Value of a:{a} is greater than value of b:{b}')
+
+
+        #Get the segments
+        segments = self.get_knot_segments(a=a, b=b)
+
+        #Compute the curvatures at the segments
+        k = 0
+        for i in range(len(segments)-1):
+            k += quad(self.get_curvature, segments[i], segments[i+1])[0]
+
+        k /= self.get_arc_length(t=b)
+        return k
+    #
