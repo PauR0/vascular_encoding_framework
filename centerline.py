@@ -2,11 +2,14 @@
 
 import numpy as np
 
-from scipy.interpolate import BSpline
+from scipy.interpolate import BSpline, make_lsq_spline
 from scipy.spatial import KDTree
 from scipy.optimize import minimize, minimize_scalar
+from scipy.spatial.transform import Rotation
+from scipy.integrate import quad
+from scipy.misc import derivative
 
-
+import messages as msg
 from utils._code import attribute_setter, attribute_checker
 from utils.spatial import normalize, compute_ref_from_points
 from utils.splines import Spline, lsq_spline_smoothing
@@ -69,7 +72,8 @@ class ParallelTransport(Spline):
 
         return pt
 
-class Centerline:
+
+class Centerline(Spline):
     """
     The centerline class contains the main attributes and methods of a Bspline
     curve that models the centerline of a branch.
@@ -77,14 +81,7 @@ class Centerline:
 
     def __init__(self):
 
-        #Extrema of the parameter domain.
-        self.t0 : float = 0
-        self.t1 : float = 1
-
-        #Spline params
-        self.k       : int = 3
-        self.n_knots : int = None
-        self.coeffs  : np.ndarray = None #Shape (3, n_knots+k+1)
+        super().__init__()
 
         #Object reference frame
         self.center : np.array = np.zeros(3)
@@ -92,9 +89,10 @@ class Centerline:
         self.e2     : np.array = np.zeros(3)
         self.e3     : np.array = np.zeros(3)
 
-        # Spline Curves
-        self.curve   : BSpline = None
+        # Spline
         self.tangent : BSpline = None
+        self.v1      : ParallelTransport = None
+        self.v2      : ParallelTransport = None
 
         # k-d tree for distance computation
         self.kdt               : KDTree     = None
@@ -103,36 +101,7 @@ class Centerline:
         self.parameter_samples : np.ndarray = None
     #
 
-    def __call__(self, t):
-        """
-        Evaluate the centerline at given parameter values. Values are clipped
-        to parameter domain, as in constant extrapolation.
-        Arguments:
-        -----------
-
-            t : float or array-like
-        """
-
-        return self.evaluate(t)
-    #
-
-    def evaluate(self, t):
-        """
-        Evaluate the spline curve at values provided in t.
-        Values are clipped to parameter domain, as in constant
-        extrapolation.
-
-        Arguments:
-        --------------
-
-            t : float, array-like
-                The parameter values to be evaluated.
-        """
-        tt = np.clip(t, a_min=self.t0, a_max=self.t1)
-        return self.curve(tt)
-    #
-
-    def get_tangent(self, t, norm=True):
+    def get_tangent(self, t, normalized=True):
         """
         Get the tangent of the centerline at given parameter values. Values are
         clipped to parameter domain, as in constant extrapolation.
@@ -143,16 +112,22 @@ class Centerline:
             t : float, array-like
                 The parameter values to be evaluated.
 
-            norm : bool
+            normalized : bool
                 Default True. Whether to normalize or not the tangents.
         """
+
         tt = np.clip(t, a_min=self.t0, a_max=self.t1)
-        tgt = self.tangent(tt)
+        tg = np.array(self.tangent(tt))
 
-        if norm:
-            return (tgt.T * 1/np.linalg.norm(tgt, axis=1)).T
+        if normalized:
 
-        return tgt
+            if tg.shape == (3,):
+                tg /= np.linalg.norm(tg)
+
+            else:
+                tg = (tg.T * 1/np.linalg.norm(tg, axis=1)).T
+
+        return tg
     #
 
     def compute_samples(self, n_samples=None):
@@ -192,35 +167,108 @@ class Centerline:
         self.e3 = e3
     #
 
-    def set_parameters(self, **kwargs):
+    def compute_parallel_transport(self, mode='project', p=None):
         """
-        Set centerline parameters and attributes by kwargs.
+        This method allows the build of the adapted frame in several ways.
+
+        If mode == 'project':
+            - If a point is passed, the projection of the vector p-c(t0) onto the plane
+              normal to the tangent at t0 is used.
+            - If no point is passed, the center of masses of the centerline is used as p.
+        if mode == 'as_is':
+            - The argument p must be the vector to be parallely transported.
+
+        Arguments:
+        ------------
+
+            mode : Literal['project', 'as_is']
+                The chosen mode to use.
+
+            p : np.ndarray (3,)
+                The point/vector to use.
+
+        Returns:
+        -----------
+            ParallelTransport
         """
 
-        attribute_setter(self, **kwargs)
+        if mode == 'project':
 
-        if  'k' in kwargs or 'n_knots' in kwargs or 'coeffs' in kwargs:
-            if attribute_checker(self, ['k', 'n_knots', 'coeffs']):
-                self.build_splines()
-    #
+            if p is None:
+                c0 = self.center
 
-    def build_splines(self):
+            i2p = normalize(c0 - self.evaluate(self.t0))
+            t_0 = self.get_tangent(self.t0)
+            v0 = normalize(i2p - t_0.dot(i2p)*t_0)
 
-        if not attribute_checker(self, ['n_knots', 'coeffs'], extra_info="cant build splines."):
+        elif mode == 'as_is':
+            if p is None:
+                msg.error_message(f"Cannot build parallel transport with mode: {mode} and p: {p}")
+
+            else:
+                v0 = p
+        else:
+            msg.error_message(f"Wrong mode passed: mode = {mode}. Available options are {'project', 'as_is'}.")
             return False
 
-        knots = knots_list(self.t0, self.t1, self.n_knots)
+        v = ParallelTransport.compute_parallel_transport_on_centerline(cl=self, v0=v0)
+        return v
 
-        self.curve = BSpline(t=knots,
-                             c=self.coeffs,
-                             k=3)
 
-        self.tangent = self.curve.derivative()
+        #Reference frame
+        v1 = np.cross(t_0, self.e3)
+        v1 = normalize(v1)
+
+        v2 = np.cross(self.t_0, v1)
+        v2 = normalize(v2)
+
+        if v1.dot(cmp) < 0:
+            v1 *= -1
+            v2 *= -1
+
+        self.v1_0 = v1
+        self.v2_0 = v2
+    #
+
+    def compute_adapted_frame(self, mode, p):
+        """
+        Compute a parallel transported adapted frame. This frame {t, v1, v2} is
+        an estable alternative to Frenet frame and has multiple purposes. The
+        argument p can be used to provide a preferred direction for v1. In turn,
+        v2 is the cross product of t and v1 for orientation and orthonormality
+        reasons. This method uses compute_parallel_transport method, you may be
+        interested in checking documentation.
+
+        Arguments:
+        -----------
+
+            p : np.ndarray (3,)
+                A reference point used to define the initial v1.
+
+            mode : Literal['project', 'as_is']
+                The mode used to built the adapted frame. Check compute_parallel_transport.
+        """
+
+        self.v1 = self.compute_parallel_transport(mode=mode, p=p)
+        v2_0 = normalize(np.cross(self.get_tangent(self.t0), self.v1.v0))
+        self.v2 = self.compute_parallel_transport(mode='as_is', p=v2_0)
+        #
+    #
+
+    def build(self):
+        """
+        This method builds the splines and sets up other useful attributes.
+        """
+        if not attribute_checker(self, ['knots', 'coeffs'], extra_info="cant build splines."):
+            return False
+
+        super().build()
+        self.tangent = self._spline.derivative()
 
         #Update functions that depend on centerline.
         self.compute_samples()
-        self.build_parallel_transport()
         self.compute_local_ref()
+        self.compute_adapted_frame(mode='project', p=None)
     #
 
     def get_projection_parameter(self, p, method='scalar'):
@@ -307,7 +355,7 @@ class Centerline:
         Computes the point in the centerline closest to p.
 
 
-        Parameters
+        Arguments:
         ----------
         p : np.array
             Point from which to compute the distance.
@@ -343,4 +391,43 @@ class Centerline:
             return self.evaluate(t), d, t
 
         return self.evaluate(t)
+    #
+
+    def get_adapted_frame(self, t):
+        """
+        Get the adapted frame at a centerline point of parameter t
+
+        The apted frame is defined as:
+
+                    {t, v1, v2}
+
+        where v1 and v2 are the parallel transported vectors and t, the tangent.
+
+        Arguments:
+        ----------
+        t : float
+            The parameter value for evaluation
+
+        Returns:
+        ---------
+
+        t_  : np.ndarray
+            The tangent.
+
+        v1 : numpy.array
+            The v1 vector of the adapted frame.
+
+        v2 : numpy.array
+            The v2 vector of the adapted frame.
+
+        """
+
+        if not attribute_checker(self, ['tangent', 'v1', 'v2'], extra_info='Cant compute adapted frame: '):
+            return False
+
+        t_  = self.get_tangent(t)
+        v1 = self.v1(t)
+        v2 = self.v2(t)
+
+        return t_, v1, v2
     #
