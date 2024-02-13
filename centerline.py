@@ -655,3 +655,67 @@ class Centerline(Spline):
         k /= self.get_arc_length(t=b)
         return k
     #
+
+    @staticmethod
+    def from_points(points, knots, pt_mode=None, p=None, force_tangent=True, norm_param=True):
+        """
+        Function to build a Centerline object from a list of points. The amount
+        knots to perform the LSQ approximation must be provided. An optional
+        vector p can be passed to build the adapted frame.
+
+        Arguments:
+        ------------
+
+            points : np.ndarray (N, 3)
+                The 3D-point array to be approximated.
+
+            knots : int or array-like
+                The knot vector used to perform the LSQ spline approximation.
+                If an int is passed a uniform knot vector is build.
+
+            pt_mode : str
+                The mode option to build the adapted frame by parallel transport.
+                If p is not passed pt_mode must be 'project'. See compute_parallel_transport
+                method for extra documentation.
+
+            p : np.ndarray
+                The initial v1. If pt_mode == 'project' it is projected onto inlet plane.
+
+            force_tangent : bool
+                Whether to add extra weighting to the first and last points in
+                the lsq approximation.
+
+            norm_params : bool, opt
+                Default True. Whether to normalize the parameter domain interval to
+                [0, 1].
+
+        Returns:
+        ----------
+            cl : Centerline
+                The centerline object built from the points passed.
+        """
+
+        n_weighted=1
+        if force_tangent:
+            n_weighted=2
+
+        spl = lsq_spline_smoothing(points=points,
+                                   knots=knots,
+                                   norm_param=norm_param,
+                                   n_weighted_ini=n_weighted,
+                                   n_weighted_end=n_weighted,
+                                   weight_ratio=4)
+
+        cl = Centerline()
+        cl.set_parameters(
+            build   = True,
+            t0      = spl.t[0],
+            t1      = spl.t[-1],
+            k       = spl.k,
+            knots   = spl.t,
+            coeffs  = spl.c,
+            n_knots = len(spl.t) - 2*(spl.k+1), #We only account for internal knots This should be explained somewhere....
+            extra   = 'linear')
+
+        return cl
+        #
