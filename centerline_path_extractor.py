@@ -145,9 +145,10 @@ class CenterlinePathExtractor:
 
         self.mode             : str   = 'i2o' #TODO: Implement j2o (junction to outlets, hierarchical tree)
         self.adjacency_factor : float = 0.33
+        self.pass_pointid     : bool   = True
 
-        self.id_paths : list[list[int]]  = None
-        self.paths    : pv.PolyData      = None
+        self.id_paths : list[list[int]] = None
+        self.paths    : pv.MultiBlock   = None
     #
 
     def set_vascular_mesh(self, vm, check_radius=True):
@@ -429,43 +430,35 @@ class CenterlinePathExtractor:
             raw_paths.append(new_path)
 
         self.id_paths = self.compose_id_paths(raw_paths)
-        self.make_polydata_path()
+        self.make_paths_multiblock()
 
         msg.done_message("centerline paths")
 
         return
     #
 
-    def make_polydata_path(self):
+    def make_paths_multiblock(self):
         """
-        Build a pyvista(vtk) PolyData with the already computed id_path.
+        Build a pyvista(vtk) MultiBlock, by converting each id_path into a PolyData.
 
         Returns:
         ----------
-            self.path : pyvista.PolyData
-                The PolyData with the centerline path
+            self.path : pyvista.MultiBlock
+                The MutliBlock with the centerline paths
         """
 
-        if not attribute_checker(self, ['id_paths']):
+        if not attribute_checker(self, ['id_paths'], extra_info="Cant make polyldata path."):
             return
 
-        pids = np.concatenate(self.id_paths, dtype=int)
-        inv_pids = {}
-        for i, p in enumerate(pids):
-            if p not in inv_pids:
-                inv_pids[p] = i
-        points = self.centerline_domain[pids]
-
-        n=0
-        lines = []
-        for idp in self.id_paths:
-            lines += [[2, n+j, n+j+1] for j in range(len(idp)-1)]
-            n+=len(idp)
-        self.paths = pv.PolyData(points, lines=lines).clean()
-
+        self.paths = pv.MultiBlock()
         for i, idp in enumerate(self.id_paths):
-            self.paths[f'B{i}'] = np.zeros((self.paths.n_points,))
-            self.paths[f'B{i}'][[inv_pids[k] for k in idp]] = 1
+            pdt = pv.PolyData()
+            pdt.points = self.centerline_domain[idp]
+            pdt.lines  = [[2, j, j+1] for j in range(len(idp)-1)]
+            if self.pass_pointid:
+                pdt['cl_domain_id'] = np.array(idp, dtype=int)
+            self.paths.append(pdt, name=f"Branch_{i}")
+        #
     #
 
     def _heuristic(self, n):
