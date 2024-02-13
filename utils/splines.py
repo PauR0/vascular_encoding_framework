@@ -1,11 +1,170 @@
 
 import numpy as np
 
-from scipy.interpolate import (splrep, splev)
+from scipy.interpolate import splrep, splev, BSpline, make_lsq_spline
+
+from utils._code import attribute_checker, attribute_setter
 
 
+class Spline:
+
+    def __init__(self) -> None:
+
+        #Extrema of the parameter domain.
+        self.t0 : float = 0
+        self.t1 : float = 1
+
+        #Spline params
+        self.k       : int        = 3    #Defaulting to cubic splines.
+        self.knots   : np.ndarray = None
+        self.coeffs  : np.ndarray = None #Shape (3, n_knots+k+1)
+        self.n_knots : int        = None
+        self.extra   : str        = 'linear' #{'linear', 'constant'}
+
+        self._spline : BSpline
+    #
+
+    def __call__(self, t):
+        """
+        Evaluate the spline at given parameter values. Values are clipped
+        to parameter domain, as in constant extrapolation.
+        Arguments:
+        -----------
+
+            t : float or array-like
+        """
+
+        return self.evaluate(t)
+    #
+
+    def set_parameters(self, build=False, **kwargs):
+        """
+        Set parameters and attributes by kwargs.
+
+        Arguments:
+        -------------
+
+            build : bool, opt
+                Default False. If run build setting the params.
+        """
+
+        attribute_setter(self, **kwargs)
+
+        if build:
+            self.build()
+    #
+
+    def evaluate(self, t):
+        """
+        Evaluate the spline at values provided in t. Values are clipped to
+        parameter domain, as in constant extrapolation.
+
+        Arguments:
+        --------------
+
+            t : float, array-like
+                The parameter values to be evaluated.
+
+        Returns:
+        ---------
+            p : float or np.ndarray
+                The evaluation of t. If coeffs are N-dimensional, the output so will.
+        """
+
+        if not attribute_checker(self, ['_spline'], extra_info="can't evaluate spline, it has not been built..."):
+            return False
 
 
+        if self.extra == 'constant':
+            tt = np.clip(t, a_min=self.t0, a_max=self.t1)
+            p  = np.array(self._spline(tt))
+
+        elif self.extra == 'linear':
+            #Sorry for the lambda mess...
+            lower_extr = lambda x: self._spline(self.t0) - self._spline.derivative(self.t0) * x
+            upper_extr = lambda x: self._spline(self.t1) + self._spline.derivative(self.t1) * (x-self.t1)
+            middl_intr = lambda x: self._spline(x)
+            if self.coeffs.ndim > 1:
+                lower_extr = lambda x: (self._spline(self.t0).reshape(3,1) - self._spline.derivative(self.t0).reshape(3,1) * x).T
+                upper_extr = lambda x: (self._spline(self.t1).reshape(3,1) + self._spline.derivative(self.t1).reshape(3,1) * (x-1)).T
+                middl_intr = lambda x: self._spline(x).reshape(-1, 3)
+
+
+            if isinstance(t, (float, int)):
+                if t < self.t0:
+                    p = lower_extr(t)
+                elif t > self.t1:
+                    p = upper_extr(t)
+                else:
+                    p = middl_intr(t)
+                p.reshape(3,)
+
+            elif isinstance(t, (np.ndarray, list)):
+                p = np.empty((len(t), 3))
+
+                low_ids = t < self.t0
+                upp_ids = t > self.t1
+                mid_ids = np.logical_not(low_ids | upp_ids)
+
+                if low_ids.any():
+                    p[low_ids] = lower_extr(t[low_ids])
+
+                if mid_ids.any():
+                    p[mid_ids] = middl_intr(t[mid_ids])
+
+                if upp_ids.any():
+                    p[upp_ids] = upper_extr(t[upp_ids])
+
+        if p.shape[0] == 1:
+            return p.ravel()
+
+        return p
+    #
+
+    def build(self):
+
+        if not attribute_checker(self, ['k', 'n_knots', 'coeffs'], extra_info="cant build splines."):
+            return False
+
+        if self.knots is None:
+            self.knots = knots_list(self.t0, self.t1, self.n_knots, mode='complete')
+
+        self._spline = BSpline(t=self.knots,
+                               c=self.coeffs,
+                               k=self.k)
+    #
+
+    def get_knot_segments(self, a, b):
+        """
+        Given the interval [a, b], this function returns a partition
+        P = {p_i}_i=0^N where p_0 = a, p_N = b and p_i = t_i for 0<i<N,
+        where t_i are knots of the centerline splines.
+
+        Parameters:
+        -----------
+            a : float
+                inferior limit
+
+            b : float
+                superior limit
+
+        Returns:
+        ---------
+            segments : np.ndarray
+                The partition of the interval with a and b as inferior and superior limits.
+        """
+        #Extract the knots
+        t = self._spline.get_knots()
+
+        #Compute the polynomial segments
+        min_id = np.argmax(t > a)
+        max_id = np.argmax(t > b)
+        if max_id == 0: max_id = -1
+
+        segments = np.concatenate(([a], t[min_id:max_id], [b]))
+
+        return segments
+    #
 
 def knots_list(s0, s1, n, mode='complete', ext=None, k=3):
     """ Generates a B-Spline uniform list of knots
