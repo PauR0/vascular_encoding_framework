@@ -9,23 +9,25 @@ from scipy.optimize import minimize, minimize_scalar
 
 from utils._code import attribute_setter, attribute_checker
 from utils.spatial import normalize, compute_ref_from_points
-from utils.splines import knots_list
+from utils.splines import Spline, lsq_spline_smoothing
 
-class ParallelTransport:
+
+class ParallelTransport(Spline):
 
     def __init__(self) -> None:
 
-        self.curve = None
+        super().__init__()
 
-        #Initial adapted frame
-        self.t0   : np.array = np.zeros(3)
-        self.v10  : np.array = np.zeros(3)
-        self.v2_0 : np.array = np.zeros(3)
-        self.splines_v1 : list[BSpline] = None
+        #The initial vector to be transported.
+        self.v0 : np.ndarray = None
 
-    def compute_parallel_transport(self):
+    @staticmethod
+    def compute_parallel_transport_on_centerline(cl, v0):
+
         """
-        This function build the spline of the parallel transport of v1.
+        This function build the parallel transport of a given vector v0 along a
+        centerline object. The parallel transported vector is interpolated
+        using the parameters of the centerline.
 
         It is build according to the algorithm from:
             https://legacy.cs.indiana.edu/ftp/techreports/TR425.pdf
@@ -33,31 +35,39 @@ class ParallelTransport:
         Briefly described, given a initial vector, orthogonal to the tangent of a curve.
         A parallel transport of given vector can be obtained by applying the rotation
         required by the curvature to remain normal.
+
+        Arguments:
+        -----------
+
+            cl : Centerline,
+                The input centerline along which the parallel transport will be computed.
+
+            v0 : np.ndarray (3,)
+                The initial vector to be transported.
+
         """
 
+        #Build the Parallel and inherit spline curve parameters.
+        pt = ParallelTransport()
+        pt.set_parameters(v0=v0, t0=cl.t0, t1=cl.t1, k=cl.k, knots=cl.knots, n_knots=cl.n_knots)
+        param_samples = np.linspace(pt.t0, pt.t1, num=cl.n_samples)
 
-        knots = knots_list(0, 1, self.n_knots, mode='simple')
-
-
-        if not self.t_0.any():
-            self.compute_initial_adapted_frame()
-
-        heights = np.linspace(0, 1, num=self.n_samples_centerline)
-        V1 = []
-        v1 = self.v1_0
-        t = self.t_0
-        for h in heights:
-            t_next = self.get_tangent(h)
-            tdottn = np.clip(t.dot(t_next),-1.0,1.0)
-            rot_vec = normalize(np.cross(t, t_next)) *  np.arccos( tdottn )
+        tg = cl.get_tangent(cl.t0)
+        V = []
+        for t in param_samples:
+            tg_next = cl.get_tangent(t)
+            tdottn = np.clip(tg.dot(tg_next), -1.0, 1.0)
+            rot_vec = normalize(np.cross(tg, tg_next)) *  np.arccos(tdottn)
             R = Rotation.from_rotvec(rot_vec)
-            v1 = R.apply(v1)
-            V1.append(v1)
-            t = t_next
+            v0 = R.apply(v0)
+            V.append(v0)
+            tg = tg_next
 
-        V1 = np.array(V1)
-        self.splines_v1 = [LSQUnivariateSpline(x = heights, y = V1[:,i], t = knots, k = 3, bbox=[0,1]) for i in range(3)]
+        #Build
+        V = np.array(V)
+        pt.set_parameters(_spline = make_lsq_spline(x=param_samples, y=V, t=pt.knots, k=pt.k))
 
+        return pt
 
 class Centerline:
     """
