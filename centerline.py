@@ -431,3 +431,67 @@ class Centerline(Spline):
 
         return t_, v1, v2
     #
+
+    def get_frenet_normal(self, t):
+        """
+        Get the normal vector of the frenet frame at centerline point of parameter t.
+
+        Returns n_ computed as:
+
+                n_ = b_ x t_
+
+        where b and t_ are the binormal and tangent respectively and x is the
+        cross product.
+
+
+        Arguments:
+        ----------
+
+            t : float
+                The parameter where normal is to be computed.
+
+        Returns:
+        --------
+            n_ : numpy.array
+                The normal of the centerline curve.
+
+        """
+
+        b = self.get_frenet_binormal(t)
+        t = self.get_tangent(t)
+
+        return np.cross(b,t)
+    #
+
+    def get_frenet_binormal(self, t):
+        """
+        Get the binormal vector of the frenet frame at centerline point
+
+        Returns b computed as:
+
+                    b_ =  C' x C'' /|| C' x C''||,
+
+        where C is the parametrization of the centerline curve and x the
+        cross product.
+
+
+        Arguments:
+        ----------
+
+            height : float
+                The parameter where binormal is to be computed.
+
+        Returns:
+        --------
+
+            b : numpy.array
+                The binormal of the centerline
+
+        """
+
+        cp = self.get_tangent(t, normalized=False)
+        cpp = self.tangent(t, nu=1)
+        b = np.cross(cp,cpp)
+
+        return normalize(b)
+    #
