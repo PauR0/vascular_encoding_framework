@@ -145,6 +145,21 @@ def lsq_spline_smoothing(points,
     return spl
 #
 
+def compute_n_weights(n, n_weighted_ini=1, n_weighted_end=1, weight_ratio=None, normalized=True):
+    """
+    Compute weights for univariate splines. Extra weighting can be assigned to
+    initial and ending points to improve normals at the extrema.
+    """
+    if weight_ratio is None:
+        weight_ratio = 2
+
+    w = np.ones((n,))
+    w[:n_weighted_ini]  = weight_ratio
+    w[-n_weighted_end:] = weight_ratio
+    if normalized:
+        w /= np.linalg.norm(w)
+
+    return w
 #
 
 def fix_discontinuity(polar_points, n_first = 10, n_last  = 10, degree = 3, logger=None):
