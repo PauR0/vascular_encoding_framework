@@ -70,47 +70,81 @@ def knots_list(s0, s1, n, mode='complete', ext=None, k=3):
     return l
 #
 
-def spline_smoothing(points,
-        param_values=None,
-        n_knots=16,
-        n_fixed_first=1,
-        n_fixed_last=1,
-        fixed_weight=None):
-    """ Smoothing of a list of d-dimensional points
+def lsq_spline_smoothing(points,
+                         knots,
+                         k=3,
+                         param_values=None,
+                         norm_param=False,
+                         n_weighted_ini=1,
+                         n_weighted_end=1,
+                         weight_ratio=1.0):
+    """
+    Compute the smoothing spline of a list of d-dimensional points.
 
-    points must be a numpy array of dimension  Nxd for
-    a list of N d-dimensional points
+    Points must be a numpy array of dimension Nxd for a list of N
+    d-dimensional points.
 
-    TODO: document parameters in spline_smoothing
+    Arguments:
+    -----------
+
+        points : np.ndarray (N, d)
+            The array of points.
+
+        knots : int or array-like
+            The knots where the lsq will be performed.
+
+        k : int, opt
+            Default is 3. The spline polynomial degree.
+
+        param_values : array-like (N,), opt
+            The parameter values for each point. Must be a increasing sequence.
+            If not passed it is computed as the normalized distance traveled.
+
+        norm_param : bool, opt
+            Whether to normalize the domain to interval [0, 1].
+
+        n_weighted_ini : int opt,
+            Default 1. The amount of points weighted at the begining of the list.
+            Useful to "force" the normal at the begining.
+
+        n_weighted_end  : int opt,
+            Default 1. The amount of points weighted at the end of the list.
+            Useful to "force" the normal at the begining.
+
+        weight_ratio : float, opt.
+            Default 1.0. The ratio of rate of weights for weighted points.
+
+    Returns:
+    ----------
+        spl : BSpline
+            The approximating spline object of scipy.interpolate.
     """
 
-    if len(points.shape) == 1:
-        points_data = np.array([points]).T
-    else:
-        points_data = points
-
-    N = points_data.shape[0]
+    N = points.shape[0]
 
     if param_values is None:
-        param_values = [0]
-        for i in range(1,N):
-            dist_recorrida = np.linalg.norm( points_data[i] - points_data[i-1] )
-            param_values.append(param_values[-1]+dist_recorrida)
+        param_values = [0.0]
+        for i in range(1, N):
+            d = np.linalg.norm(points[i] - points[i-1])
+            param_values.append(param_values[-1]+d)
+    param_values = np.array(param_values)
 
+    if norm_param:
+        param_values /= param_values[-1]
 
-    #Computing knots
-    knots = knots_list(param_values[0], param_values[-1], n_knots,mode='simple')
+    if isinstance(knots, int):
+        #Computing knots
+        knots = knots_list(param_values[0], param_values[-1], knots, mode='complete')
 
     #Computing weights taking into account fixed nodes
-    w = compute_n_weights(n=N, n_fixed_ini=n_fixed_first, n_fixed_end=n_fixed_last, fixed_weight=fixed_weight)
+    w = compute_n_weights(n=N, n_weighted_ini=n_weighted_ini, n_weighted_end=n_weighted_end, weight_ratio=weight_ratio)
 
-    Lcoefficients = []
+    #Compute spline
+    spl = make_lsq_spline(x=param_values, y=points, t=knots, k=k, w=w)
 
-    for pts in points_data.T:
-        _,c,_ = splrep(param_values, pts, k=3, w=w, task=-1, t=knots)
-        Lcoefficients.append(c)
+    return spl
+#
 
-    return Lcoefficients
 #
 
 def fix_discontinuity(polar_points, n_first = 10, n_last  = 10, degree = 3, logger=None):
