@@ -213,21 +213,6 @@ class Centerline(Spline):
 
         v = ParallelTransport.compute_parallel_transport_on_centerline(cl=self, v0=v0)
         return v
-
-
-        #Reference frame
-        v1 = np.cross(t_0, self.e3)
-        v1 = normalize(v1)
-
-        v2 = np.cross(self.t_0, v1)
-        v2 = normalize(v2)
-
-        if v1.dot(cmp) < 0:
-            v1 *= -1
-            v2 *= -1
-
-        self.v1_0 = v1
-        self.v2_0 = v2
     #
 
     def compute_adapted_frame(self, mode, p):
