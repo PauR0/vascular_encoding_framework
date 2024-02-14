@@ -10,7 +10,7 @@ from scipy.integrate import quad
 from scipy.misc import derivative
 
 import messages as msg
-from utils._code import attribute_setter, attribute_checker
+from utils._code import Tree, Node, attribute_checker
 from utils.spatial import normalize, compute_ref_from_points
 from utils.splines import Spline, lsq_spline_smoothing
 
@@ -717,3 +717,109 @@ class Centerline(Spline):
 
         return cl
         #
+#
+
+
+class CenterlineBranch(Centerline, Node):
+    """
+    Class to extend Centerline to work as a node of and abstract tree structure.
+    """
+
+    def __init__(self, parent=None, joint_t=None) -> None:
+
+        Centerline.__init__(self=self)
+        Node.__init__(self=self)
+
+        self.parent = None
+        if parent is not None:
+            self.parent = parent
+
+        self.joint_t = None
+        if joint_t is not None:
+            self.joint_t = joint_t
+
+        self.children : set = set()
+    #
+
+    def add_child(self, c):
+        """
+        Add a child to this branch.
+        """
+        self.children.add(c)
+    #
+
+    def remove_child(self, c):
+        """
+        Remove child. If does not exists, nothing happens.
+        """
+        self.children.discard(c)
+    #
+#
+
+
+class CenterlineTree(Tree):
+    """
+    Class for the centerline of branched vascular geometries.
+    """
+
+    #No constructor is needed, the super() will be executed.
+
+    def __setitem__(self, __key, clb: CenterlineBranch) -> None:
+
+        #Checking it has joint attributes. Since None are admited, attribute_checker is not well suited now.
+        if not hasattr(clb, 'joint_t'):
+            msg.error_message(f"Aborted insertion of branch with id: {__key}. It has no joint_t attribute.")
+            return
+
+        super().__setitem__(__key, clb)
+    #
+
+    def get_branch_membership(self, p, n=None, thrs=30):
+        """
+        Given a point in space (with optional normal n) this method computes
+        the branch it belongs. If no normal is None, the branch is decided
+        based on the distance to a rough approximation on the point projection.
+        If n is provided, let q the projection of p onto the nearest centerline
+        branch, if the angles between vectors q2p and n are greater than thrs,
+        the next nearest branch will be tested. If non satisfy the criteria, a
+        warnin message will be outputed and the point will be assigned to the
+        nearest branch.
+
+        Warning: normal is expected to be used as the surface normal of a point.
+        However, normales are sensible to high frequency noise in the mesh, try
+        smoothing it before branching splitting.
+
+        Arguments:
+        -------------
+
+            p : np.ndarray
+                The point in space
+
+            n : np.ndarray, opt
+                Default is None. The normal of the points. Specially useful to preserve
+                topology
+
+            thrs : float, opt
+                Default is 30. The maximum angle allowed between q2p and n.
+
+        Returns:
+        ---------
+            bid : any
+                The branch id.
+
+        """
+
+        branch_ids = self.get_branch_ids()
+    #
+
+    def get_projection_parameter(self, p, method='scalar'):
+        """
+        Get the projection onto the centerline tree by normal - distance.
+        """
+        pass
+    #
+
+    def get_projection_point(self, p, method='scalar', full_output=False)
+        pass
+    #
+#
