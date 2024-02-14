@@ -335,7 +335,7 @@ class Centerline(Spline):
         return x, d
     #
 
-    def get_centerline_closest_point(self, p, method='scalar', opt_ret=False):
+    def get_projection_point(self, p, method='scalar', full_output=False):
         """
         Computes the point in the centerline closest to p.
 
@@ -356,7 +356,7 @@ class Centerline(Spline):
             sampled centerline point.
             In all cases, constrained minimization is used to force the
             value of the parameter to be in [0,1]. The default is 'scalar'.
-        opt_ret : bool
+        full_output : bool
             Whether to return the distance and the value of the parameter
             or not. Default is False.
 
@@ -364,15 +364,15 @@ class Centerline(Spline):
         -------
         p : np.array
             The closest point to p in the centerline.
-        d : float, optional
-            The distance from p to the closest point in the centerline.
         t : float, optional
             The value of the parameter.
+        d : float, optional
+            The distance from p to the closest point in the centerline.
 
         """
         t, d = self.get_projection_parameter(p,method=method)
 
-        if opt_ret:
+        if full_output:
             return self.evaluate(t), d, t
 
         return self.evaluate(t)
