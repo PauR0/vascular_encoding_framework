@@ -503,7 +503,7 @@ class Centerline(Spline):
         return velocity
     #
 
-    def get_arc_length(self, b=1, a=0):
+    def get_arc_length(self, b=None, a=None):
         """
         Compute the arclength of the centerline, with the formula:
 
@@ -517,15 +517,20 @@ class Centerline(Spline):
         -----------
 
             b : float
-                Default 1. The upper parameter to compute length
+                Default t1. The upper parameter to compute length
             a : float
-                Default 0. The lower parameter to compute length
+                Default t0. The lower parameter to compute length
 
         Returns:
         --------
         l : float
             centerline arc length
         """
+
+        if a is None:
+            a = self.t0
+        if b is None:
+            b = self.t1
 
         segments = self.get_knot_segments(a=a, b=b)
 
@@ -592,7 +597,7 @@ class Centerline(Spline):
         return t
     #
 
-    def get_mean_curvature(self, a=0, b=1):
+    def get_mean_curvature(self, a=None, b=None):
         """
         Get the mean curavture of the centerline in the segment
         defined from a to b. The mean curvature is computed as the
@@ -609,9 +614,9 @@ class Centerline(Spline):
         Arguments:
         ----------
         a : float
-            Default 0. The lower bound of the interval.
+            Default t0. The lower bound of the interval.
             Must be greater than or equal to 0 and lower than b.
-        b : Default 1. The upper bound of the interval.
+        b : Default t1. The upper bound of the interval.
             Must be lower than or equal to 1 and greater than a.
 
         Returns:
@@ -620,6 +625,11 @@ class Centerline(Spline):
             The mean curvature estimated.
 
         """
+
+        if a is None:
+            a=self.t0
+        if b is None:
+            b=self.t1
 
         if a < 0:
             raise ValueError(f'Value of a {a} is lower than 0')
@@ -637,7 +647,7 @@ class Centerline(Spline):
         for i in range(len(segments)-1):
             k += quad(self.get_curvature, segments[i], segments[i+1])[0]
 
-        k /= self.get_arc_length(t=b)
+        k /= self.get_arc_length(b=b, a=a)
         return k
     #
 
