@@ -39,7 +39,7 @@ class VascularMesh(pv.PolyData):
         self.e3 : np.ndarray     = None
 
         super().__init__(p)
-        if p is not None:
+        if isinstance(p, pv.PolyData):
             self.triangulate()
             self.compute_kdt()
             self.compute_local_ref()
