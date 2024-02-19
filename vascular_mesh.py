@@ -196,17 +196,19 @@ class VascularMesh(pv.PolyData):
         return self.closed
     #
 
-    def compute_boundaries(self, interactive=False):
+    def compute_boundaries(self, hierarchy=None):
         """
-        Method to build the boundaries dictionary based on the boundary edges
-        on the mesh attribute.
+        Method to build the boundary tree based on the boundary edges
+        on the mesh attribute. Attribute can be set through a hierarchy dict,
+        however, if none is passed this method leaves the hierarcy undefined.
+
+        TODO: Allow inputing the branch hierarchy.
 
         Arguments:
         ------------
 
-            interactive : bool, opt
-                Default False. TODO: Make the user able to provide an id for
-                each boundary.
+            hierarchy : dict, opt
+                Default None. TODO: Implement.
 
         """
 
