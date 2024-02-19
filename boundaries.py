@@ -5,10 +5,10 @@ from scipy.interpolate import BSpline
 
 from utils.spatial import planar_coordinates, cart_to_polar, normalize
 from utils.splines import knots_list, compute_rho_spline
-from utils._code   import attribute_setter, attribute_checker
+from utils._code   import Tree, Node, attribute_setter, attribute_checker
 
 
-class Boundary:
+class Boundary(Node):
 
     """
     Class to represent the open boundaries of a vascular mesh.
@@ -313,3 +313,35 @@ class Boundary:
         return b
     #
 #
+
+class Boundaries(Tree):
+    """
+    A class containing the boundaries inheriting structure from python's
+    dictionary.
+    """
+
+    #No init required since parent init suffice.
+
+    def save(self, filename):
+        pass
+    #
+
+    @staticmethod
+    def read(filename):
+        pass
+    #
+
+    def translate(self):
+        #TODO
+        pass
+    #
+
+    def rotate(self):
+        #TODO
+        pass
+    #
+
+    def scale(self):
+        #TODO
+        pass
+    #

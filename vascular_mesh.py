@@ -6,61 +6,11 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from boundaries import Boundary
+from boundaries import Boundaries, Boundary
 import messages as msg
 from utils.geometry import triangulate_cross_section
 from utils.spatial  import compute_ref_from_points, normalize
 from utils._code    import attribute_setter
-
-
-class Boundaries(dict):
-    """
-    A class containing the boundaries inheriting structure from python's
-    dictionary.
-    """
-
-    #No init required since parent init suffice.
-
-    def __setitem__(self, __key, __value):
-        if __key in self:
-            msg.warning_message(f"id {__key} already exists, overwritting boundary. To update a boundary, use update method.")
-
-        if __value.id is None:
-            __value.id = __key
-        elif __value.id != __key:
-            msg.warning_message(f"id {__key} in Boundaries dict is different from the id in the Boundary object ")
-
-        return super().__setitem__(__key, __value)
-    #
-
-    def get_ids(self):
-        return list(super().keys())
-    #
-
-    def save(self, filename):
-        pass
-    #
-
-    @staticmethod
-    def read(filename):
-        pass
-    #
-
-    def translate(self):
-        #TODO
-        pass
-    #
-
-    def rotate(self):
-        #TODO
-        pass
-    #
-
-    def scale(self):
-        #TODO
-        pass
-    #
-
 
 class VascularMesh(pv.PolyData):
 
