@@ -69,7 +69,7 @@ class Tree(dict):
             msg.error_message(f"Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree.")
             return
 
-        self[__key] = nd
+        super().__setitem__(__key, nd)
 
         if nd.parent is None:
             self.roots.add(__key)
