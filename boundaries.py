@@ -14,10 +14,12 @@ class Boundary(Node):
     Class to represent the open boundaries of a vascular mesh.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, nd=None) -> None:
 
-        #Metadata
-        self.id : str = None
+        #Added Node parent.
+        super().__init__(nd=None)
+        if nd is not None:
+            self.set_data(**nd.__dict__)
 
         #Local reference frame
         self.center : np.ndarray = None # Shape = (3,)
@@ -117,8 +119,7 @@ class Boundary(Node):
 
         """
 
-
-        attribute_setter(self, **kwargs)
+        super().set_data(**kwargs)
 
         if "points" in kwargs and update:
             self.from_3D_to_polar()

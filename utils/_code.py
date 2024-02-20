@@ -9,13 +9,29 @@ class Node:
     Abstract class for tree node.
     """
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, nd=None) -> None:
 
-        self.parent = None
-        if parent is not None:
-            self.parent = parent
-
+        self.id             = None
+        self.parent         = None
         self.children : set = set()
+
+        if nd is not None:
+            self.set_data(id       = nd.id,
+                          parent   = nd.parent,
+                          children = nd.children)
+    #
+
+    def set_data(self, **kwargs):
+        """
+        Method to set attributes by means of kwargs.
+        E.g.
+            a = Node()
+            a.set_data(center=np.zeros((3,)))
+
+        """
+
+
+        attribute_setter(self, **kwargs)
     #
 
     def add_child(self, c):
