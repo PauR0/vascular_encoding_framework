@@ -21,6 +21,10 @@ class Node:
                           children = nd.children)
     #
 
+    def __str__(self):
+        return "\n".join([f"{k}".ljust(10, '.')+f": {v}" for k, v in self.__dict__.items()])
+    #
+
     def set_data(self, **kwargs):
         """
         Method to set attributes by means of kwargs.
