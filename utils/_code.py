@@ -281,14 +281,17 @@ def attribute_checker(obj, atts, extra_info='', opts=None):
         False otherwise.
     """
 
-    check = lambda at: getattr(obj, at) is None
-    if opts is not None:
-        check = lambda at: getattr(obj, at) not in opts
+    if opts is None:
+        for att in atts:
+            if getattr(obj, att) is None:
+                msg.error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}....")
+                return False
 
-    for att in atts:
-        if check(att):
-            msg.error_message(info=f"{extra_info}. Attribute {att} is None....")
-            return False
+    else:
+        for att, opt in zip(atts, opts):
+            if getattr(obj, att) not in opt:
+                msg.error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}, and it must be in {opt}....")
+                return False
 
     return True
 #
