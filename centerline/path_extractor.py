@@ -144,9 +144,11 @@ class CenterlinePathExtractor:
         self.inverse_radius     : np.ndarray   = None
         self.boundaries         : Boundaries   = None
 
-        self.mode             : str   = 'i2o' #TODO: Implement j2o (junction to outlets, hierarchical tree)
+
+        self.mode             : str   = 'j2o'
+        self.reverse          : bool  = False
         self.adjacency_factor : float = 0.33
-        self.pass_pointid     : bool   = True
+        self.pass_pointid     : bool  = True
 
         self.id_paths : list[list[int]] = None
         self.paths    : pv.MultiBlock   = None
@@ -410,57 +412,37 @@ class CenterlinePathExtractor:
         self.compute_kdt()
     #
 
-    def compose_id_paths(self, raw_paths):
+    def _compose_id_paths(self):
         """
-        Compose the path attribute according to the policy established in the
+        Arrange the id_path attribute according to the policy established in the
         mode attribute.
-
-        Arguments:
-        ----------
-
-            raw_paths : list[[ids]]
-                The raw paths extracted using the A* algorithm.
-
-        Returns:
-        --------
-
-            paths : list[[ids]]
-                The list of paths meeting the mode criteria.
         """
 
-        if not attribute_checker(self, ['mode'], extra_info="wrong mode chosen to extract centerline paths...", opts=['i2o', 'o2i', 'j2o', 'o2j']):
+        if not attribute_checker(self, ['mode'], extra_info="wrong mode chosen to extract centerline paths...", opts=[['i2o', 'j2o']]):
             return False
 
-        paths = []
+        def arrange_path(bid):
 
-        if self.mode in ['i2o', 'o2i']:
-            for i, path in enumerate(raw_paths):
-                if i == 0 and self.inlet not in path:
-                    msg.error_message("Can't find inlet in the first path provided...")
-                    return False
+            if self.boundaries[bid].parent is not None:
 
-                if i == 0:
-                    paths.append(path)
+                pid = self.boundaries[bid].parent
+                joint = self.boundaries[bid].id_path[0] #Junction id in cl_domain
+                if joint not in self.boundaries[pid].id_path:
+                    msg.error_message(f"At node {bid} cant find joint id in parent's path (parent id {pid}). Something has crashed during path extraction...")
+                    return
+                jid = self.boundaries[pid].id_path.index(joint)
 
-                else:
-                    j, joint = 0, path[0] #id of the path, and id of the joint.
-                    while joint not in paths[j] and j < len(paths)-1:
-                        j += 1
-                    if joint not in paths[j]:
-                        msg.error_message(f"Unable to find the joint for the branch at outlet {path[0]}")
-                        paths.append(path)
-                    else:
-                        jid = paths[j].index(joint)
-                        paths.append(paths[j][:jid] + path)
+                if self.mode == 'i2o':
+                        self.boundaries[bid].id_path = self.boundaries[pid].id_path[:jid] + self.boundaries[bid].id_path
+                if self.reverse:
+                    self.boundaries[bid].id_path.reverse()
 
-            if self.mode == 'o2i':
-                for p in paths: p.reverse()
+            for cid in self.boundaries[bid].children:
+                arrange_path(cid)
 
-            return paths
-
-        if self.mode in ['j2o', 'o2j']:
-            msg.error_message("Not implemented yet....") #TODO: Implement! (requires hierarchy)
-            return None
+        for rid in self.boundaries.roots:
+            arrange_path(rid)
+            self.boundaries[rid].id_path = None
     #
 
     def compute_paths(self):
@@ -473,18 +455,26 @@ class CenterlinePathExtractor:
         """
 
         msg.computing_message("centerline paths")
-        raw_paths = []
-        end_points = [self.inlet]
-        for out in self.outlets:
-            new_path = minimum_cost_path(heuristic = self._heuristic,
-                                         cost      = self._cost,
-                                         adjacency = self._adjacency,
-                                         initial=out,
-                                         ends=end_points)
-            end_points += new_path
-            raw_paths.append(new_path)
 
-        self.id_paths = self.compose_id_paths(raw_paths)
+        def path_to_parent(bid):
+
+            if self.boundaries[bid].parent is None:
+                self.boundaries[bid].set_data(id_path=[self.boundaries[bid].cl_domain_id])
+            else:
+                pid = self.boundaries[bid].parent
+                parent_path = self.boundaries[pid].id_path
+                self.boundaries[bid].set_data(id_path=minimum_cost_path(heuristic = self._heuristic,
+                                                                        cost      = self._cost,
+                                                                        adjacency = self._adjacency,
+                                                                        initial=self.boundaries[bid].cl_domain_id,
+                                                                        ends=parent_path))
+            for cid in self.boundaries[bid].children:
+                path_to_parent(cid)
+
+        for rid in self.boundaries.roots:
+            path_to_parent(rid)
+
+        self._compose_id_paths()
         self.make_paths_multiblock()
 
         msg.done_message("centerline paths")
@@ -494,26 +484,29 @@ class CenterlinePathExtractor:
 
     def make_paths_multiblock(self):
         """
-        Build a pyvista(vtk) MultiBlock, by converting each id_path into a PolyData.
+        Build a pyvista(vtk) MultiBlock, by converting the id_paths into a PolyData.
 
         Returns:
         ----------
-            self.path : pyvista.MultiBlock
+            self.paths : pyvista.MultiBlock
                 The MutliBlock with the centerline paths
         """
 
-        if not attribute_checker(self, ['id_paths'], extra_info="Cant make polyldata path."):
-            return
-
         self.paths = pv.MultiBlock()
-        for i, idp in enumerate(self.id_paths):
-            pdt = pv.PolyData()
-            pdt.points = self.centerline_domain[idp]
-            pdt.lines  = [[2, j, j+1] for j in range(len(idp)-1)]
-            if self.pass_pointid:
-                pdt['cl_domain_id'] = np.array(idp, dtype=int)
-            self.paths.append(pdt, name=f"Branch_{i}")
-        #
+
+        def make_polydata_path(bid):
+            if self.boundaries[bid].id_path is not None:
+                pdt = pv.PolyData()
+                pdt.points = self.centerline_domain[self.boundaries[bid].id_path]
+                pdt.lines  = np.array([[2, j, j+1] for j in range(len(self.boundaries[bid].id_path)-1)], dtype=int)
+                pdt['cl_domain_id'] = np.array(self.boundaries[bid].id_path, dtype=int)
+                pdt.field_data['parent'] = [self.boundaries[bid].parent]
+                self.paths.append(pdt, name=f"branch_{bid}")
+            for cid in self.boundaries[bid].children:
+                make_polydata_path(bid=cid)
+
+        for rid in self.boundaries.roots:
+            make_polydata_path(rid)
     #
 
     def _heuristic(self, n):
