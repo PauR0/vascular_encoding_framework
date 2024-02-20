@@ -33,6 +33,11 @@ def split_and_pad(input_string, max_length=LENGTH, pad_direction='right', pad_sy
 def get_message_maker(main_message, pad_direction='right'):
 
     def message_maker(info='', prnt=True):
+        if pad_direction is None:
+            strout = f"{main_message} {info}"
+            if prnt:
+                print(strout)
+            return strout
         if pad_direction == 'right':
             message = f"{main_message} {info}"
         else:
