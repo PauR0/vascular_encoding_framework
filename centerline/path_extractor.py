@@ -7,8 +7,10 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from vascular_mesh import VascularMesh
+from boundaries import Boundaries
 import messages as msg
 from utils._code import attribute_checker
+
 
 def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
     """
@@ -140,8 +142,7 @@ class CenterlinePathExtractor:
         self.domain_kdt         : KDTree       = None
         self.radius             : np.ndarray   = None
         self.inverse_radius     : np.ndarray   = None
-        self.inlet              : list         = None
-        self.outlets            : list         = None
+        self.boundaries         : Boundaries   = None
 
         self.mode             : str   = 'i2o' #TODO: Implement j2o (junction to outlets, hierarchical tree)
         self.adjacency_factor : float = 0.33
@@ -151,7 +152,7 @@ class CenterlinePathExtractor:
         self.paths    : pv.MultiBlock   = None
     #
 
-    def set_vascular_mesh(self, vm, check_radius=True):
+    def set_vascular_mesh(self, vm, check_radius=True, update_boundaries=True):
         """
         Set the vascular domain. If check_radius is True, self.centerline_domain
         is not None, and self.radius is None, then self.radius is computed.
@@ -162,13 +163,20 @@ class CenterlinePathExtractor:
             vm : VascularMesh
                 The input vascular mesh
 
-            check_radius : bool
+            check_radius : bool, opt
                 Whether to check for radius existence and comput it if required.
+
+            update_boundaries : bool, opt
+                Whether to update the boundaries dict with the ones in vm.
+
         """
 
         self.vmesh = vm
         if check_radius and self.radius is None and self.centerline_domain is not None:
             self.compute_radius_fields()
+
+        if update_boundaries:
+            self.boundaries_from_vascular_mesh()
     #
 
     def set_centerline_domain(self, cntrln_dmn, check_fields=True, check_radius=True):
@@ -304,7 +312,7 @@ class CenterlinePathExtractor:
             self.set_radius(np.hstack(stack_r(self.vmesh.kdt.query(p)[0], self.radius)), update_inv=True)
 
             if update_kdt:
-                self.domain_kdt = KDTree(self.centerline_domain)
+                self.compute_kdt()
 
             return ind
 
@@ -313,46 +321,93 @@ class CenterlinePathExtractor:
         return False
     #
 
-    def set_inlet(self, inlt):
+    def compute_kdt(self):
         """
-        Set the inlet of the vascular structure. It can be both, the id
-        of a point in the centerline domain, or a numpy array containing
-        the coordinates of new 3D point.
-
-        Arguments:
-        ----------
-
-            inlt : int or np.ndarray (3,)
-                The id of the point in the centerline_domain array
-                or a 3D point to use as the inlet.
+        Compute the KDTree using the available points.s
         """
-
-        if isinstance(inlt, int):
-            self.inlet = inlt
-        elif isinstance(inlt, np.ndarray):
-            if inlt in self.centerline_domain:
-                self.inlet = np.where(self.centerline_domain)[0][0]
-            else:
-                self.inlet = self.add_point_to_centerline_domain(p=inlt, where='ini')
+        self.domain_kdt = KDTree(self.centerline_domain)
     #
 
-    def set_outlets(self, outlt):
+    def boundaries_from_vascular_mesh(self, vm=None, copy=True):
         """
-        Set the outlets of the vascular structure. It can be both, a list
-        with the ids of the outlet points in the centerline domain, or a
-        numpy array containing the coordinates them.
+        Assume the hierarchy defined by the boundaries of a
+        vascular mesh.
 
         Arguments:
-        ----------
+        -------------
 
-            outlt : list[int] or array-like (N, 3)
-                The id of the point in the centerline_domain array
-                or a 3D point to use as the inlet.
+            vm : VascularMesh, opt.
+                Default self.vmesh. The vascular mesh to use.
+
+            copy : bool, opt.
+                Default True. Whether to make a deep copy of the hierarchy or
+                use it by reference.
+
         """
-        if isinstance(outlt, int):
-            self.outlets = outlt
-        elif isinstance(outlt, np.ndarray):
-            self.outlets = self.add_point_to_centerline_domain(p=outlt, where='end')
+
+        if vm is None:
+            attribute_checker(self, ['vmesh'], extra_info="no VascularMesh has been passed and...")
+            vm = self.vmesh
+
+        attribute_checker(vm, ['boundaries'], extra_info="can't compute hirarchy from vmesh.")
+
+        self.set_boundaries(bndrs=vm.boundaries, copy=copy)
+    #
+
+    def set_boundaries(self, bndrs, copy=True):
+        """
+        Set the boundary hierarchy to compute the centerline paths.
+        If hierarchy is set paths are first computed from children to
+        parents. Then, the id_paths are arranged according to mode and
+        reverse.
+
+        Ex. hierarchy = {"1" : { "center"   : [ x1, y1, z1],
+                                 "children" : { "2" : { "center"   : [x2, y2, z2],
+                                                        "children" : {"0" : {"center"   : [x0, y0, z0],
+                                                                             "children" : {}
+                                                                            }
+                                                                     }
+                                                      },
+                                               }
+                                }
+                        }
+
+        With this hierarchy the algorithm would extract the paths:
+        "1" - "2"
+               |
+              "0"
+        And then rearrange them according to self.mode and self.reverse to set directions propperly.
+
+        Arguments:
+        ------------
+
+            bndr : Boundaries or dict
+                A Boundaries object where each Boundary object has its center attribute, or a hierarchy
+                dictionary to parse.
+
+            copy : bool, opt.
+                Default True. Whether to make a deep copy of the hierarchy or
+                use it by reference.
+
+        """
+
+        if isinstance(bndrs, Boundaries):
+            if copy:
+                self.boundaries = bndrs.copy(deep=True)
+            else:
+                self.boundaries = bndrs
+        elif isinstance(bndrs, dict):
+            self.boundaries = Boundaries(bndrs)
+
+        def add_bound_point(bid):
+            self.boundaries[bid].set_data(cl_domain_id=self.add_point_to_centerline_domain(p=self.boundaries[bid].center, where='end', update_kdt=False))
+            for cid in self.boundaries[bid].children:
+                add_bound_point(bid=cid)
+
+        for rid in self.boundaries.roots:
+            add_bound_point(bid=rid)
+
+        self.compute_kdt()
     #
 
     def compose_id_paths(self, raw_paths):
