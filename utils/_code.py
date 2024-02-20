@@ -193,6 +193,56 @@ class Tree(dict):
         rm_child(k)
     #
 
+    @staticmethod
+    def from_hierarchy_dict(hierarchy):
+        """
+        Build a tree object infering the hierarchy from a dictionary.
+        Structure for hierarchy dicts are as follows:
+
+        {
+            root-id :   **kwargs,
+                        children { ch-id : { **kwargs
+                                            children : {}
+                                            }
+                                 }
+        }
+
+        In the following exemple, a Boundaries object is created with a root node
+        whose id is 1, and and having two children 2, and 0. Children does not have
+        any child, and a center argument is provided to be set in each node.
+        Ex. hierarchy = {"1" : { "center"   : [ x1, y1, z1],
+                                 "children" : { "2" : { "center"   : [x2, y2, z2],
+                                                        "children" : {}},
+                                                "0" : {"center"   : [x3, y3, z3],
+                                                       "children" : {}}
+                                               }
+                                }
+                        }
+
+        Arguments:
+        -----------
+            hierarchy : dict
+                The dictionary with the hierarchy.
+
+        """
+
+        tree = Tree()
+
+        def add_child(nid, children, parent=None, **kwargs):
+            n          = Node()
+            n.parent   = parent
+            n.id       = nid
+            n.children = set(children.keys())
+            n.set_data(**kwargs)
+            tree[n.id] = n
+            if children:
+                for cid, child in children.items():
+                    add_child(nid=cid, children=child['children'], parent=nid, **{k:v for (k, v) in child.items() if k not in ['id', 'parent', 'children']})
+
+        for rid, root in hierarchy.items():
+            add_child(nid=rid, children=root['children'], parent=None, **{k:v for (k, v) in root.items() if k not in ['id', 'parent', 'children']})
+
+        return tree
     #
 #
 
