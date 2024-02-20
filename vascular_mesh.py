@@ -197,30 +197,81 @@ class VascularMesh(pv.PolyData):
         return self.closed
     #
 
-    def compute_boundaries(self, hierarchy=None):
+    def compute_boundaries(self, hierarchy=None, by_center=True, by_id=False):
         """
         Method to build the boundary tree based on the boundary edges
         on the mesh attribute. Attribute can be set through a hierarchy dict,
         however, if none is passed this method leaves the hierarcy undefined.
 
-        TODO: Allow inputing the branch hierarchy.
+        Example of a valid hierarcy using by_centers=True:
+        Ex. hierarchy = {"1" : { "center"   : [ x1, y1, z1],
+                                 "children" : { "2" : { "center"   : [x2, y2, z2],
+                                                        "children" : {}},
+                                                "0" : {"center"   : [x0, y0, z0],
+                                                       "children" : {}}
+                                               }
+                                }
+                        }
 
         Arguments:
         ------------
 
             hierarchy : dict, opt
-                Default None. TODO: Implement.
+                Default None. A hierarchical dict.
+
+            by_center : bool, opt
+                Default True. If True, the hierarchy dictionary must be passed.
+                In addition, each node-dict must have a center attribute with
+                the coordinates of the center. The closest centroid of boundaris
+                will be used to match each computed boundary.
+
+            by_id : bool, opt
+                Default False. If True, the hierarchy dictionary must be passed.
+                In contrast with by_center, the id must be the id inferred by
+                pyvista while computing boundary_edges. This should only be used
+                if the ids have been already inspected and the ids are known
+                beforehand.
 
         """
 
-        self.boundaries = Boundaries()
+        msg.computing_message("mesh boundaries")
+        if hierarchy is None:
+            msg.warning_message("No hierarchy defined. No relation will be assumed among boundaries.")
+
         bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
         bnds = bnds.connectivity()
 
+        if hierarchy is not None:
+            self.boundaries = Boundaries.from_hierarchy_dict(hierarchy=hierarchy)
+            bids = self.boundaries.enumerate()
+            centers = np.array([self.boundaries[bid].center for bid in bids])
+
+        else:
+            self.boundaries = Boundaries()
+
         for i in np.unique(bnds['RegionId']):
+            ii = str(i)
             b = bnds.extract_cells(bnds['RegionId'] == i).extract_surface(pass_pointid=False, pass_cellid=False)
             b = triangulate_cross_section(b)
-            self.boundaries[i] = Boundary.from_polydata(b)
+
+            if hierarchy is None:
+                bd = Boundary()
+                bid = ii
+
+            elif by_id:
+                bd = Boundary(self.boundaries[ii])
+                bid = ii
+
+            elif by_center:
+                aux = np.argmin(np.linalg.norm(centers - np.array(b.center), axis=1))
+                bid = bids[aux]
+                bd = Boundary(self.boundaries[bid])
+
+            bd.extract_from_polydata(b)
+            self.boundaries[ii] = bd
+
+        self.n_boundaries = len(self.boundaries)
+        msg.done_message("mesh boundaries")
     #
 
     def translate(self, t, update_kdt=True):
@@ -300,5 +351,7 @@ class VascularMesh(pv.PolyData):
             self.compute_kdt()
         msg.done_message('vascular mesh scaling.')
     #
+#
+
 
 #
