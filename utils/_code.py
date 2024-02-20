@@ -193,6 +193,13 @@ class Tree(dict):
         rm_child(k)
     #
 
+    def copy(self, deep=True):
+        if deep:
+            return deepcopy(self)
+        else:
+            return copy(self)
+    #
+
     @staticmethod
     def from_hierarchy_dict(hierarchy):
         """
