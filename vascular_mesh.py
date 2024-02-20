@@ -242,7 +242,8 @@ class VascularMesh(pv.PolyData):
         bnds = bnds.connectivity()
 
         if hierarchy is not None:
-            self.boundaries = Boundaries.from_hierarchy_dict(hierarchy=hierarchy)
+            self.boundaries = Boundaries(hierarchy=hierarchy)
+            msg.info_message(f"Assuming the following hierarchy: \n{self.boundaries}")
             bids = self.boundaries.enumerate()
             centers = np.array([self.boundaries[bid].center for bid in bids])
 
