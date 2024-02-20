@@ -119,31 +119,30 @@ class Tree(dict):
             self[nd.parent].add_child(__key)
     #
 
-    def graft(self, tr, r=None):
+    def graft(self, tr, gr_id=None):
         """
-        Merge another tree. If r is a node id of this tree,
-        root nodes are rooted on self[r], otherwise they are
-        kept as roots.
+        Merge another tree. If gr_id is a node id of this tree,
+        root nodes are grafted on self[gr_id], otherwise they are
+        grafted as roots.
 
         Arguments:
             tr : Tree
-                The tree to merge in this.
+                The tree to merge into self.
 
-            r : node id
-                The id of a node in this tree.
+            gr_id : node id
+                The id of a node in this tree where tr will be grafted.
         """
 
-        new_nodes = []
-        for nid in tr.roots:
-            n = tr[nid]
-            if r is not None:
-                n = copy(tr[nid])
-                n.parent = r
-            new_nodes.append(n)
+        def add_child(nid):
+            self[nid] = tr[nid]
+            for cid in tr[nid].children:
+                add_child(nid=cid)
 
-        while new_nodes:
-            nid = new_nodes.pop(0)
-            new_nodes += list(tr[nid].children)
+        for rid in tr.roots:
+            if gr_id in self:
+                add_child(tr[rid])
+                self[rid].parent = gr_id
+                self[gr_id].add_child(rid)
     #
 
     def remove(self, k):
