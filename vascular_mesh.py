@@ -26,8 +26,9 @@ class VascularMesh(pv.PolyData):
     def __init__(self, p:pv.PolyData=None) -> None:
 
 
-        self.boundaries : Boundaries = None
-        self.closed : pv.PolyData = None
+        self.boundaries   : Boundaries = None
+        self.n_boundaries : int = None
+        self.closed       : pv.PolyData = None
 
         #To query distances
         self.kdt : KDTree = None
