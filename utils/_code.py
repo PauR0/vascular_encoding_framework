@@ -139,8 +139,8 @@ class Tree(dict):
                 add_child(nid=cid)
 
         for rid in tr.roots:
+            add_child(rid)
             if gr_id in self:
-                add_child(tr[rid])
                 self[rid].parent = gr_id
                 self[gr_id].add_child(rid)
     #
