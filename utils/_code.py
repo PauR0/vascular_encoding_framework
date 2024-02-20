@@ -1,5 +1,5 @@
 
-from copy import copy
+from copy import copy, deepcopy
 
 import messages as msg
 
