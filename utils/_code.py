@@ -70,6 +70,23 @@ class Tree(dict):
         return
     #
 
+    def __str__(self):
+        outstr = ""
+        ind = " "
+
+        def append_str(nid, outstr, l=0):
+            strout = "\n".join([ind*4*l+s for s in self[nid].__str__().split("\n")]) + "\n\n"
+            for cid in self[nid].children:
+                strout += append_str(cid, outstr, l=l+1)
+
+            return strout
+
+        for rid in self.roots:
+            outstr += append_str(rid, outstr=outstr)
+
+        return outstr
+    #
+
     def enumerate(self):
         """
         Get a list with the id of stored items.
