@@ -181,11 +181,18 @@ class Tree(dict):
                 id of the node from which to prune.
         """
 
-        children = [k]
-        while children:
-            #Adding all the children of the last node...
-            children += list(self[children[0]].children)
-            self.remove(k=children[0])
+        def rm_child(nid):
+            for cid in self[nid].children:
+                rm_child(nid=cid)
+            super().pop(__key=nid)
+
+        pid = self[k].parent
+        if pid is not None:
+            self[pid].remove_child(k)
+
+        rm_child(k)
+    #
+
     #
 #
 
