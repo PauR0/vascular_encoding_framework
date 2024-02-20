@@ -314,11 +314,18 @@ class Boundary(Node):
 
 class Boundaries(Tree):
     """
-    A class containing the boundaries inheriting structure from python's
-    dictionary.
+    A class containing the boundaries inheriting structure from Tree class.
     """
 
     #No init required since parent init suffice.
+
+    def __init__(self, hierarchy=None) -> None:
+
+        super().__init__()
+
+        if hierarchy is not None:
+            self.graft(Tree.from_hierarchy_dict(hierarchy=hierarchy))
+    #
 
     def save(self, filename):
         pass
