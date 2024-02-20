@@ -116,7 +116,7 @@ class Tree(dict):
         if nd.parent is None:
             self.roots.add(__key)
         else:
-            self[nd.parent].set_children(__key)
+            self[nd.parent].add_child(__key)
     #
 
     def graft(self, tr, r=None):
