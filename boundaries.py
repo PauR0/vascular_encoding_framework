@@ -284,16 +284,16 @@ class Boundary(Node):
             self.area = area
 
         return area
+    #
 
-    @staticmethod
-    def from_polydata(pdt):
+    def extract_from_polydata(self, pdt):
         """
-        Get a new Boundary object built from data stored in a pyvista PolyData.
+        Extract main data from a pyvista PolyData.
 
         Arguments:
         ------------
             pdt : pv.PolyData
-                The polydata with the points and faces fields.
+                The polydata with the points and faces attributes.
 
         Returns:
         ---------
@@ -304,14 +304,11 @@ class Boundary(Node):
         if 'Normals' not in pdt.cell_data:
             pdt = pdt.compute_normals(cell_normals=True)
 
-
-        b = Boundary()
-        b.set_data(center = np.array(pdt.center),
-                   normal = normalize(pdt.get_array('Normals', preference='cell').mean(axis=0)),
-                   points = pdt.points,
-                   faces  = pdt.faces
-                  )
-        return b
+        self.set_data(center = np.array(pdt.center),
+                      normal = normalize(pdt.get_array('Normals', preference='cell').mean(axis=0)),
+                      points = pdt.points,
+                      faces  = pdt.faces
+                     )
     #
 #
 
