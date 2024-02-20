@@ -71,6 +71,7 @@ class ParallelTransport(Spline):
         pt.set_parameters(_spline = make_lsq_spline(x=param_samples, y=V, t=pt.knots, k=pt.k))
 
         return pt
+#
 
 
 class Centerline(Spline):
@@ -819,7 +820,7 @@ class CenterlineTree(Tree):
         pass
     #
 
-    def get_projection_point(self, p, method='scalar', full_output=False)
+    def get_projection_point(self, p, method='scalar', full_output=False):
         pass
     #
 #
