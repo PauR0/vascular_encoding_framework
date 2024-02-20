@@ -106,6 +106,11 @@ class Tree(dict):
             msg.error_message(f"Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree.")
             return
 
+        if not isinstance(__key, str):
+            msg.warning_message(f"node {__key} has been set with a non-string key. This may turn in troubles...")
+        if __key != nd.id:
+            msg.warning_message(f"node id attribute is {nd.id} and node id in tree has been set as {__key}.")
+
         super().__setitem__(__key, nd)
 
         if nd.parent is None:
