@@ -109,6 +109,10 @@ class Centerline(Spline, Node):
         self.parameter_samples : np.ndarray = None
     #
 
+    def __str__(self):
+        return Node.__str__(self=self)
+    #
+
     def get_tangent(self, t, normalized=True):
         """
         Get the tangent of the centerline at given parameter values. Values are
