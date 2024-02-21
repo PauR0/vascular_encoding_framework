@@ -80,8 +80,7 @@ class ParallelTransport(Spline):
     #
 #
 
-
-class Centerline(Spline):
+class Centerline(Spline, Node):
     """
     The centerline class contains the main attributes and methods of a Bspline
     curve that models the centerline of a branch.
@@ -89,7 +88,8 @@ class Centerline(Spline):
 
     def __init__(self):
 
-        super().__init__()
+        Node.__init__(self=self)
+        Spline.__init__(self=self)
 
         #Object reference frame
         self.center : np.array = None
@@ -728,42 +728,6 @@ class Centerline(Spline):
 #
 
 
-class CenterlineBranch(Centerline, Node):
-    """
-    Class to extend Centerline to work as a node of and abstract tree structure.
-    """
-
-    def __init__(self, parent=None, joint_t=None) -> None:
-
-        Centerline.__init__(self=self)
-        Node.__init__(self=self)
-
-        self.parent = None
-        if parent is not None:
-            self.parent = parent
-
-        self.joint_t = None
-        if joint_t is not None:
-            self.joint_t = joint_t
-
-        self.children : set = set()
-    #
-
-    def add_child(self, c):
-        """
-        Add a child to this branch.
-        """
-        self.children.add(c)
-    #
-
-    def remove_child(self, c):
-        """
-        Remove child. If does not exists, nothing happens.
-        """
-        self.children.discard(c)
-    #
-#
-
 
 class CenterlineTree(Tree):
     """
@@ -772,11 +736,7 @@ class CenterlineTree(Tree):
 
     #No constructor is needed, the super() will be executed.
 
-    def __setitem__(self, __key, clb: CenterlineBranch) -> None:
-
-        #Checking it has joint attributes. Since None are admited, attribute_checker is not well suited now.
-        if not hasattr(clb, 'joint_t'):
-            msg.error_message(f"Aborted insertion of branch with id: {__key}. It has no joint_t attribute.")
+    def __setitem__(self, __key, cl: Centerline) -> None:
             return
 
         super().__setitem__(__key, clb)
