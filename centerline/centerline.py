@@ -783,7 +783,7 @@ class CenterlineNetwork(Tree):
         super().__setitem__(__key, cl)
     #
 
-    def get_branch_membership(self, p, n=None, thrs=30):
+    def get_centerline_membership(self, p, n=None, thrs=30):
         """
         Given a point in space (with optional normal n) this method computes
         the branch it belongs. If no normal is None, the branch is decided
