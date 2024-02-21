@@ -59,10 +59,7 @@ class ParallelTransport(Spline):
         V = []
         for t in param_samples:
             tg_next = cl.get_tangent(t)
-            tdottn = np.clip(tg.dot(tg_next), -1.0, 1.0)
-            rot_vec = normalize(np.cross(tg, tg_next)) *  np.arccos(tdottn)
-            R = Rotation.from_rotvec(rot_vec)
-            v0 = R.apply(v0)
+            v0 = ParallelTransport.parallel_rotation(t0=tg, t1=tg_next, v=v0)
             V.append(v0)
             tg = tg_next
 
@@ -71,6 +68,15 @@ class ParallelTransport(Spline):
         pt.set_parameters(_spline = make_lsq_spline(x=param_samples, y=V, t=pt.knots, k=pt.k))
 
         return pt
+    #
+
+    @staticmethod
+    def parallel_rotation(t0, t1, v):
+        t0dott1 = np.clip(t0.dot(t1), -1.0, 1.0)
+        rot_vec = normalize(np.cross(t0, t1)) * np.arccos(t0dott1)
+        R = Rotation.from_rotvec(rot_vec)
+        return R.apply(v)
+    #
 #
 
 
