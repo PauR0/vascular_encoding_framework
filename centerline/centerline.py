@@ -65,7 +65,8 @@ class ParallelTransport(Spline):
 
         #Build
         V = np.array(V)
-        pt.set_parameters(_spline = make_lsq_spline(x=param_samples, y=V, t=pt.knots, k=pt.k))
+        pt.set_parameters(build=True,
+                          coeffs=make_lsq_spline(x=param_samples, y=V, t=pt.knots, k=pt.k).c)
 
         return pt
     #
