@@ -686,7 +686,7 @@ class Centerline(Spline, Node):
     #
 
     @staticmethod
-    def from_points(points, knots, pt_mode=None, p=None, force_tangent=True, norm_param=True):
+    def from_points(points, knots, cl=None, pt_mode='project', p=None, force_tangent=True, norm_param=True):
         """
         Function to build a Centerline object from a list of points. The amount
         knots to perform the LSQ approximation must be provided. An optional
@@ -701,6 +701,9 @@ class Centerline(Spline, Node):
             knots : int or array-like
                 The knot vector used to perform the LSQ spline approximation.
                 If an int is passed a uniform knot vector is build.
+
+            cl : Centerline
+                A Centerline object to be used. The all the data will be overwritten.
 
             pt_mode : str
                 The mode option to build the adapted frame by parallel transport.
@@ -735,7 +738,9 @@ class Centerline(Spline, Node):
                                    n_weighted_end=n_weighted,
                                    weight_ratio=4)
 
-        cl = Centerline()
+        if cl is None:
+            cl = Centerline()
+
         cl.set_parameters(
             build   = True,
             t0      = spl.t[0],
