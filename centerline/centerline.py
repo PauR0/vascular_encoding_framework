@@ -92,10 +92,10 @@ class Centerline(Spline):
         super().__init__()
 
         #Object reference frame
-        self.center : np.array = np.zeros(3)
-        self.e1     : np.array = np.zeros(3)
-        self.e2     : np.array = np.zeros(3)
-        self.e3     : np.array = np.zeros(3)
+        self.center : np.array = None
+        self.e1     : np.array = None
+        self.e2     : np.array = None
+        self.e3     : np.array = None
 
         # Spline
         self.tangent : BSpline = None
