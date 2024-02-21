@@ -831,4 +831,62 @@ class CenterlineNetwork(Tree):
     def get_projection_point(self, p, method='scalar', full_output=False):
         pass
     #
+
+    @staticmethod
+    def from_multiblock_paths(paths, knots):
+        """
+        Create a CenterlineTree from a pyvista MultiBlock made polydatas with
+        points joined by lines, basically like the ouput of CenterlinePathExtractor.
+        Each polydata must have a field_data called 'parent' and has to be a list with
+        a single id (present in the multiblock names).
+
+        Arguments:
+        ------------
+
+            paths : pv.MultiBlock
+                The multiblock containing the centerline paths. All the elements in the paths
+                have to be of PolyData type. Each of these polydatas must have a field_data
+                called 'parent', that has to be a list with a single id (present in the multiblock names).
+                The names of the polydatas must be separable in "path_" + "id" as in path_AsAo
+
+            n_knots : dict[str]
+                A dictionary with the knots to perform the spline curve least squares fitting of each polydata.
+                The id is accessed by the centerline id, and the value can be the list of knots to use, or a int
+                in the latter, a uniform spline is built with the number provided.
+
+        Returns:
+        -----------
+
+            clnet : CenterlineNetwork
+                The centerline network extracted from the passed MultiBlock.
+        """
+
+        if not paths.is_all_polydata:
+            msg.error_message("Can make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
+            return None
+
+
+        cl_net = CenterlineNetwork()
+
+        cl_ids  = [s.replace('path_', '') for s in paths.keys()]
+        parents = {i : paths[f"path_{i}"].field_data['parent'][0] for i in cl_ids}
+
+
+        def add_to_network(nid):
+            cl = Centerline.from_points(paths[f'path_{nid}'].points, knots=knots[nid])
+            cl.id = nid
+            if parents[nid] != 'None':
+                cl.parent = parents[nid]
+            cl_net[nid] = cl
+
+            for cid in cl_ids:
+                if parents[cid] == nid:
+                    add_to_network(cid)
+
+        for rid in cl_ids:
+            if parents[rid] == 'None':
+                add_to_network(rid)
+
+        return cl_net
+
 #
