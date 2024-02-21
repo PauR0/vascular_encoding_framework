@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from abc import ABC, abstractmethod
 
 from scipy.spatial import KDTree
 import numpy as np
@@ -9,10 +10,11 @@ from vascular_mesh import VascularMesh
 import messages as msg
 from utils._code import attribute_checker, attribute_setter
 
-class CenterlineDomainExtractor:
+class CenterlineDomainExtractor(ABC):
     """
     Base class for centerline domain extractors. This method has the minimum
-    requirements for centerline domain extractors.
+    requirements for centerline domain extractors. Note that since it inherits
+    Abstract Base Class it forces run() method exist on subclasses
     """
 
     def __init__(self):
@@ -39,6 +41,10 @@ class CenterlineDomainExtractor:
     def get_output(self):
         return self.output_domain
     #
+
+    @abstractmethod
+    def run(self):
+        ...
 #
 
 class Seekers(CenterlineDomainExtractor):
