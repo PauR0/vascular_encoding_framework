@@ -179,25 +179,26 @@ class Centerline(Spline, Node):
         self.e3 = e3
     #
 
-    def compute_parallel_transport(self, mode='project', p=None):
+    def compute_parallel_transport(self, p=None, mode='project'):
         """
         This method allows the build of the adapted frame in several ways.
 
         If mode == 'project':
-            - If a point is passed, the projection of the vector p-c(t0) onto the plane
-              normal to the tangent at t0 is used.
-            - If no point is passed, the center of masses of the centerline is used as p.
+            - If a point is passed, the vector p-c(t0) is projected onto the normal plane
+              at t0 and used as initial contition for parallel transport.
+            - If no point is passed, the mass center of the centerline is used as p.
+
         if mode == 'as_is':
             - The argument p must be the vector to be parallely transported.
 
         Arguments:
         ------------
 
+            p : np.ndarray (3,)
+                The point/vector to use.    i2p = normalize(c0 - self.evaluate(self.t0))
+
             mode : Literal['project', 'as_is']
                 The chosen mode to use.
-
-            p : np.ndarray (3,)
-                The point/vector to use.
 
         Returns:
         -----------
@@ -227,7 +228,7 @@ class Centerline(Spline, Node):
         return v
     #
 
-    def compute_adapted_frame(self, mode, p):
+    def compute_adapted_frame(self, p=None, mode='project'):
         """
         Compute a parallel transported adapted frame. This frame {t, v1, v2} is
         an estable alternative to Frenet frame and has multiple purposes. The
