@@ -207,9 +207,9 @@ class Centerline(Spline, Node):
         if mode == 'project':
 
             if p is None:
-                c0 = self.center
+                p = self.center
 
-            i2p = normalize(c0 - self.evaluate(self.t0))
+            i2p = normalize(p - self.evaluate(self.t0))
             t_0 = self.get_tangent(self.t0)
             v0 = normalize(i2p - t_0.dot(i2p)*t_0)
 
