@@ -766,9 +766,21 @@ class CenterlineNetwork(Tree):
     #No constructor is needed, the super() will be executed.
 
     def __setitem__(self, __key, cl: Centerline) -> None:
+        """
+        Setting items as in dictionaries. However, to belong to a CenterlineNetwork
+        requieres consistency in the adapted frames.
+        """
+        #Checking it has parent attribute.
+        if not hasattr(cl, 'parent'):
+            msg.error_message(f"Aborted insertion of branch with id: {__key}. It has no parent attribute. Not even None.")
             return
 
-        super().__setitem__(__key, clb)
+        if cl.parent is not None:
+            cl.set_data(join_t = self[cl.parent].get_projection_parameter(cl(cl.t0), method='scalar'))
+            v1 = ParallelTransport.parallel_rotation(t0=self[cl.parent].get_tangent(cl.join_t), t1=cl.get_tangent(cl.t0), v=self[cl.parent].v1(cl.join_t))
+            cl.compute_adapted_frame(p=v1, mode='as_is')
+
+        super().__setitem__(__key, cl)
     #
 
     def get_branch_membership(self, p, n=None, thrs=30):
