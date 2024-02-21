@@ -758,8 +758,7 @@ class Centerline(Spline, Node):
 #
 
 
-
-class CenterlineTree(Tree):
+class CenterlineNetwork(Tree):
     """
     Class for the centerline of branched vascular geometries.
     """
