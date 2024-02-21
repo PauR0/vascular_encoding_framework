@@ -277,7 +277,7 @@ class Centerline(Spline, Node):
         self.compute_adapted_frame(mode='project', p=None)
     #
 
-    def get_projection_parameter(self, p, method='scalar'):
+    def get_projection_parameter(self, p, method='scalar', full_output=False):
         """
         Computes the value of the parameter for the point in the centerline
         closest to p.
@@ -302,13 +302,17 @@ class Centerline(Spline, Node):
                 - 'sample' : the optimization is avoided by keeping the closest
                 sampled centerline point.
 
+            full_output : bool
+                Whether to return the distance and the value of the parameter
+                or not. Default is False.
+
         Returns:
         ---------
 
             t : float
                 The value of the parameter.
 
-            d : float
+            d : float, opt
                 The distance from p to the closest point in the centerline
 
         """
@@ -353,7 +357,10 @@ class Centerline(Spline, Node):
             d = float(res.fun)
             x = float(res.x)
 
-        return x, d
+        if full_output:
+            return x, d
+
+        return x
     #
 
     def get_projection_point(self, p, method='scalar', full_output=False):
@@ -363,35 +370,41 @@ class Centerline(Spline, Node):
 
         Arguments:
         ----------
-        p : np.array
-            Point from which to compute the distance.
-        method : str, optional
-            Minimzation method. It can be one of 'scala', 'vec' and 'vec_jac'.
-            - 'scalar' : treats the optimization variable as a scalar, using
-            scipy.optimize.minimize_scalar.
-            - 'vec' : treats the optimization variable as a 1-dimensional
-            vector, using scipy.optimize.minimize.
-            - 'vec_jac' : treats the optimization variable as a 1-dimensional
-            vector, using scipy.optimize.minimize. The Jacobian is provided.
-            - 'sample' : the optimization is avoided by keeping the closest
-            sampled centerline point.
-            In all cases, constrained minimization is used to force the
-            value of the parameter to be in [0,1]. The default is 'scalar'.
-        full_output : bool
-            Whether to return the distance and the value of the parameter
-            or not. Default is False.
+
+            p : np.array
+                Point from which to compute the distance.
+
+            method : str, optional
+                Minimzation method. It can be one of 'scala', 'vec' and 'vec_jac'.
+                - 'scalar' : treats the optimization variable as a scalar, using
+                scipy.optimize.minimize_scalar.
+                - 'vec' : treats the optimization variable as a 1-dimensional
+                vector, using scipy.optimize.minimize.
+                - 'vec_jac' : treats the optimization variable as a 1-dimensional
+                vector, using scipy.optimize.minimize. The Jacobian is provided.
+                - 'sample' : the optimization is avoided by keeping the closest
+                sampled centerline point.
+                In all cases, constrained minimization is used to force the
+                value of the parameter to be in [0,1]. The default is 'scalar'.
+
+            full_output : bool
+                Whether to return the distance and the value of the parameter
+                or not. Default is False.
 
         Returns
         -------
-        p : np.array
-            The closest point to p in the centerline.
-        t : float, optional
-            The value of the parameter.
-        d : float, optional
-            The distance from p to the closest point in the centerline.
+
+            p : np.array
+                The closest point to p in the centerline.
+
+            t : float, optional
+                The value of the parameter.
+
+            d : float, optional
+                The distance from p to the closest point in the centerline.
 
         """
-        t, d = self.get_projection_parameter(p,method=method)
+        t, d = self.get_projection_parameter(p, method=method, full_output=True)
 
         if full_output:
             return self.evaluate(t), d, t
