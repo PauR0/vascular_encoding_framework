@@ -501,7 +501,9 @@ class CenterlinePathExtractor:
                 pdt.lines  = np.array([[2, j, j+1] for j in range(len(self.boundaries[bid].id_path)-1)], dtype=int)
                 pdt['cl_domain_id'] = np.array(self.boundaries[bid].id_path, dtype=int)
                 pdt.field_data['parent'] = [self.boundaries[bid].parent]
-                self.paths.append(pdt, name=f"branch_{bid}")
+                if self.boundaries[bid].parent in self.boundaries.roots:
+                    pdt.field_data['parent'] = ['None']
+                self.paths.append(pdt, name=f"path_{bid}")
             for cid in self.boundaries[bid].children:
                 make_polydata_path(bid=cid)
 
