@@ -247,6 +247,14 @@ class Centerline(Spline, Node):
                 The mode used to built the adapted frame. Check compute_parallel_transport.
         """
 
+        if p is None:
+            if self.e3 is None:
+                self.compute_local_ref()
+            p = normalize(np.cross(self.get_tangent(self.t0), self.e3))
+            aux = normalize(self.center - self(self.t0))
+            if p.dot(aux) < 0:
+                p *= -1
+
         self.v1 = self.compute_parallel_transport(mode=mode, p=p)
         v2_0 = normalize(np.cross(self.get_tangent(self.t0), self.v1.v0))
         self.v2 = self.compute_parallel_transport(mode='as_is', p=v2_0)
