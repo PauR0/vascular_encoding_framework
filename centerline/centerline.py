@@ -451,6 +451,64 @@ class Centerline(Spline, Node):
         return t_, v1, v2
     #
 
+    def cartesian_to_vcs(self, p, method='scalar'):
+        """
+        Given a 3D point p expressed in cartesian coordinates, this method
+        computes its expression in the Vessel Coordinate System (VCS).
+
+        Arguments:
+        -------------
+
+            p : np.ndarray (3,)
+                A 3D point in cartesian coordinates.
+
+            method : Literal{'scalar', 'vec', 'vec_jac'}, opt
+                The minimization method to use. See get_projection_parameter
+                for more infor.
+
+        Returns:
+        ---------
+
+            p_vcs : np.ndarray(3,)
+                The coordinates of the point in the VCS.
+
+        """
+
+        tau, rho = self.get_projection_parameter(p, method=method, full_output=True)
+        theta = get_theta_coord(p, self(tau), self.v1(tau), self.v2(tau))
+        return np.array((tau, theta, rho))
+    #
+
+    def vcs_to_cartesian(self, tau, theta, rho):
+        """
+        Given a point expressed in Vessel Coordinate System (VCS), this method
+        computes its cartesian coordinates.
+
+
+        Arguments:
+        ----------
+
+            tau : float
+                The longitudinal coordinate of the point
+
+            theta : float, np.array (N,1)
+                Angular coordinate of the point
+
+            rho : float, np.array (N,1), optional.
+                The radial coordinate of the point
+
+        Returns
+        -------
+            p : np.ndarray
+                The point in cartesian coordinates.
+
+        """
+
+        p = self(tau) + rho * (self.v1(tau)*np.cos(theta) + self.v2(tau)*np.sin(theta))
+
+        return np.array(p)
+    #
+
     def get_frenet_normal(self, t):
         """
         Get the normal vector of the frenet frame at centerline point of parameter t.
