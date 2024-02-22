@@ -289,8 +289,8 @@ class Centerline(Spline, Node):
             p : np.array
                 Point from which to compute the distance.
 
-            method : str, optional
-                Minimzation method. It can be one of 'scalar', 'vec' and 'vec_jac'.
+            method : Literal{'scalar', 'vec', 'vec_jac', 'sample'}, opt
+                The minimization method to use.
                 - 'scalar' : treats the optimization variable as a scalar, using
                 scipy.optimize.minimize_scalar.
                 - 'vec' : treats the optimization variable as a 1-dimensional
@@ -374,8 +374,8 @@ class Centerline(Spline, Node):
             p : np.array
                 Point from which to compute the distance.
 
-            method : str, optional
-                Minimzation method. It can be one of 'scala', 'vec' and 'vec_jac'.
+            method : Literal{'scalar', 'vec', 'vec_jac', 'sample'}, opt
+                The minimization method to use.
                 - 'scalar' : treats the optimization variable as a scalar, using
                 scipy.optimize.minimize_scalar.
                 - 'vec' : treats the optimization variable as a 1-dimensional
@@ -407,7 +407,7 @@ class Centerline(Spline, Node):
         t, d = self.get_projection_parameter(p, method=method, full_output=True)
 
         if full_output:
-            return self.evaluate(t), d, t
+            return self.evaluate(t), t, d
 
         return self.evaluate(t)
     #
