@@ -1112,7 +1112,8 @@ class CenterlineNetwork(Tree):
 
 
         def add_to_network(nid):
-            cl = Centerline.from_points(paths[f'path_{nid}'].points, knots=knots[nid])
+            force_tangent = True if parents[nid] == 'None' else 'end'
+            cl = Centerline.from_points(paths[f'path_{nid}'].points, knots=knots[nid], force_tangent=force_tangent)
             cl.id = nid
             if parents[nid] != 'None':
                 cl.parent = parents[nid]
