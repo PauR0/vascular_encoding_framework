@@ -60,11 +60,37 @@ def cart_to_polar(x_cart, sort=True):
     return x_pol
 #
 
-def get_theta_coord(points, c, v1, v2):
+def get_theta_coord(points, c, v1, v2, deg=False):
+    """
+    Get the theta coordinate for a list of points in a cross
+    section.
+
+    Arguments:
+    ------------
+
+        points : np.ndarray (3,) or (N, 3)
+            The points belonging to the same cross section
+
+        c, v1, v2 : np.ndarray (3,)
+            The center, v1, and v2 of the cross section respectively.
+
+        deg : bool, opt
+            Default False. Whether to return theta coord in degrees instead of radians.
+    """
+
+    if len(points.shape) == 1:
+        points = points[None, :] #Adding a dimension
 
     u1, u2 = planar_coordinates(points.T, c0=c, v1=v1, v2=v2)
     th = np.arctan2(u2,u1)
     th[th < 0] += 2*np.pi
+
+    if deg:
+        th = radians_to_degrees(r=th)
+
+    if len(th) == 1:
+        return th[0]
+
     return th
 #
 
