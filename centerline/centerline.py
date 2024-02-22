@@ -771,9 +771,10 @@ class Centerline(Spline, Node):
             p : np.ndarray
                 The initial v1. If pt_mode == 'project' it is projected onto inlet plane.
 
-            force_tangent : bool
+            force_tangent : Literal = {False, True, 'ini', 'end'}
                 Whether to add extra weighting to the first and last points in
-                the lsq approximation.
+                the lsq approximation. If 'ini', resp. 'end', only initial (ending)
+                points are weighted to force the tangent.
 
             norm_params : bool, opt
                 Default True. Whether to normalize the parameter domain interval to
@@ -785,15 +786,23 @@ class Centerline(Spline, Node):
                 The centerline object built from the points passed.
         """
 
-        n_weighted=1
+        wini=1
+        wend=1
         if force_tangent:
-            n_weighted=2
+            wini=2
+            wend=2
+            if force_tangent == 'ini':
+                wini=2
+                wend=0
+            elif force_tangent == 'else':
+                wini=0
+                wend=2
 
         spl = lsq_spline_smoothing(points=points,
                                    knots=knots,
                                    norm_param=norm_param,
-                                   n_weighted_ini=n_weighted,
-                                   n_weighted_end=n_weighted,
+                                   n_weighted_ini=wini,
+                                   n_weighted_end=wend,
                                    weight_ratio=4)
 
         if cl is None:
