@@ -11,7 +11,7 @@ from scipy.misc import derivative
 
 import messages as msg
 from utils._code import Tree, Node, attribute_checker
-from utils.spatial import normalize, compute_ref_from_points
+from utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
 from utils.splines import Spline, lsq_spline_smoothing
 
 
@@ -850,20 +850,21 @@ class CenterlineNetwork(Tree):
         super().__setitem__(__key, cl)
     #
 
-    def get_centerline_membership(self, p, n=None, thrs=30):
+    def get_centerline_association(self, p, n=None, method='scalar', thrs=30):
         """
         Given a point in space (with optional normal n) this method computes
-        the branch it belongs. If no normal is None, the branch is decided
-        based on the distance to a rough approximation on the point projection.
-        If n is provided, let q the projection of p onto the nearest centerline
-        branch, if the angles between vectors q2p and n are greater than thrs,
-        the next nearest branch will be tested. If non satisfy the criteria, a
-        warnin message will be outputed and the point will be assigned to the
-        nearest branch.
+        the branch it can be associated to. If no normal is None, the branch
+        is decided based on the distance to a rough approximation on the point
+        projection. If n is provided, let q the projection of p onto the nearest
+        centerline branch, if the angles between vectors q2p and n are greater
+        than thrs, the next nearest branch will be tested. If non satisfy the
+        criteria, a warnin message will be outputed and the point will be assigned
+        to the nearest branch.
 
         Warning: normal is expected to be used as the surface normal of a point.
         However, normales are sensible to high frequency noise in the mesh, try
-        smoothing it before branching splitting.
+        smoothing it before using the normals in the computation of the centerline
+        association.
 
         Arguments:
         -------------
@@ -875,8 +876,12 @@ class CenterlineNetwork(Tree):
                 Default is None. The normal of the points. Specially useful to preserve
                 topology
 
+            method : Literal {'scalar', 'vec', 'jac-vec', 'sample'}
+                Default scalar. The method use to compute the projection.
+                Note: 'sample' method is the fastest, but the least accurate.
+
             thrs : float, opt
-                Default is 30. The maximum angle allowed between q2p and n.
+                Default is 30. The maximum angle (in degrees) allowed between q2p and n.
 
         Returns:
         ---------
@@ -885,7 +890,31 @@ class CenterlineNetwork(Tree):
 
         """
 
-        branch_ids = self.get_branch_ids()
+        ids, dists, angles = [], [], []
+        for cid, cl in self.items():
+            q, t, d = cl.get_projection_point(p, method=method, full_output=True)
+            ids.append(cid)
+            dists.append(d)
+            if n is not None:
+                q2p = normalize(p-q)
+                angles.append((np.arccos(n.dot(q2p))))
+
+        min_i = np.argmin(dists)
+        minid = ids[min_i]
+
+        if n is None:
+            return minid
+
+
+        angles = radians_to_degrees(np.array(angles)).tolist()
+        while ids:
+            i = np.argmin([dists])
+            if angles[i] < thrs:
+                minid = ids[i]
+                break
+            _, _, _ = ids.pop(i), dists.pop(i), angles.pop(i)
+
+        return minid
     #
 
     def get_projection_parameter(self, p, method='scalar'):
