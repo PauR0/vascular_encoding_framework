@@ -969,12 +969,106 @@ class CenterlineNetwork(Tree):
 
         return t
     #
+
+    def get_projection_point(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
         """
-        pass
+        Get the point projection onto the centerline tree.
+        If centerline id (cl_id) argument is not provided it is computed
+        using get_centerline_membership.
+
+        Arguments:
+        -----------
+
+            p : np.ndarray (3,)
+                The 3D point.
+
+            cl_id : str, opt
+                Default None. The id of the centerline of the network to project
+                the point. If None, it is computed using get_centerline_membership
+                method.
+
+            n : np.ndarray, opt
+                Default None. A normal direction at the point, useful if the point
+                belongs to the surface of the vascular domain, its normal can be used.
+
+            method : Literal {'scalar', 'vec', 'jac-vec', 'sample'}
+                The method use to compute the projection.
+
+            full_output : bool
+                Whether to return the parameter value, distance and the centerline association
+                or not. Default is False.
+
+        Returns:
+        --------
+
+            pr : np.ndarray (3,)
+                The projection of the point in the centerline
+
+            t : float, opt
+                The value of the parameter.
+
+            d : float, opt
+                The distance from p to the closest point in the centerline
+
+            cl_id : str, opt
+                The id of the centerline it belongs to
+
+        """
+
+        if cl_id is None:
+            cl_id = self.get_centerline_association(p, n=n, thrs=thrs)
+
+        p, t, d = self[cl_id].get_projection_point(p=p, method=method, full_output=True)
+
+        if full_output:
+            return t, cl_id, d
+
+        return t
     #
 
-    def get_projection_point(self, p, method='scalar', full_output=False):
-        pass
+    def cartesian_to_vcs(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
+        """
+        Given a 3D point p expressed in cartesian coordinates, this method
+        computes its expression in the Vessel Coordinate System (VCS) of the
+        centerline it has been associated to.
+
+        Arguments:
+        -----------
+
+            p : np.ndarray (3,)
+                The 3D point.
+
+            cl_id : str, opt
+                Default None. The id of the centerline of the network to project
+                the point. If None, it is computed using get_centerline_membership
+                method.
+
+            n : np.ndarray, opt
+                Default None. A normal direction at the point, useful if the point
+                belongs to the surface of the vascular domain, its normal can be used.
+
+            method : Literal {'scalar', 'vec', 'jac-vec', 'sample'}
+                The method use to compute the projection.
+
+            full_output : bool, opt
+                Default False. Whether to add the cl_id to the returns.
+
+        Returns:
+        --------
+
+            p_vcs : np.ndarray (3,)
+                The (tau, theta, rho) coordinates of the given point.
+
+            cl_id : str, opt
+                The id of the centerline the point has been associated to.
+
+        """
+
+
+        if cl_id is None:
+            cl_id = self.get_centerline_association(p=p, n=n, method=method, thrs=thrs)
+
+        return self[cl_id].cartesian_to_vcs(p=p)
     #
 
     @staticmethod
