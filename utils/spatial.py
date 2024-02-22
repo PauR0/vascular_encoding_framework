@@ -121,3 +121,23 @@ def sort_glob_ids_by_angle(gids, points, c, v1, v2):
     ids = th.argsort()
     return gids[ids]
 #
+
+def radians_to_degrees(r):
+    """
+    Convert from radians to degrees.
+
+    Arguments:
+    ----------
+
+        r : float or np.ndarray
+            The radians.
+
+    Returns:
+    ----------
+
+        deg : float or np.ndarray
+            The degrees.
+
+    """
+    deg = 180/np.pi * r
+    return deg
