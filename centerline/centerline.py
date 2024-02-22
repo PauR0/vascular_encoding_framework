@@ -917,9 +917,58 @@ class CenterlineNetwork(Tree):
         return minid
     #
 
-    def get_projection_parameter(self, p, method='scalar'):
+    def get_projection_parameter(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
         """
-        Get the projection onto the centerline tree by normal - distance.
+        Get the parameter of the projection onto the centerline tree.
+        If centerline id (cl_id) argument is not provided it is computed
+        using get_centerline_association.
+
+        Arguments:
+        -----------
+
+            p : np.ndarray (3,)
+                The 3D point.
+
+            cl_id : str, opt
+                Default None. The id of the centerline of the network to project
+                the point. If None, it is computed using get_centerline_membership
+                method.
+
+            n : np.ndarray, opt
+                Default None. A normal direction at the point, useful if the point
+                belongs to the surface of the vascular domain, its normal can be used.
+
+            method : Literal {'scalar', 'vec', 'jac-vec', 'sample'}
+                The method use to compute the projection.
+
+            full_output : bool
+                Whether to return the distance and centerline membership with the parameter
+                or not. Default is False.
+
+        Returns:
+        --------
+
+            t : float
+                The value of the parameter.
+
+            d : float, opt
+                The distance from p to the closest point in the centerline
+
+            cl_id : str
+                The id of the centerline it belongs to
+
+        """
+
+        if cl_id is None:
+            cl_id = self.get_centerline_association(p, n=n, thrs=thrs)
+
+        t, d = self[cl_id].get_projection_parameter(p=p, method=method)
+
+        if full_output:
+            return t, d, cl_id
+
+        return t
+    #
         """
         pass
     #
