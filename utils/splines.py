@@ -66,7 +66,7 @@ class UniSpline(Spline):
         self.n_knots : int        = None
         self.extra   : str        = 'linear' #{'linear', 'constant'}
 
-        self._spline : BSpline
+        self._spl : BSpline
     #
 
     def __call__(self, t):
@@ -99,23 +99,23 @@ class UniSpline(Spline):
                 The evaluation of t. If coeffs are N-dimensional, the output so will.
         """
 
-        if not attribute_checker(self, ['_spline'], extra_info="can't evaluate spline, it has not been built..."):
+        if not attribute_checker(self, ['_spl'], extra_info="can't evaluate spline, it has not been built..."):
             return False
 
 
         if self.extra == 'constant':
             tt = np.clip(t, a_min=self.t0, a_max=self.t1)
-            p  = np.array(self._spline(tt))
+            p  = np.array(self._spl(tt))
 
         elif self.extra == 'linear':
             #Sorry for the lambda mess...
-            lower_extr = lambda x: self._spline(self.t0) - self._spline.derivative(self.t0) * x
-            upper_extr = lambda x: self._spline(self.t1) + self._spline.derivative(self.t1) * (x-self.t1)
-            middl_intr = lambda x: self._spline(x)
+            lower_extr = lambda x: self._spl(self.t0) - self._spl.derivative(self.t0) * x
+            upper_extr = lambda x: self._spl(self.t1) + self._spl.derivative(self.t1) * (x-self.t1)
+            middl_intr = lambda x: self._spl(x)
             if self.coeffs.ndim > 1:
-                lower_extr = lambda x: (self._spline(self.t0).reshape(3,1) - self._spline.derivative(self.t0).reshape(3,1) * x).T
-                upper_extr = lambda x: (self._spline(self.t1).reshape(3,1) + self._spline.derivative(self.t1).reshape(3,1) * (x-1)).T
-                middl_intr = lambda x: self._spline(x).reshape(-1, 3)
+                lower_extr = lambda x: (self._spl(self.t0).reshape(3,1) - self._spl.derivative(self.t0).reshape(3,1) * x).T
+                upper_extr = lambda x: (self._spl(self.t1).reshape(3,1) + self._spl.derivative(self.t1).reshape(3,1) * (x-1)).T
+                middl_intr = lambda x: self._spl(x).reshape(-1, 3)
 
 
             if isinstance(t, (float, int)):
@@ -157,7 +157,7 @@ class UniSpline(Spline):
         if self.knots is None:
             self.knots = knots_list(self.t0, self.t1, self.n_knots, mode='complete')
 
-        self._spline = BSpline(t=self.knots,
+        self._spl = BSpline(t=self.knots,
                                c=self.coeffs,
                                k=self.k)
     #
@@ -183,12 +183,12 @@ class UniSpline(Spline):
         """
 
         #Compute the polynomial segments
-        min_id = np.argmax(self._spline.t > a)
-        max_id = np.argmax(self._spline.t > b)
+        min_id = np.argmax(self._spl.t > a)
+        max_id = np.argmax(self._spl.t > b)
         if max_id == 0:
             max_id = -1
 
-        segments = np.concatenate(([a], self._spline.t[min_id:max_id], [b]))
+        segments = np.concatenate(([a], self._spl.t[min_id:max_id], [b]))
 
         return segments
     #
