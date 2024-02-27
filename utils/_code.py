@@ -252,19 +252,25 @@ class Tree(dict):
 
         tree = Tree()
 
-        def add_child(nid, children, parent=None, **kwargs):
-            n          = Node()
-            n.parent   = parent
-            n.id       = nid
-            n.children = set(children.keys())
-            n.set_data(**kwargs)
-            tree[n.id] = n
-            if children:
-                for cid, child in children.items():
-                    add_child(nid=cid, children=child['children'], parent=nid, **{k:v for (k, v) in child.items() if k not in ['id', 'parent', 'children']})
+        roots = [nid for nid, node in hierarchy.items() if node['parent'] is None]
 
-        for rid, root in hierarchy.items():
-            add_child(nid=rid, children=root['children'], parent=None, **{k:v for (k, v) in root.items() if k not in ['id', 'parent', 'children']})
+        def add_node(nid):#, children, parent=None, **kwargs):
+
+            for k in Node().__dict__:
+                if k not in hierarchy[nid]:
+                    msg.error_message(f"cant build hierarchy base on dict. Node {nid} has no entry for {k}")
+                    return False
+
+            n = Node()
+            n.id = nid
+            n.set_data(**hierarchy[nid])
+            tree[n.id] = n
+            for cid in n.children:
+                    add_node(nid=cid)
+            return True
+
+        for rid in roots:
+            add_node(nid=rid)
 
         return tree
     #
