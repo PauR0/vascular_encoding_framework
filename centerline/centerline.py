@@ -599,7 +599,7 @@ class Centerline(Spline, Node):
         """
         Compute the arclength of the centerline, with the formula:
 
-                    L_c(h) = int_0^h ||C'(t)|| dt.
+                    L_c(a,b) = int_a^b ||c'(t)|| dt.
 
         Since the centerline is a piecewise polynomial (spline curve)
         each integration is carried out in each polynomial segment
