@@ -32,6 +32,9 @@ class Node:
 
         """
 
+        if 'children' in kwargs:
+            self.children = set(kwargs['children'])
+            kwargs.pop('children')
 
         attribute_setter(self, **kwargs)
     #
