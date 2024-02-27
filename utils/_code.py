@@ -16,9 +16,7 @@ class Node:
         self.children : set = set()
 
         if nd is not None:
-            self.set_data(id       = nd.id,
-                          parent   = nd.parent,
-                          children = nd.children)
+            self.set_data_from_other_node(nd=nd)
     #
 
     def __str__(self):
@@ -36,6 +34,22 @@ class Node:
 
 
         attribute_setter(self, **kwargs)
+    #
+
+    def set_data_from_other_node(self, nd):
+        """
+        Copy the Node attribute from other Node object into this.
+        Note that only the default Node attributes defined in the
+        class constructor will be copied.
+
+        Arguments:
+        ----------
+
+            nd : Node
+                The node from which attributes will be copied.
+        """
+
+        self.set_data(**{k : getattr(nd, k) for k in Node().__dict__})
     #
 
     def add_child(self, c):
