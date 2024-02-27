@@ -566,69 +566,6 @@ def compute_rho_spline(polar_points, n_knots, k=3, logger=None):
     return coeff_r, rmse
 #
 
-def compute_slice_coeffs(points, v1, v2, center, n_knots_slice, logger=None, full_output=False, debug=False, k=3):
-    """ Fits a spline to the points of a slice
-
-    TODO: document compute_slice_coeffs
-
-    Returns
-    -------
-    coef_r : numpy.array
-        List of coefficients.
-    min_r : float
-        minimum value of the radius
-    max_r : float
-        maximum value of the radius
-    rmse : float
-        root mean squared error of the fitting
-
-    """
-
-    points2d_cart = coord_planes(points.T, center, v1, v2)
-
-    # Convert to polars. sorted by theta and with 0 <= th < 2pi
-    polar_points = cart_to_polar(points2d_cart)
-
-    coeff_r, rmse = compute_rho_spline(polar_points=polar_points, k=k, n_knots=n_knots_slice, logger=logger)
-
-    max_r = max(polar_points[1])
-    min_r = min(polar_points[1])
-
-    if debug:
-        f = plt.figure()
-        ax_c = f.add_subplot(121)
-        ax_c.set_title('Cartesian coords')
-        ax_c.scatter(points2d_cart[0], points2d_cart[1])
-
-        ax_p = f.add_subplot(122)
-        ax_p.set_title('Polar coords')
-        ax_p.scatter(polar_points[0], polar_points[1])
-
-        plt.show()
-
-
-    # The last four values are always 0. We do not remove them
-    if full_output:
-        return coeff_r, min_r, max_r, rmse
-    else:
-        return coeff_r, min_r, max_r
-#
-
-def compute_slice_rmse(polar_points, coeff, n_knots_slice, k=3):
-
-    error = 0
-    if not isinstance(polar_points, np.ndarray): polar_points = np.array(polar_points)
-
-    t = knots_list(0, 2*np.pi, n_knots_slice, mode='periodic')
-
-    for p in polar_points.T:
-        e = (p[1] - splev(p[0], (t,coeff,k)))**2
-        error += e
-
-    error = np.sqrt(error/polar_points.shape[1])
-    return error
-#
-
 def compute_point_weights(points, weighting=None, normalize=True):
     """
     Function to compute weights for a list of points. The weighting of the points
