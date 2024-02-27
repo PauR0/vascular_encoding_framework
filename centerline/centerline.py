@@ -634,6 +634,50 @@ class Centerline(Spline, Node):
         return l
     #
 
+    def travel_distance_parameter(self, d, a=None):
+        """
+        Get the parameter resulting from traveling a distance d, from an initial
+        parameter a. Note that if d is negative, the distance will be traveled
+        in reverse direction to centerline parameterization.
+
+        Arguments:
+        ------------
+
+            d : float
+                The signed distance to travel.
+
+            a : float
+                Default is self.t0. The initial parameter where to start the
+                traveling.
+
+        Returns:
+        ----------
+            t : float
+                The parameter at which the distance from a, along the centerline
+                has reached d.
+        """
+
+        if a is None:
+            a=self.t0
+
+        if d == 0:
+            return a
+
+        if d > 0:
+            bounds = [a, self.t1]
+            def f(t):
+                return np.abs(d - self.get_arc_length(b=t, a=a))
+
+        if d < 0:
+            bounds = [self.t0, a]
+            def f(t):
+                return np.abs(d + self.get_arc_length(b=a, a=t))
+
+        res = minimize_scalar(fun=f, bounds=bounds, method='bounded')
+
+        return res.x
+    #
+
     def get_curvature(self, t):
         """
         Get the curvature of the centerline at a given parameter value.
