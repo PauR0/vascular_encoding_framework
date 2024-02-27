@@ -132,3 +132,29 @@ def triangulate_connected_cross_section(cs):
 
     return new_cs
 #
+
+def polyline_from_points(points):
+    """
+    Make a pyvista PolyData consisting of points and
+    lines joining them.
+
+    Arguments:
+    ------------
+
+        points : array-like
+            The list of points.
+
+    Returns:
+    ---------
+
+        pline : pv.PolyData
+            The polyline.
+    """
+
+    if not isinstance(points, np.ndarray):
+        points = np.array(points)
+
+    pline = pv.PolyData(points)
+    pline.lines = np.array([(2, i, i+1) for i in range(pline.n_points-1)], dtype=int).ravel()
+    return pline
+#
