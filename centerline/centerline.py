@@ -1147,7 +1147,7 @@ class CenterlineNetwork(Tree):
     #
 
     @staticmethod
-    def from_multiblock_paths(paths, knots, graft_rate=0.2):
+    def from_multiblock_paths(paths, knots, graft_rate=0.5):
         """
         Create a CenterlineTree from a pyvista MultiBlock made polydatas with
         points joined by lines, basically like the ouput of CenterlinePathExtractor.
@@ -1169,7 +1169,7 @@ class CenterlineNetwork(Tree):
                 in the latter, a uniform spline is built with the number provided.
 
             graft_rate : float
-                Default is 0.2. A parameter to control the grafting insertion. Represent a distance proportional to the radius
+                Default is 0.5. A parameter to control the grafting insertion. Represent a distance proportional to the radius
                 traveled towards the parent branch inlet along the centerline at the junction.
 
 
@@ -1199,7 +1199,9 @@ class CenterlineNetwork(Tree):
                 pre_joint   = paths[f'path_{nid}'].points[0]
                 pre_joint_t = pcl.get_projection_parameter(pre_joint)
                 joint_t     = pcl.travel_distance_parameter(d=-paths[f'path_{nid}']['radius'][0]*graft_rate, a=pre_joint_t)
-                points      = np.concatenate([[pcl(joint_t), (pcl(pre_joint_t)+pre_joint)/2], paths[f'path_{nid}'].points[1:]])
+                joint       = pcl(joint_t)
+                ids         = np.linalg.norm(points - joint, axis=1) > paths[f'path_{nid}']['radius'][0]*graft_rate
+                points      = np.concatenate([[joint, pcl((joint_t+pre_joint_t)/2)], paths[f'path_{nid}'].points[ids]])
 
             cl = Centerline.from_points(points, knots=knots[nid], force_tangent=True)
             cl.id = nid
