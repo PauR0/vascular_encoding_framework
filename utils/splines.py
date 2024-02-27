@@ -82,23 +82,6 @@ class UniSpline(Spline):
         return self.evaluate(t)
     #
 
-    def set_parameters(self, build=False, **kwargs):
-        """
-        Set parameters and attributes by kwargs.
-
-        Arguments:
-        -------------
-
-            build : bool, opt
-                Default False. If run build setting the params.
-        """
-
-        attribute_setter(self, **kwargs)
-
-        if build:
-            self.build()
-    #
-
     def evaluate(self, t):
         """
         Evaluate the spline at values provided in t. Values are clipped to
