@@ -500,6 +500,7 @@ class CenterlinePathExtractor:
                 pdt.points = self.centerline_domain[self.boundaries[bid].id_path]
                 pdt.lines  = np.array([[2, j, j+1] for j in range(len(self.boundaries[bid].id_path)-1)], dtype=int)
                 pdt['cl_domain_id'] = np.array(self.boundaries[bid].id_path, dtype=int)
+                pdt['radius']       = self.radius[self.boundaries[bid].id_path]
                 pdt.field_data['parent'] = [self.boundaries[bid].parent]
                 if self.boundaries[bid].parent in self.boundaries.roots:
                     pdt.field_data['parent'] = ['None']
