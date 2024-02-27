@@ -12,10 +12,10 @@ from scipy.misc import derivative
 import messages as msg
 from utils._code import Tree, Node, attribute_checker
 from utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
-from utils.splines import Spline, lsq_spline_smoothing
+from utils.splines import UniSpline, lsq_spline_smoothing
 
 
-class ParallelTransport(Spline):
+class ParallelTransport(UniSpline):
 
     def __init__(self) -> None:
 
@@ -80,7 +80,7 @@ class ParallelTransport(Spline):
     #
 #
 
-class Centerline(Spline, Node):
+class Centerline(UniSpline, Node):
     """
     The centerline class contains the main attributes and methods of a Bspline
     curve that models the centerline of a branch.
@@ -89,7 +89,9 @@ class Centerline(Spline, Node):
     def __init__(self):
 
         Node.__init__(self=self)
-        Spline.__init__(self=self)
+        self.joint_t : float = None #The parameter of the joint at parent centerline
+
+        UniSpline.__init__(self=self)
 
         #Object reference frame
         self.center : np.array = None
@@ -269,7 +271,7 @@ class Centerline(Spline, Node):
             return False
 
         super().build()
-        self.tangent = self._spline.derivative()
+        self.tangent = self._spl.derivative()
 
         #Update functions that depend on centerline.
         self.compute_samples()
