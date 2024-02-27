@@ -6,9 +6,54 @@ from scipy.interpolate import splrep, splev, BSpline, make_lsq_spline
 from utils._code import attribute_checker, attribute_setter
 
 
-class Spline:
+class Spline(ABC):
+
+    def __init__(self):
+        ...
+    #
+
+    @abstractmethod
+    def evaluate(self, **kwargs):
+        ...
+    #
+
+    @abstractmethod
+    def __call__(self, **kwargs):
+        """
+        Calling a spline object is expected to return the same as the evaluate
+        method does.
+        """
+        ...
+    #
+
+    def set_parameters(self, build=False, **kwargs):
+        """
+        Set parameters and attributes by kwargs.
+
+        Arguments:
+        -------------
+
+            build : bool, opt
+                Default False. If run build setting the params.
+        """
+
+        attribute_setter(self, **kwargs)
+
+        if build:
+            self.build()
+    #
+
+    @abstractmethod
+    def build(self):
+        ...
+    #
+#
+
+class UniSpline(Spline):
 
     def __init__(self) -> None:
+
+        super().__init__()
 
         #Extrema of the parameter domain.
         self.t0 : float = 0
