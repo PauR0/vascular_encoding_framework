@@ -1068,6 +1068,9 @@ class CenterlineNetwork(Tree):
         if cl_id is None:
             cl_id = self.get_centerline_association(p=p, n=n, method=method, thrs=thrs)
 
+        if full_output:
+            return self[cl_id].cartesian_to_vcs(p=p), cl_id
+
         return self[cl_id].cartesian_to_vcs(p=p)
     #
 
