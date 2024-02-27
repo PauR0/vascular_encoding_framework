@@ -656,9 +656,12 @@ def extend_periodically_point_cloud(pts, col=1, T=None, d_max=None):
 def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ext=None, kx=3, ky=3, debug=False):
     """
     A function to perform a LSQ approximation of a bivariate function, f(x,y),
-    that is periodic wrt the y axis, by means of bivariate splines. To emulate periodicity
+    that is periodic wrt the y axis, by means of uniform bivariate splines. To emulate periodicity
     the provide points are periodically extended in the y-axis, and a bivariate spline with
     its corresponding extended knots is fitted in that space.
+
+    TODO: Allow passing the knot vectors to support non-uniform splines and an int to build the
+    uniform knot.
 
     Arguments:
     ------------
@@ -700,7 +703,7 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
     d = ty[1] - ty[0]
 
     pts = np.concatenate((x.reshape(-1,1), y.reshape(-1,1), z.reshape(-1,1)), axis=1)
-    pts_ext = extend_periodically_point_cloud(pts, col=1, T=2*np.pi, d_max=ext*d)
+    pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb, d_max=ext*d)
     x_ext, y_ext, z_ext = pts_ext[:,0], pts_ext[:,1], pts_ext[:,2]
     yb_ext, ye_ext = y_ext.min(), y_ext.max()
 
