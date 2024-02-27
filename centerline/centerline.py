@@ -13,6 +13,7 @@ import messages as msg
 from utils._code import Tree, Node, attribute_checker
 from utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
 from utils.splines import UniSpline, lsq_spline_smoothing
+from utils.geometry import polyline_from_points
 
 
 class ParallelTransport(UniSpline):
@@ -787,6 +788,31 @@ class Centerline(UniSpline, Node):
 
         k /= self.get_arc_length(b=b, a=a)
         return k
+    #
+
+    def as_polydata(self, t_res=None):
+        """
+        Transform centerline into a PolyData based on points and lines.
+
+        Arguments:
+        -------------
+
+            tau_res : int, opt
+                The number of points in which to discretize the curve.
+        """
+
+        params = self.parameter_samples
+        points = self.samples
+        if t_res is not None:
+            params = np.linspace(self.t0, self.t1, t_res)
+            points = self(params)
+
+        pline = polyline_from_points(points)
+
+        pline['v1'] = self.v1(params)
+        pline['v2'] = self.v1(params)
+
+        return pline
     #
 
     @staticmethod
