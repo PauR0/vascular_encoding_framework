@@ -12,6 +12,67 @@ from utils.spatial import normalize
 import messages as msg
 
 
+def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, max_d=None, debug=False):
+    """
+    Given a point in the lumen of a vascular mesh, this function approximates the cross section it belongs to.
+    This function computes the cross section as the plane-mesh intersection whose perimeter/area is minimal.
+    The intersection optimization is approxiated using a discrete amount of posible planes, the resolution can
+    be controlled by means of the theta_res and phi_res arguments.
+
+
+    Arguments:
+    ------------
+
+        point : np.ndarray (3,)
+            The point to compute the cross section
+
+        mesh : pv.PolyData
+            The vascular mesh.
+
+        theta_res, phi_res : int, opt
+            The resolution in spherical coordinates for the testing directions.
+
+        max_d : float, opt
+            The maximum distance allowed between
+    """
+
+    def perimeter(n):
+        cs = extract_section(mesh=mesh, normal=n, origin=point)
+
+        pts, _ = mesh.ray_trace(point, cs.center, first_point=True)
+        if pts.shape[0]>0:
+            return np.inf
+
+        if max_d is not None:
+            if np.linalg.norm(point-np.array(cs.center)) > max_d:
+                return np.inf
+
+        cs = cs.compute_cell_sizes(length=True, area=False, volume=False)
+        return cs['Length'].sum()
+
+    n0 = np.array([0, 0, 1]) #Testing only on half the sphere, due to periodicity
+    normals = pv.Sphere(theta_resolution=theta_res, phi_resolution=phi_res)
+    aligned = np.sign((normals.points*n0).sum(axis=1)) >= 0
+    normals = normals.extract_points(aligned, adjacent_cells=False)
+    perimeters = np.array([perimeter(n) for n in normals.points])
+    perimeters[perimeters <= 0.0] = np.inf
+    id_opt = np.argmin(perimeters)
+    n_opt = normals.points[id_opt]
+
+    cs_opt = extract_section(mesh=mesh, normal=n_opt, origin=point, triangulate=True)
+
+    if debug:
+        arrow = pv.Arrow(start=point, direction=n_opt)
+        p = pv.Plotter()
+        p.add_mesh(mesh, opacity=0.4)
+        p.add_mesh(cs_opt, color='g')
+        p.add_mesh(point, color='g', render_points_as_spheres=True, point_size=10)
+        p.add_mesh(arrow)
+        p.show()
+
+    return cs_opt
+#
+
 def extract_section(mesh, normal, origin, min_perim=None, triangulate=False):
     """
     Given a vascular mesh, a normal and an origin this method extracts the clossest component of
