@@ -12,6 +12,63 @@ from utils.spatial import normalize
 import messages as msg
 
 
+def extract_section(mesh, normal, origin, min_perim=None, triangulate=False):
+    """
+    Given a vascular mesh, a normal and an origin this method extracts the clossest component of
+    the intersection of the mesh and the plane with provided normal and origin. A minimum perimeter can be
+    provided to discard spurious small intersections.
+
+    From each connected component (cc) of the mesh-plane intersection, we use ray-trace to compute the amount of
+    intersections between the cc and the segment [origin - cc.center]. The cross section with no intersection
+    should be the sought one.
+
+    Arguments:
+    ------------
+
+        mesh : pv.PolyData
+            The vascular mesh domain.
+
+        normal : np.ndarray (3,)
+            The normal of the plane
+
+        origin : np.ndarray (3,)
+            The origin of the plane
+
+        min_perim : float, opt
+            Default None. A inferior perimeter threshold to remove small spurious intersections.
+
+        triangulate : bool, opt
+            Default False. Whether to triangulate the resulting section.
+
+    Returns:
+    ---------
+
+        sect : pv.Polydata
+            The section extracted.
+    """
+
+    sect = mesh.slice(normal=normal, origin=origin)
+    sect = sect.connectivity()
+    conn_comps = [sect.extract_points(sect.get_array('RegionId', preference='point') == comp) for comp in np.unique(sect['RegionId'])]
+    comp_centers = np.array([cn.center for cn in conn_comps])
+    dist = np.linalg.norm(comp_centers - origin, axis=1)
+    for i, comp in enumerate(conn_comps):
+        intersect_points, _ = mesh.ray_trace(origin, comp_centers[i])
+        if intersect_points.shape[0] > 0:
+            dist[i] = np.inf
+        if min_perim is not None:
+            comp = comp.compute_cell_sizes()
+            if comp['Length'].sum() < min_perim:
+                dist[i] = np.inf
+    selected_comp = dist.argmin()
+    sect = conn_comps[selected_comp].extract_surface()
+
+    if triangulate:
+        sect = triangulate_cross_section(sect)
+
+    return sect
+#
+
 def triangulate_cross_section(cross_section, method='connected', n=None):
     """
     This function triangulare a cross section list of points.
