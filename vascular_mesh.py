@@ -204,14 +204,19 @@ class VascularMesh(pv.PolyData):
         however, if none is passed this method leaves the hierarcy undefined.
 
         Example of a valid hierarcy using by_centers=True:
-        Ex. hierarchy = {"1" : { "center"   : [ x1, y1, z1],
-                                 "children" : { "2" : { "center"   : [x2, y2, z2],
-                                                        "children" : {}},
-                                                "0" : {"center"   : [x0, y0, z0],
-                                                       "children" : {}}
-                                               }
-                                }
-                        }
+        Ex. hierarchy = {"1" : {"parent"     : None,
+                            "center"   : [ x1, y1, z1],
+                            "children" : {"2"}
+                           }
+                     "2" : {"parent"     : '1',
+                            "center"   : [ x2, y2, z2],
+                            "children" : {"0"}
+                           }
+                     "0" : {"parent"     : '2',
+                            "center"   : [ x0, y0, z0],
+                            "children" : {}
+                           }
+                    }
 
         Arguments:
         ------------
