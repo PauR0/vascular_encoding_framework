@@ -426,19 +426,17 @@ def extract_centerline_domain(mesh, method='seekers', method_params=None, debug=
         return False
     alg.debug = debug
 
+    update=True
     input_mesh = mesh
     if isinstance(mesh, VascularMesh):
-        mesh.compute_closed_mesh()
-        input_mesh = mesh.closed.compute_normals(cell_normals=False, point_normals=True)#, flip_normals=True)
-
-    update=True
-    if mesh.kdt is not None and method == 'flux':
-        update=False
+        if mesh.closed is None:
+            mesh.compute_closed_mesh()
+        input_mesh = mesh.closed.compute_normals(cell_normals=False, point_normals=True)
+        if mesh.kdt is not None and method == 'flux':
+            alg.mesh_kdt = mesh.kdt
+            update=False
 
     alg.set_mesh(m=input_mesh, update=update)
-
-    if mesh.kdt is not None and method == 'flux':
-        alg.mesh_kdt = mesh.kdt
 
     if method_params is not None:
         alg.set_parameters(**method_params)
