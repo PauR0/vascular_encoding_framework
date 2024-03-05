@@ -278,7 +278,7 @@ class VascularMesh(pv.PolyData):
                 bd = Boundary(self.boundaries[bid])
 
             bd.extract_from_polydata(b)
-            self.boundaries[ii] = bd
+            self.boundaries[bid] = bd
 
         self.n_boundaries = len(self.boundaries)
         msg.done_message("mesh boundaries")
