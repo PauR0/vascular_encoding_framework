@@ -178,6 +178,9 @@ class VesselEncoding(Node):
                 The VesselEncoding object.
         """
 
+        if cl is not None:
+            self.set_centerline(cl=cl)
+
         points_vcs = np.array([self.centerline.cartesian_to_vcs(p) for p in vsl_mesh.points])
 
         self.radius = Radius()
