@@ -252,7 +252,7 @@ class Tree(dict):
 
         tree = Tree()
 
-        roots = [nid for nid, node in hierarchy.items() if node['parent'] is None]
+        roots = [nid for nid, node in hierarchy.items() if node['parent'] in [None, 'None']]
 
         def add_node(nid):#, children, parent=None, **kwargs):
 
