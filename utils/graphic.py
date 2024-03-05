@@ -7,7 +7,7 @@ from centerline import Centerline, CenterlineNetwork
 
 
 
-def plot_adapted_frame(cntrln, plotter=None, scale=1, show=True):
+def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
     """
     Plot the parallel transport defined on a centerline.
 
@@ -16,6 +16,9 @@ def plot_adapted_frame(cntrln, plotter=None, scale=1, show=True):
 
         cl : Centerline or CenterlineNetwork
             The centerline to plot
+
+        vmesh : VascularMesh or pv.PolyData
+            The vascular mesh used to compute the centerline.
 
         plotter : pv.Plotter
             Default None. If passed, parallel_transport is displayed there.
@@ -63,6 +66,9 @@ def plot_adapted_frame(cntrln, plotter=None, scale=1, show=True):
 
     else:
         msg.error_message("The argument cntrln must be an instance of Centerline or CenterlineNetwork.")
+
+    if vmesh is not None:
+        plotter.add_mesh(vmesh, opacity=0.5, color='w')
 
     if show:
         plotter.show()
