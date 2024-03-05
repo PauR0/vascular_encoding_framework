@@ -221,27 +221,40 @@ class Tree(dict):
     def from_hierarchy_dict(hierarchy):
         """
         Build a tree object infering the hierarchy from a dictionary.
-        Structure for hierarchy dicts are as follows:
+        The dictionary must contain the tree nodes as dictionaries themselves.
+        Each node-dict must have the pairs 'id': id, 'parent' : parent_id,
+        children : [child_id1, child_id2,....], the following dict is an exemple
+        node-dict. Note that children must be an iterable of 'ids' that will be
+        turned into a set, duplications of ids are disregarded.
 
         {
-            root-id :   **kwargs,
-                        children { ch-id : { **kwargs
-                                            children : {}
-                                            }
-                                 }
+            '1' : {'id'       : '1',
+                   'parent'   : None,
+                   'children' : {}
+                  }
         }
 
         In the following exemple, a Boundaries object is created with a root node
-        whose id is 1, and and having two children 2, and 0. Children does not have
-        any child, and a center argument is provided to be set in each node.
-        Ex. hierarchy = {"1" : { "center"   : [ x1, y1, z1],
-                                 "children" : { "2" : { "center"   : [x2, y2, z2],
-                                                        "children" : {}},
-                                                "0" : {"center"   : [x3, y3, z3],
-                                                       "children" : {}}
-                                               }
-                                }
-                        }
+        whose id is '1', with a child node '2', and whose center is at (x1,y1,z1). The
+        node '2', has a child '0', its parent is '1', and its center is (x2,y2,z2).
+        Finally, node '0', has no children, its parent is '2' and its center is (x0,y0,z0).
+
+        hierarchy = {"1" : {"id"       : "1"
+                            "parent"   : None,
+                            "center"   : [ x1, y1, z1],
+                            "children" : {"2"}
+                           }
+                     "2" : {"id"       : "2"
+                            "parent"   : '1',
+                            "center"   : [ x2, y2, z2],
+                            "children" : {"0"}
+                           }
+                     "0" : {"id"       : "0",
+                            "parent"   : '2',
+                            "center"   : [ x0, y0, z0],
+                            "children" : {}
+                           }
+                    }
 
         Arguments:
         -----------
