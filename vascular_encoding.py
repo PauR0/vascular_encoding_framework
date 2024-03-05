@@ -17,7 +17,24 @@ class Radius(BiSpline):
         self.x1 = 1
         self.y0 = 0
         self.y1 = 2*np.pi
+    #
 
+    def set_parameters_from_centerline(self, cl):
+        """
+        This method set the radius bounds equal to the Centerline object
+        passed.
+
+        Arguments:
+        -----------
+
+            cl : Centerline
+                The Centerline of the vessel
+        """
+
+        self.x0 = cl.t0
+        self.x1 = cl.t1
+    #
+#
 
 class VesselEncoding(Node):
     """
@@ -184,6 +201,7 @@ class VesselEncoding(Node):
         points_vcs = np.array([self.centerline.cartesian_to_vcs(p) for p in vsl_mesh.points])
 
         self.radius = Radius()
+        self.radius.set_parameters_from_centerline(self.centerline)
         self.radius.set_parameters(n_knots_x = tau_knots,
                                    n_knots_y = theta_knots,
                                    coeffs    = semiperiodic_LSQ_bivariate_approximation(x=points_vcs[:,0],
