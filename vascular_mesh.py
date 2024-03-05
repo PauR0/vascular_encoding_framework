@@ -221,8 +221,8 @@ class VascularMesh(pv.PolyData):
         Arguments:
         ------------
 
-            hierarchy : dict, opt
-                Default None. A hierarchical dict.
+            hierarchy : dict or Boundaries, opt
+                Default None. A hierarchical dictionary or a Boundary object.
 
             by_center : bool, opt
                 Default True. If True, the hierarchy dictionary must be passed.
@@ -247,7 +247,11 @@ class VascularMesh(pv.PolyData):
         bnds = bnds.connectivity()
 
         if hierarchy is not None:
-            self.boundaries = Boundaries(hierarchy=hierarchy)
+            if isinstance(hierarchy, Boundaries):
+                self.boundaries = hierarchy
+            elif isinstance(hierarchy, dict):
+                self.boundaries = Boundaries(hierarchy=hierarchy)
+
             msg.info_message(f"Assuming the following hierarchy: \n{self.boundaries}")
             bids = self.boundaries.enumerate()
             centers = np.array([self.boundaries[bid].center for bid in bids])
