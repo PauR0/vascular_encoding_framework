@@ -363,16 +363,16 @@ class CenterlinePathExtractor:
         parents. Then, the id_paths are arranged according to mode and
         reverse.
 
-        Ex. hierarchy = {"1" : { "center"   : [ x1, y1, z1],
-                                 "children" : { "2" : { "center"   : [x2, y2, z2],
-                                                        "children" : {"0" : {"center"   : [x0, y0, z0],
-                                                                             "children" : {}
-                                                                            }
-                                                                     }
-                                                      },
-                                               }
-                                }
-                        }
+        Ex. Ex. hierarchy = {"1" : {"parent"     : None,
+                                    "center"   : [ x1, y1, z1],
+                                    "children" : {"2"}},
+                             "2" : {"parent"     : '1',
+                                     "center"   : [ x2, y2, z2],
+                                     "children" : {"0"}},
+                             "0" : {"parent"     : '2',
+                                     "center"   : [ x0, y0, z0],
+                                     "children" : {}}
+                            }
 
         With this hierarchy the algorithm would extract the paths:
         "1" - "2"
