@@ -12,7 +12,7 @@ from utils.spatial import normalize
 import messages as msg
 
 
-def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, max_d=None, debug=False):
+def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, n0=None, max_d=None, min_perim=None, debug=False):
     """
     Given a point in the lumen of a vascular mesh, this function approximates the cross section it belongs to.
     This function computes the cross section as the plane-mesh intersection whose perimeter/area is minimal.
@@ -32,12 +32,30 @@ def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, max_d=None,
         theta_res, phi_res : int, opt
             The resolution in spherical coordinates for the testing directions.
 
+        n0 : np.ndarray (3,)
+            Default (0, 0, 1). A normalized direction to filter the sphere of
+            normals.
+
         max_d : float, opt
-            The maximum distance allowed between
+            The maximum distance allowed between the provided center and the
+            center of the computed section.
+
+        min_perim : float, opt
+            Default None. A minimum threshold for the available perimeters. It
+            can be used to filter out small intersections. If the point provided
+            is near the centerline, and let d be the distance between point and mesh,
+            a good value for min_perim is (d/2)*2*pi = d*pi, which is the perimeter of
+            the circumference with radius half the distance from point to mesh.
+
+    Returns:
+    -----------
+
+        cs_opt : pv.PolyData
+            The computed cross section. It is triangulated using the center.
     """
 
     def perimeter(n):
-        cs = extract_section(mesh=mesh, normal=n, origin=point)
+        cs = extract_section(mesh=mesh, normal=n, origin=point, min_perim=min_perim)
 
         pts, _ = mesh.ray_trace(point, cs.center, first_point=True)
         if pts.shape[0]>0:
@@ -50,7 +68,9 @@ def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, max_d=None,
         cs = cs.compute_cell_sizes(length=True, area=False, volume=False)
         return cs['Length'].sum()
 
-    n0 = np.array([0, 0, 1]) #Testing only on half the sphere, due to periodicity
+    if n0 is None:
+        n0 = np.array([0, 0, 1]) #Testing only on half the sphere, due to periodicity
+
     normals = pv.Sphere(theta_resolution=theta_res, phi_resolution=phi_res)
     aligned = np.sign((normals.points*n0).sum(axis=1)) >= 0
     normals = normals.extract_points(aligned, adjacent_cells=False)
