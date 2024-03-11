@@ -72,8 +72,8 @@ def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, n0=None, ma
         n0 = np.array([0, 0, 1]) #Testing only on half the sphere, due to periodicity
 
     normals = pv.Sphere(theta_resolution=theta_res, phi_resolution=phi_res)
-    aligned = np.sign((normals.points*n0).sum(axis=1)) >= 0
-    normals = normals.extract_points(aligned, adjacent_cells=False)
+    aligned = normals.points.dot(n0) >= -0.0
+    normals = normals.extract_points(aligned, adjacent_cells=True)
     perimeters = np.array([perimeter(n) for n in normals.points])
     perimeters[perimeters <= 0.0] = np.inf
     id_opt = np.argmin(perimeters)
