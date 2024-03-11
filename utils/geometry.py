@@ -85,6 +85,7 @@ def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, n0=None, ma
         arrow = pv.Arrow(start=point, direction=n_opt)
         p = pv.Plotter()
         p.add_mesh(mesh, opacity=0.4)
+        p.add_mesh(mesh.slice(normal=n_opt, origin=cs_opt.center), color='r')
         p.add_mesh(cs_opt, color='g')
         p.add_mesh(point, color='g', render_points_as_spheres=True, point_size=10)
         p.add_mesh(arrow)
