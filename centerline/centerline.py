@@ -1210,6 +1210,7 @@ class CenterlineNetwork(Tree):
             cl.id = nid
             if parents[nid] != 'None':
                 cl.parent = parents[nid]
+                cl.joint_t = joint_t
             cl_net[nid] = cl
 
             for cid in cl_ids:
