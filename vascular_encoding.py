@@ -384,6 +384,7 @@ class VesselEncoding(Node):
 class VascularEncoding(Tree):
 
     def __init__(self):
+        super().__init__()
         self.cl_net : CenterlineNetwork = None
     #
 
