@@ -309,6 +309,8 @@ class Boundaries(Tree):
 
         if hierarchy is not None:
             self.graft(Tree.from_hierarchy_dict(hierarchy=hierarchy))
+            for i, n in self.items():
+                self[i] = Boundary(nd=n)
     #
 
     def save(self, filename):
