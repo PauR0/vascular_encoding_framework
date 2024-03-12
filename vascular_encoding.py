@@ -301,13 +301,17 @@ class VesselEncoding(Node):
         self.radius.set_parameters(n_knots_x = tau_knots,
                                    n_knots_y = theta_knots,
                                    coeffs    = semiperiodic_LSQ_bivariate_approximation(x=points_vcs[:,0],
-                                                                             y=points_vcs[:,1],
-                                                                             z=points_vcs[:,2],
-                                                                             nx=tau_knots,
-                                                                             ny=theta_knots,
-                                                                             kx=self.radius.kx,
-                                                                             ky=self.radius.ky,
-                                                                             debug=True))
+                                                                                        y=points_vcs[:,1],
+                                                                                        z=points_vcs[:,2],
+                                                                                        nx=tau_knots,
+                                                                                        ny=theta_knots,
+                                                                                        kx=self.radius.kx,
+                                                                                        ky=self.radius.ky,
+                                                                                        bounds=(self.radius.x0,
+                                                                                                self.radius.x1,
+                                                                                                self.radius.y0,
+                                                                                                self.radius.y1),
+                                                                                        debug=debug))
         self.build()
     #
 #
