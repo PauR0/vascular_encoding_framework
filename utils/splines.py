@@ -763,3 +763,79 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
 
     return Mcoeff
 #
+
+def fill_gaps(points, f, N=None, M=None, d=2, debug=False):
+    """
+    Provided a 2D point cloud, with a field defined on it. This function
+    detects the holes in the image and add new points on it interpolating the map
+    at the new points.
+
+
+    Arguments:
+    -----------
+
+        points : np.ndarray (n, 2)
+            The cartesian coordinates of the points.
+
+        f : np.ndarray (n,)
+            The field values
+
+        N, M : int, opt
+            Default None. The resolution of the grid for searching the gap.
+            If not provided, the average point density is used.
+
+        d : float, opt
+            Default 1.2. If N or M are None, d_ can be used as a factor to
+            increase the estimated average point density.
+
+        debug : bool,
+            Plot the process.
+    Returns:
+    ---------
+        new_points, new_f : np.ndarray (n,)
+            The new points with the interpolated field
+    """
+
+    pm, pM = points.min(axis=0), points.max(axis=0)
+    if None in [M, N]:
+        d *= points.shape[0] / np.product(pM-pm)
+        N = M = np.round(np.sqrt(d)).astype(int)
+
+    grid = np.ones((N,M), dtype=int)
+    points.min(axis=0)
+
+    v_tr = np.array([N-1, M-1]) / (pM-pm)
+    points_tr = (points-pm)*v_tr
+    ids = np.round(points_tr).astype(int)
+    ids = (ids[None,:,0], ids[None,:,1])
+    grid[ids] = 0
+    grid = label(dilation(grid, footprint=np.ones((5,5))))
+
+    new_points, new_f = [], []
+    for reg in regionprops(grid):
+        rm, cm, rM, cM = reg.bbox
+        ids = (rm <= points_tr[:, 0]) & (points_tr[:, 0] <= rM) & (cm <= points_tr[:, 1]) & (points_tr[:, 1] <= cM)
+        pts_, f_ = points[ids], f[ids]
+        interp = RBFInterpolator(y=pts_, d=f_, kernel='thin_plate_spline')
+        new_pts = reg.coords / v_tr + pm
+        new_points.append(new_pts)
+        new_f.append(interp(new_pts))
+
+    print(new_points)
+    print(new_f)
+
+    new_points = np.vstack(new_points)
+    new_f = np.concatenate(new_f)
+    print(new_points.shape)
+    print(new_f.shape)
+
+    if debug:
+        _, ax = plt.subplots(1, 2)
+        ax[0].imshow(grid.T, origin='lower')
+        ax[0].scatter(points_tr[:,0], points_tr[:,1], s=.5)
+
+        ax[1].scatter(points[:,0],     points[:,1],     c=f,     s=.5)
+        ax[1].scatter(new_points[:,0], new_points[:,1], c=new_f, s=1)
+        plt.show()
+
+    return new_points, new_f
