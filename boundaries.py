@@ -286,7 +286,7 @@ class Boundary(Node):
         """
 
         if 'Normals' not in pdt.cell_data:
-            pdt = pdt.compute_normals(cell_normals=True)
+            pdt = pdt.compute_normals(cell_normals=True, inplace=False)
 
         self.set_data(center = np.array(pdt.center),
                       normal = normalize(pdt.get_array('Normals', preference='cell').mean(axis=0)),
