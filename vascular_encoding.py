@@ -259,4 +259,64 @@ class VascularEncoding(Tree):
         for rid in cl_net.roots:
             encode_and_add_vessel(rid)
     #
+
+    def encode_vascular_mesh_decoupling(self, vmesh, cl_net, params, debug=False):
+        """
+        Encode a vascular mesh decoupling each branch as an independent vessel.
+        Although using this method returns independent branches, the encoding keeps
+        the track of the vessel junctions by mean of the vessel coordinates of the
+        inlet in the parent branch.
+
+        Arguments:
+        ------------
+            TBD.
+
+        Returns:
+        ---------
+            TBD.
+        """
+
+        def remove_centerline_graft(bid):
+            cl = cl_net[bid]
+            pve = self[cl.parent]
+
+            def f(t):
+                vcs = pve.cartesian_to_vcs(cl(t), rho_norm=True)
+                return abs(1-vcs[2])
+
+            res = minimize_scalar(f, bounds=(cl.t0, cl.t1), method='bounded')
+
+            p = pv.Plotter()
+            p.add_mesh(vmesh, opacity=0.4)
+            p.add_mesh(pve.make_surface_mesh(), color='b', line_width=5)
+            p.add_mesh(cl.as_polydata(), color='k', line_width=5)
+            p.add_mesh(cl(res.x), color='g', render_points_as_spheres=True, point_size=10)
+            p.show()
+
+            return cl
+
+        def decouple_and_encode_vessel(bid):
+
+            cl = cl_net[bid]
+            if cl.parent is not None:
+                cl = remove_centerline_graft(bid)
+
+            ve = VesselEncoding()
+            ve.set_centerline(cl)
+            vsl_mesh = ve.extract_vessel_from_network(vmesh)
+            ve.encode_vessel_mesh(vsl_mesh,
+                                  tau_knots=params[bid]['tau_knots'],
+                                  theta_knots=params[bid]['theta_knots'],
+                                  debug=debug)
+
+            self[bid] = ve
+            for cid in cl.children:
+                decouple_and_encode_vessel(bid=cid)
+
+        for rid in cl_net.roots:
+            decouple_and_encode_vessel(bid=rid)
+    #
+
+
+
 #
