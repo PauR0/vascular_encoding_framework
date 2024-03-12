@@ -482,34 +482,60 @@ class Centerline(UniSpline, Node):
         return np.array((tau, theta, rho))
     #
 
-    def vcs_to_cartesian(self, tau, theta, rho):
+    def vcs_to_cartesian(self, tau, theta, rho, grid=False, full_output=False):
         """
         Given a point expressed in Vessel Coordinate System (VCS), this method
         computes its cartesian coordinates.
 
+        Using numpy broadcasting this metho allows working with arrays of vessel
+        coordinates.
 
         Arguments:
         ----------
 
-            tau : float
+            tau : float or arraylike (N,)
                 The longitudinal coordinate of the point
 
-            theta : float, np.array (N,1)
+            theta : float or arraylike (N,)
                 Angular coordinate of the point
 
-            rho : float, np.array (N,1), optional.
+            rho : float or arraylike (N,)
                 The radial coordinate of the point
 
+            grid : bool
+                Default False. If true, the method returns the cartesian representation of the
+                grid tau x theta x rho.
+
+            full_output : bool, false
+                Default False. Whether to return the as well the vcs. Useful in combination with grid.
         Returns
         -------
-            p : np.ndarray
+            p : np.ndarray (N, 3)
                 The point in cartesian coordinates.
 
+            tau, theta, rho : np.ndarray (N, ), opt.
+                If full_output is True, the vessel coordinates of the points are returned.
         """
+
+        arraylike = (list, np.ndarray)
+        if isinstance(theta, arraylike) or grid:
+            theta = np.array([theta]).reshape(-1, 1)
+
+        if isinstance(rho, arraylike) or grid:
+            rho = np.array([rho]).reshape(-1, 1)
+
+        if grid:
+            gr = np.meshgrid(tau, theta, rho)
+            tau   = gr[0].ravel()
+            theta = gr[1].reshape(-1, 1)
+            rho   = gr[2].reshape(-1, 1)
 
         p = self(tau) + rho * (self.v1(tau)*np.cos(theta) + self.v2(tau)*np.sin(theta))
 
-        return np.array(p)
+        if full_output:
+            return p, tau, theta, rho
+
+        return p
     #
 
     def get_frenet_normal(self, t):
