@@ -260,7 +260,7 @@ class VesselEncoding(Node):
         return vsl_mesh
     #
 
-    def encode_vessel_mesh(self, vsl_mesh, tau_knots, theta_knots, cl=None, debug=False):
+    def encode_vessel_mesh(self, vsl_mesh, tau_knots, theta_knots, cl=None, debug=True):
         """
         Encode a vessel using the centerline and the anisotropic radius.
         If the centerline have hierarchical data like its parent or joint_t
