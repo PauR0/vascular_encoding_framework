@@ -653,7 +653,7 @@ def extend_periodically_point_cloud(pts, col=1, T=None, d_max=None):
     return np.unique(pts_out,axis=0)
 #
 
-def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ext=None, kx=3, ky=3, debug=False):
+def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ext=None, kx=3, ky=3, bounds=None, fill=True, debug=False):
     """
     A function to perform a LSQ approximation of a bivariate function, f(x,y),
     that is periodic wrt the y axis, by means of uniform bivariate splines. To emulate periodicity
@@ -684,6 +684,10 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
             The degree of the spline for each dimension.
 
         degbug : bool
+        fill : bool, opt
+            Whether to add interpolated points at detected gaps in the x-y point cloud.
+
+        degbug : bool, opt
             Display a plot with the extension of the data and the fitting result.
 
     Returns:
@@ -704,6 +708,14 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
 
     pts = np.concatenate((x.reshape(-1,1), y.reshape(-1,1), z.reshape(-1,1)), axis=1)
     pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb, d_max=ext*d)
+
+    if fill:
+        fill_xy, fill_z = fill_gaps(pts_ext[:, [0, 1]], pts_ext[:, 2], debug=debug)
+        print(fill_xy.shape)
+        print(fill_z.shape)
+        fill_pts = np.hstack([fill_xy, fill_z[:,None]])
+        pts_ext = np.concatenate([pts_ext, fill_pts])
+
     x_ext, y_ext, z_ext = pts_ext[:,0], pts_ext[:,1], pts_ext[:,2]
     yb_ext, ye_ext = y_ext.min(), y_ext.max()
 
