@@ -81,6 +81,48 @@ class VesselEncoding(Node):
         self.radius.build()
     #
 
+    def cartesian_to_vcs(self, p, rho_norm=False, method='scalar'):
+        """
+        Given a 3D point p expressed in cartesian coordinates, this method
+        computes its expression in the Vessel Coordinate System (VCS). The method
+        requires the attribute centerline to be set, additionally if rho normalization
+        is desired, the radius spline attributes must have been built.
+
+        Arguments:
+        -------------
+
+            p : np.ndarray (3,)
+                A 3D point in cartesian coordinates.
+
+            rho_norm : bool, opt
+                Default False. If radius attribute is built, and rho_norm
+                is True, the radial coordinate is normalized by the expression:
+                rho_n = rho /rho_w(tau, theta)
+
+            method : Literal{'scalar', 'vec', 'vec_jac'}, opt
+                The minimization method to use. See get_projection_parameter
+                for more infor.
+
+        Returns:
+        ---------
+
+            p_vcs : np.ndarray(3,)
+                The coordinates of the point in the VCS.
+
+        """
+
+        if not attribute_checker(self, atts=['centerline'], extra_info="cant compute VCS."):
+            return False
+
+        tau, theta, rho = self.centerline.cartesian_to_vcs(p=p, method=method)
+        if rho_norm:
+            if not attribute_checker(self, atts=['radius'], extra_info="cant compute normalized VCS."):
+                return False
+            rho /= self.radius(tau, theta)
+
+        return np.array((tau, theta, rho))
+    #
+
     def extract_vessel_from_network(self, vmesh, thrs=5, use_normal=True, normal_thrs=30, cl=None, debug=True):
         """
         This method extracts the vessel mesh from a vascular structure
