@@ -18,8 +18,6 @@ class Boundary(Node):
 
         #Added Node parent.
         super().__init__(nd=None)
-        if nd is not None:
-            self.set_data(**nd.__dict__)
 
         #Local reference frame
         self.center : np.ndarray = None # Shape = (3,)
@@ -42,6 +40,10 @@ class Boundary(Node):
         self.k           : int = 3
 
         self.area : float = None
+
+        #Inherit node data
+        if nd is not None:
+            self.set_data(**nd.__dict__)
     #
 
     def __str__(self) -> str:
