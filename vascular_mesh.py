@@ -363,7 +363,7 @@ class VascularMesh(pv.PolyData):
     #
 
     @staticmethod
-    def from_closed_mesh(cmesh, boundaries, debug=False):
+    def from_closed_mesh_and_boundaries(cmesh, boundaries, debug=False):
         """
         Given a closed vascular mesh, and a boundaries object where each boundary has
         a center attribute. This function approximate the boundary cross section of each
@@ -398,8 +398,12 @@ class VascularMesh(pv.PolyData):
         cs_bounds = pv.PolyData()
         kdt = KDTree(cmesh.points)
         for _, bound in boundaries.items():
-            max_d = kdt.query(bound.center)[0]*1.5
-            cs = approximate_cross_section(point=bound.center, mesh=cmesh, debug=debug, max_d=max_d)
+            d = kdt.query(bound.center)[0]
+            cs = approximate_cross_section(point=bound.center,
+                                           mesh=cmesh,
+                                           max_d=d*1.5,
+                                           min_perim=2 * np.pi * d * 0.75,
+                                           debug=debug)
             bound.extract_from_polydata(cs)
             c = cs.center
             cs.points = (cs.points - c) * 1.1 + c #Scaling from center
