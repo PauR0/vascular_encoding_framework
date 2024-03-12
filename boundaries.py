@@ -46,24 +46,6 @@ class Boundary(Node):
             self.set_data(**nd.__dict__)
     #
 
-    def __str__(self) -> str:
-        if self.points is not None:
-            npts = self.points.shape[0]
-        else:
-            npts = 0
-
-        return "Boundary info: \n" \
-               +f"\t id        : {self.id} \n"\
-               +f"\t center    : {self.center}\n"\
-               +f"\t normal    : {self.normal}\n"\
-               +f"\t v1        : {self.v1}\n"\
-               +f"\t v2        : {self.v2}\n"\
-               +f"\t n points  : {npts}\n"\
-               +f"\t rho_coeff : {self.rho_coef}\n"\
-               +f"\t n knots   : {self.n_knots_rho}\n"\
-               +f"\t k         : {self.k}"\
-    #
-
     def save(self, fname):
         """
         Method to save a boundary dict.
