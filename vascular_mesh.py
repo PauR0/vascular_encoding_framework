@@ -8,7 +8,7 @@ from scipy.spatial import KDTree
 
 from boundaries import Boundaries, Boundary
 import messages as msg
-from utils.geometry import triangulate_cross_section, approximate_cross_section
+from utils.geometry import triangulate_cross_section, approximate_cross_section, extract_section
 from utils.spatial  import compute_ref_from_points, normalize
 from utils._code    import attribute_setter
 
