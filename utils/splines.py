@@ -683,7 +683,10 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
         kx,ky : int
             The degree of the spline for each dimension.
 
-        degbug : bool
+        bounds : tuple(float)
+            The interval extrema of the parameters domain in the form
+            (xmin, xmax, ymin, ymax).
+
         fill : bool, opt
             Whether to add interpolated points at detected gaps in the x-y point cloud.
 
@@ -699,8 +702,11 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
     if ext is None:
         ext = ky+1
 
-    xb, xe = x.min(), x.max()
-    yb, ye = y.min(), y.max()
+    if bounds is None:
+        xb, xe = x.min(), x.max()
+        yb, ye = y.min(), y.max()
+    else:
+        xb, xe, yb, ye = bounds
 
     tx = knots_list(s0=xb, s1=xe, n=nx, mode='simple')
     ty = knots_list(s0=yb, s1=ye, n=ny, mode='extended', ext=ext-1)
