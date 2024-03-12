@@ -424,6 +424,92 @@ class VascularMesh(pv.PolyData):
         return vmesh
     #
 
+    @staticmethod
+    def from_closed_mesh_and_centerline(cmesh, cl_net, debug=False):
+        """
+        Given a closed vascular mesh, and a CenterlineNetwork object. This function approximate
+        the cross section of each boundary using the tangent of the centerline at the extrema.
+
+        Arguments:
+        ------------
+
+            vmesh : pv.PolyData
+                The vascular mesh.
+
+            cl_net : CenterlineNetwork
+                The centerline network of the vasculare mesh already computed.
+
+            debug : bool, opt
+                Default False. Show some plots of the process.
+
+        Returns:
+        ----------
+            vmesh : VascularMesh
+                The VascularMesh object with open boundaries. The passed closed mesh is stored in
+                closed_mesh attribute of the VascularMesh.
+        """
+
+        if not cmesh.is_all_triangles:
+            cmesh = cmesh.triangulate()
+
+        boundaries = Boundaries()
+
+        def scale_from_center(cs, s=1.1):
+            scs = cs.copy(deep=True)
+            c = scs.center
+            scs.points = ((scs.points - c) * s) + c #Scaling from center
+            return scs
+
+        def compute_boundary(p, n):
+            b = Boundary()
+            cs = extract_section(mesh=cmesh, normal=n, origin=p, triangulate=True)
+            b.extract_from_polydata(cs)
+            return b
+
+        def add_centerline_boundary(cid, root=False):
+            cl = cl_net[cid]
+            if root:
+                inlet = compute_boundary(p=cl(cl.t0), n=cl.get_tangent(cl.t0))
+                inlet.set_data(id       = f"root_{len(boundaries.roots)}",
+                               parent   = None)
+                boundaries[inlet.id] = inlet
+
+            outlet = compute_boundary(p=cl(cl.t1), n=cl.get_tangent(cl.t1))
+            outlet.set_data_from_other_node(cl)
+            if root:
+                outlet.parent = inlet.id
+            boundaries[outlet.id] = outlet
+
+            for chid in cl.children:
+                add_centerline_boundary(cid=chid)
+
+
+        for rid in cl_net.roots:
+            add_centerline_boundary(rid, root=True)
+
+        cs_bounds = pv.PolyData()
+        for _, b in boundaries.items():
+            cs_bounds += scale_from_center(pv.PolyData(b.points, b.faces))
+
+        col_mesh, _ = cmesh.collision(cs_bounds)
+        colls = np.ones(cmesh.n_cells, dtype=bool)
+        colls[col_mesh.field_data['ContactCells']] = False
+        open_vmesh = col_mesh.extract_cells(colls).extract_largest().extract_surface()
+
+        vmesh            = VascularMesh(p=open_vmesh)
+        vmesh.closed     = cmesh
+        vmesh.boundaries = boundaries
+
+        if debug:
+            p = pv.Plotter()
+            p.add_mesh(cmesh, color='w', opacity=0.8)
+            p.add_mesh(vmesh, color='b')
+            p.add_mesh(cs_bounds, color='r')
+            p.show()
+
+        return vmesh
+
+
 #
 
 
