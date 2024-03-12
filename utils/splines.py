@@ -308,7 +308,7 @@ class BiSpline(Spline):
             T = self.y1-self.y0
             y = clip_periodic(y, T)
 
-        return self._bislp(x, y, grid=grid)
+        return self._bispl(x, y, grid=grid)
     #
 #
 
