@@ -314,6 +314,71 @@ class VesselEncoding(Node):
                                                                                         debug=debug))
         self.build()
     #
+
+    def make_surface_mesh(self, tau_res=100, theta_res=50, vcs=True):
+        """
+        Make a triangle mesh of the encoded vessel. Parameters m and a allow
+
+        Arguments:
+        -----------
+
+            tau_res : int, opt
+                The number of longitudinal discretizations.
+
+            theta_res : int, opt
+                The number of angular discretizations.
+
+            m : float
+                By default 1.0. The multiplicative factor to warp the wall points.
+                if m == 1, the parallel wall is equal to the wall,
+                if m < 1, the parallel wall is a shrinked wall,
+                if m > 1, the parallel wall is a swelled wall.
+
+            a : float
+                By default 0.0. The aditive factor to warp the wall points.
+                if a == 1, the parallel wall is equal to the wall,
+                if a < 1, the parallel wall is a shrinked wall,
+                if a > 1, the parallel wall is a swelled wall.
+
+            vcs : bool
+                Defaulting to False. Whether to add the VCS coordinates of
+                each point as a point array.
+
+        Returns:
+        ---------
+
+            vsl_mesh : VascularMesh
+        """
+
+
+        taus   = np.linspace(self.centerline.t0, self.centerline.t1, tau_res)
+        thetas = np.linspace(self.radius.y0, self.radius.y1, theta_res)
+        rhos   = [1.0]
+
+        points, tau, theta, rho = self.vcs_to_cartesian(tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
+
+
+        triangles = []
+
+        for i in range(tau_res):
+            if i > 0:
+                for j in range(theta_res):
+                    if j == theta_res-1:
+                        triangles.append([3, i*theta_res + j, (i-1)*theta_res + j, (i-1)*theta_res ])
+                        triangles.append([3, i*theta_res + j,     i*theta_res,     (i-1)*theta_res ])
+                    else:
+                        triangles.append([3, i*theta_res + j, (i-1)*theta_res + j,   (i-1)*theta_res + j+1 ])
+                        triangles.append([3, i*theta_res + j,     i*theta_res + j+1, (i-1)*theta_res + j+1 ])
+
+        vsl_mesh = pv.PolyData(points, triangles)
+        if vcs:
+            vsl_mesh['tau']   = tau
+            vsl_mesh['theta'] = theta
+            vsl_mesh['rho']   = rho
+            vsl_mesh['rho_n']   = rho / self.radius(tau, theta)
+
+        return vsl_mesh
+    #
 #
 
 class VascularEncoding(Tree):
