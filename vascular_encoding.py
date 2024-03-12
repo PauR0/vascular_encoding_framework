@@ -123,6 +123,60 @@ class VesselEncoding(Node):
         return np.array((tau, theta, rho))
     #
 
+    def vcs_to_cartesian(self, tau, theta, rho, rho_norm=True, grid=False, full_output=False):
+        """
+        Given a point expressed in Vessel Coordinate System (VCS), this method
+        computes its cartesian coordinates.
+
+        Using numpy broadcasting this metho allows working with arrays of vessel
+        coordinates.
+
+        Arguments:
+        ----------
+
+            tau : float or arraylike (N,)
+                The longitudinal coordinate of the point
+
+            theta : float or arraylike (N,)
+                Angular coordinate of the point
+
+            rho : float or arraylike (N,)
+                The radial coordinate of the point
+
+            rho_norm : bool, opt
+                Default False. Whether the rho passed is normalized or not.
+
+            grid : bool
+                Default False. If true, the method returns the cartesian representation of the
+                grid tau x theta x rho.
+
+            full_output : bool, false
+                Default False. Whether to return the as well the vcs. Useful in combination with grid.
+        Returns
+        -------
+            p : np.ndarray (N, 3)
+                The point in cartesian coordinates.
+
+            tau, theta, rho : np.ndarray (N, ), opt.
+                If full_output is True, the vessel coordinates of the points are returned.
+        """
+
+        if grid:
+            gr = np.meshgrid(tau, theta, rho, indexing='ij')
+            tau   = gr[0].ravel()
+            theta = gr[1].reshape(-1, 1)
+            rho   = gr[2].reshape(-1, 1)
+
+        if rho_norm:
+            rho *= self.radius(tau, np.ravel(theta)).reshape(rho.shape)
+
+        p = self.centerline.vcs_to_cartesian(tau, theta, rho)
+        if full_output:
+            return p, tau, theta, rho
+
+        return p
+    #
+
     def extract_vessel_from_network(self, vmesh, thrs=5, use_normal=True, normal_thrs=30, cl=None, debug=True):
         """
         This method extracts the vessel mesh from a vascular structure
