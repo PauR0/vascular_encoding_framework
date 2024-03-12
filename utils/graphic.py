@@ -53,7 +53,7 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
         v2 = pdt.glyph(orient="v2", factor=scale)
         plotter.add_mesh(v2, color='b')
 
-        if hasattr(cl, 'children'):
+        if isinstance(cntrln, CenterlineNetwork) and hasattr(cl, 'children'):
             for cid in cl.children:
                 plot_cl_pl(cntrln[cid])
 
