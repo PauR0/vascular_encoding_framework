@@ -6,8 +6,7 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from vascular_mesh import VascularMesh
-from boundaries import Boundaries
+from vascular_mesh.vascular_mesh import VascularMesh, Boundaries
 import messages as msg
 from utils._code import attribute_checker
 
