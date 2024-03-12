@@ -45,6 +45,8 @@ class VascularMesh(pv.PolyData):
             self.compute_kdt()
             self.compute_local_ref()
             self.compute_normals()
+        if p.is_manifold:
+            self.closed = p
     #
 
     def compute_kdt(self):
