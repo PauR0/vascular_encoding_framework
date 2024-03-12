@@ -4,7 +4,12 @@ from abc import ABC, abstractmethod
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scipy.interpolate import splrep, splev, BSpline, BivariateSpline, LSQBivariateSpline, make_lsq_spline
+from scipy.interpolate import (splrep, splev, make_lsq_spline,
+                               BSpline, BivariateSpline, LSQBivariateSpline,
+                               RBFInterpolator)
+
+from skimage.morphology import dilation
+from skimage.measure import label, regionprops
 
 import messages as msg
 from utils._code import attribute_checker, attribute_setter
