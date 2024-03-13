@@ -20,7 +20,11 @@ class Node:
     #
 
     def __str__(self):
-        return "\n".join([f"{k}".ljust(10, '.')+f": {v}" for k, v in self.__dict__.items()])
+        strout="\n".join([f"{k}".ljust(10, '.')+f": {v}" for k, v in self.__dict__.items() if k!='points'])
+        if 'points' in self.__dict__:
+            strout += "\npoints shape".ljust(10, '.')+f"{self.points.shape}"
+
+        return strout
     #
 
     def set_data(self, **kwargs):
