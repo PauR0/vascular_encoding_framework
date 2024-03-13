@@ -1227,11 +1227,13 @@ class CenterlineNetwork(Tree):
                 pcl         = cl_net[parents[nid]]
                 pre_joint   = paths[f'path_{nid}'].points[0]
                 pre_joint_t = pcl.get_projection_parameter(pre_joint)
-                joint_t     = pcl.travel_distance_parameter(d=-paths[f'path_{nid}']['radius'][0]*graft_rate, a=pre_joint_t)
-                joint       = pcl(joint_t)
-                ids         = np.linalg.norm(points - joint, axis=1) > paths[f'path_{nid}']['radius'][0]*graft_rate
-                points      = np.concatenate([[joint, pcl((joint_t+pre_joint_t)/2)], paths[f'path_{nid}'].points[ids]])
-
+                if graft_rate:
+                    joint_t     = pcl.travel_distance_parameter(d=-paths[f'path_{nid}']['radius'][0]*graft_rate, a=pre_joint_t)
+                    joint       = pcl(joint_t)
+                    ids         = np.linalg.norm(points - joint, axis=1) > paths[f'path_{nid}']['radius'][0]*graft_rate
+                    points      = np.concatenate([[joint, pcl((joint_t+pre_joint_t)/2)], paths[f'path_{nid}'].points[ids]])
+                else:
+                    joint_t = pre_joint_t
             cl = Centerline.from_points(points, knots=knots[nid], force_tangent=force_tangent)
             cl.id = nid
             if parents[nid] != 'None':
