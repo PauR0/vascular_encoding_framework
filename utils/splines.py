@@ -722,8 +722,6 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
 
     if fill:
         fill_xy, fill_z = fill_gaps(pts_ext[:, [0, 1]], pts_ext[:, 2], debug=debug)
-        print(fill_xy.shape)
-        print(fill_z.shape)
         fill_pts = np.hstack([fill_xy, fill_z[:,None]])
         pts_ext = np.concatenate([pts_ext, fill_pts])
 
