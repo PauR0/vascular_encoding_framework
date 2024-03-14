@@ -254,6 +254,32 @@ class CenterlinePathExtractor:
             self.inverse_radius = 1 / self.radius
     #
 
+    def remove_from_centerline_domain_by_id(self, ids, update_kdt=True):
+        """
+        Remove points from centerline domain according to their index. Then linked
+        attributes such as the radius or the domain kdt are updated.
+
+        Arguments:
+        ------------
+
+            ids : int or array-like
+                The indexes of the points to remove.
+
+            update_kdt : bool, opt
+                Default True. Whether to update the domain_kdt. This argument should only be false
+                if domain_kdt is going to be updated later.
+        """
+
+        mask = np.ones((self.centerline_domain.shape[0],), dtype=bool)
+        mask[ids] = False
+        self.centerline_domain = self.centerline_domain[mask]
+        self.radius = self.radius[mask]
+        self.inverse_radius = self.inverse_radius[mask]
+
+        if update_kdt:
+            self.compute_kdt()
+    #
+
     def add_point_to_centerline_domain(self, p, where='end', update_kdt=True):
         """
         Append a point to the centerline domain updating the radius and inverse radius arrays.
