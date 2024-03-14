@@ -20,9 +20,10 @@ class Node:
     #
 
     def __str__(self):
-        strout="\n".join([f"{k}".ljust(10, '.')+f": {v}" for k, v in self.__dict__.items() if k!='points'])
+        strout="\n".join([f"{k}".ljust(10, '.')+f": {v}" for k, v in self.__dict__.items() if k!='points' and v is not None])
         if 'points' in self.__dict__:
-            strout += "\npoints shape".ljust(10, '.')+f"{self.points.shape}"
+            if self.points is not None:
+                strout += "\npoints shape".ljust(10, '.')+f"{self.points.shape}"
 
         return strout
     #
