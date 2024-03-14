@@ -841,6 +841,61 @@ class Centerline(UniSpline, Node):
         return pline
     #
 
+    def trim(self, t0_, t1_=None, pass_atts=True, n_samps=100):
+        """
+        This method trims the centerline from t0_ to t1_ and
+        returns the new segment as a centelrine object. If pass_atts is true
+        all the centerline attributes such as the v1, v2 and others are kept.
+        The amount of knots for the trimmed centerline will be computed taking
+        into account the amount of knot_segments in the interval [t0_, t1_].
+
+        Arguments:
+        -------------
+
+            t0_, t1_ : float
+                The lower and upper extrema to trim. If t1_ is None, self.t1 is assumed.
+
+            pass_atts : bool, opt
+                Default True. Whether to pass all the attributes of the current centerline
+                to the trimmed one.
+
+            n_samps : int, opt
+                Default 100. The amount of samples to generate to perform the approximation.
+        Returns:
+        -----------
+            cl : Centerline
+                The trimmed centerline.
+        """
+
+        if t1_ is None:
+            t1_ = self.t1
+
+        ts = np.linspace(t0_, t1_, n_samps)
+        n_knots = len(self.get_knot_segments(t0_, t1_)) - 2
+        spl = lsq_spline_smoothing(points=self(ts),
+                                   knots=n_knots,
+                                   k=self.k,
+                                   param_values=ts,
+                                   norm_param=True)
+
+        cl = Centerline()
+        cl.set_parameters(build   = True,
+                          t0      = spl.t[0],
+                          t1      = spl.t[-1],
+                          k       = spl.k,
+                          knots   = spl.t,
+                          coeffs  = spl.c,
+                          n_knots = len(spl.t) - 2*(spl.k+1),
+                          extra   = 'linear')
+
+        if pass_atts:
+            cl.set_data_from_other_node(self)
+            cl.set_data(joint_t = self.joint_t )
+            cl.compute_adapted_frame(mode='as_is', p=self.v1(t0_))
+
+        return cl
+
+
     @staticmethod
     def from_points(points, knots, cl=None, pt_mode='project', p=None, force_tangent=True, norm_param=True):
         """
