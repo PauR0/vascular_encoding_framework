@@ -2,6 +2,7 @@
 
 import pyvista as pv
 import numpy as np
+from scipy.optimize import minimize_scalar
 
 from centerline import Centerline, CenterlineNetwork
 from utils._code import Tree, Node, attribute_checker
