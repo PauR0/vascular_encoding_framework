@@ -484,11 +484,12 @@ class CenterlinePathExtractor:
         def path_to_parent(bid):
 
             if self.boundaries[bid].parent is None:
-                self.boundaries[bid].set_data(id_path=[self.boundaries[bid].cl_domain_id])
+                self.boundaries[bid].set_data(to_numpy=False, id_path=[self.boundaries[bid].cl_domain_id])
             else:
                 pid = self.boundaries[bid].parent
                 parent_path = self.boundaries[pid].id_path
-                self.boundaries[bid].set_data(id_path=minimum_cost_path(heuristic = self._heuristic,
+                self.boundaries[bid].set_data(to_numpy=False,
+                                              id_path=minimum_cost_path(heuristic = self._heuristic,
                                                                         cost      = self._cost,
                                                                         adjacency = self._adjacency,
                                                                         initial=self.boundaries[bid].cl_domain_id,
