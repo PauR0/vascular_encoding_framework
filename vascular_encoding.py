@@ -452,7 +452,7 @@ class VascularEncoding(Tree):
 
             res = minimize_scalar(f, bounds=(cl.t0, cl.t1), method='bounded')
 
-
+            cl = cl.trim(t0_=res.x)
             return cl
 
         def decouple_and_encode_vessel(bid):
