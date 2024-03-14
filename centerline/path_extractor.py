@@ -220,7 +220,7 @@ class CenterlinePathExtractor:
             self.compute_radius_fields()
 
         #Computing centerline_domain_kdt
-        self.domain_kdt = KDTree(self.centerline_domain)
+        self.compute_kdt()
 
         return True
     #
