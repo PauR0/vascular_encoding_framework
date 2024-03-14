@@ -177,7 +177,7 @@ class VesselEncoding(Node):
         return p
     #
 
-    def extract_vessel_from_network(self, vmesh, thrs=5, use_normal=True, normal_thrs=30, cl=None, debug=True):
+    def extract_vessel_from_network(self, vmesh, thrs=5, use_normal=True, normal_thrs=30, cl=None, debug=False):
         """
         This method extracts the vessel mesh from a vascular structure
         based on the centerline. It works similarly to the centerline
