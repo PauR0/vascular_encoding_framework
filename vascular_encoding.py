@@ -452,12 +452,6 @@ class VascularEncoding(Tree):
 
             res = minimize_scalar(f, bounds=(cl.t0, cl.t1), method='bounded')
 
-            p = pv.Plotter()
-            p.add_mesh(vmesh, opacity=0.4)
-            p.add_mesh(pve.make_surface_mesh(), color='b', line_width=5)
-            p.add_mesh(cl.as_polydata(), color='k', line_width=5)
-            p.add_mesh(cl(res.x), color='g', render_points_as_spheres=True, point_size=10)
-            p.show()
 
             return cl
 
