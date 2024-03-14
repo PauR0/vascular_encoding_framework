@@ -463,7 +463,7 @@ class VascularEncoding(Tree):
 
             ve = VesselEncoding()
             ve.set_centerline(cl)
-            vsl_mesh = ve.extract_vessel_from_network(vmesh)
+            vsl_mesh = ve.extract_vessel_from_network(vmesh, debug=debug)
             ve.encode_vessel_mesh(vsl_mesh,
                                   tau_knots=params[bid]['tau_knots'],
                                   theta_knots=params[bid]['theta_knots'],
