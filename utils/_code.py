@@ -1,6 +1,8 @@
 
 from copy import copy, deepcopy
 
+import numpy as np
+
 import messages as msg
 
 
@@ -28,18 +30,35 @@ class Node:
         return strout
     #
 
-    def set_data(self, **kwargs):
+    def set_data(self, to_numpy=True, **kwargs):
         """
         Method to set attributes by means of kwargs.
+        If to_numpy lists containig floats or lists of floats
+        will be tried to turn into numpy arrays.
+
         E.g.
             a = Node()
             a.set_data(center=np.zeros((3,)))
 
+        Arguments:
+        ------------
+
+            to_numpy : bool, opt
+                Default True. Whether to try to cast numerical sequences to
+                numpy arrays.
         """
 
         if 'children' in kwargs:
             self.children = set(kwargs['children'])
             kwargs.pop('children')
+
+        if to_numpy:
+            kwargs_np = deepcopy(kwargs)
+            for k, v in kwargs.items():
+                if v is not None:
+                    if is_arrayable(v):
+                        kwargs_np[k]= k=np.array(v)
+            kwargs = kwargs_np
 
         attribute_setter(self, **kwargs)
     #
@@ -294,7 +313,77 @@ class Tree(dict):
     #
 #
 
+def is_sequence(obj):
+    """
+    Check wether an object is a sequence.
 
+    Arguments:
+    ----------
+
+        obj : any
+            The object to be checked.
+
+    Returns:
+    ---------
+        True or False.
+    """
+    if isinstance(obj, str) and len(obj)<2:
+        return False
+
+    return hasattr(obj, '__iter__') and callable(getattr(obj, '__iter__'))
+#
+
+def is_numeric(obj):
+    """
+    Check whether a object is numeric.
+
+    Arguments:
+    ----------
+
+        seq : iterable object.
+            The sequence to test.
+
+    Returns:
+    ----------
+        True or False
+    """
+
+    numeric = (int, float)
+    if not isinstance(obj, numeric):
+        return False
+    return True
+#
+
+def is_arrayable(seq):
+    """
+    Check whether a sequence is all numeric and safe to be casted it to a numpy array.
+    This function is used to parse float list as numpy arrays but preventing strings and
+    other actual arrayable functions to be a numpy array.
+
+    Arguments:
+    -----------
+
+        seq : any
+            The object to be tested.
+
+    Returns:
+    ----------
+        True or False.
+    """
+
+    if not is_sequence(seq):
+        return False
+
+    for elmnt in seq:
+        if is_sequence(elmnt):
+            if not is_arrayable(elmnt):
+                return False
+        else:
+            if not is_numeric(elmnt):
+                return False
+
+    return True
+#
 
 def attribute_checker(obj, atts, extra_info='', opts=None):
     """
