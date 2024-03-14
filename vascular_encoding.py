@@ -294,7 +294,10 @@ class VesselEncoding(Node):
         if cl is not None:
             self.set_centerline(cl=cl)
 
-        points_vcs = np.array([self.centerline.cartesian_to_vcs(p) for p in vsl_mesh.points])
+        if not 'vcs' in vsl_mesh.point_data:
+            points_vcs = np.array([self.centerline.cartesian_to_vcs(p) for p in vsl_mesh.points])
+        else:
+            points_vcs = vsl_mesh['vcs']
 
         self.radius = Radius()
         self.radius.set_parameters_from_centerline(self.centerline)
