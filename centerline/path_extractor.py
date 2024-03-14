@@ -336,7 +336,10 @@ class CenterlinePathExtractor:
 
             #We update the centerline domain list and the ones in correspondence (radius and inverse_radius)
             self.centerline_domain = np.vstack(stack_p(p, self.centerline_domain))
-            self.set_radius(np.hstack(stack_r(self.vmesh.kdt.query(p)[0], self.radius)), update_inv=True)
+
+            r = self.vmesh.kdt.query(p)[0]
+            self.radius         = np.hstack(stack_r(r, self.radius))
+            self.inverse_radius = np.hstack(stack_r(1/r, self.inverse_radius))
 
             if update_kdt:
                 self.compute_kdt()
@@ -350,21 +353,29 @@ class CenterlinePathExtractor:
 
     def compute_kdt(self):
         """
-        Compute the KDTree using the available points.s
+        Compute the KDTree using the available points.
         """
         self.domain_kdt = KDTree(self.centerline_domain)
     #
 
-    def boundaries_from_vascular_mesh(self, vm=None, copy=True):
+    def boundaries_from_vascular_mesh(self, vm=None, force_tangent=True, copy=True):
         """
-        Assume the hierarchy defined by the boundaries of a
-        vascular mesh.
+        Assume the hierarchy defined by the boundaries of a vascular mesh.
+
+        If force_tangent is true, and "node" key/atribute is present,
+        points at distance radius from center are removed, and eight points
+        are inserted as center +t*radius*normal with t in linspace(-1,1,8).
+
+
 
         Arguments:
         -------------
 
             vm : VascularMesh, opt.
                 Default self.vmesh. The vascular mesh to use.
+
+            force_tangent : bool, opt
+                Default True. Whether to force centerline tangent using boundary normals.
 
             copy : bool, opt.
                 Default True. Whether to make a deep copy of the hierarchy or
@@ -378,10 +389,10 @@ class CenterlinePathExtractor:
 
         attribute_checker(vm, ['boundaries'], extra_info="can't compute hirarchy from vmesh.")
 
-        self.set_boundaries(bndrs=vm.boundaries, copy=copy)
+        self.set_boundaries(bndrs=vm.boundaries, force_tangent=force_tangent, copy=copy)
     #
 
-    def set_boundaries(self, bndrs, copy=True):
+    def set_boundaries(self, bndrs, force_tangent=False, copy=True):
         """
         Set the boundary hierarchy to compute the centerline paths.
         If hierarchy is set paths are first computed from children to
@@ -412,6 +423,9 @@ class CenterlinePathExtractor:
                 A Boundaries object where each Boundary object has its center attribute, or a hierarchy
                 dictionary to parse.
 
+            force_tangent : bool, opt
+                Default True. Whether to force centerline tangent using boundary normals.
+
             copy : bool, opt.
                 Default True. Whether to make a deep copy of the hierarchy or
                 use it by reference.
@@ -425,6 +439,25 @@ class CenterlinePathExtractor:
                 self.boundaries = bndrs
         elif isinstance(bndrs, dict):
             self.boundaries = Boundaries(bndrs)
+
+        if force_tangent:
+            def ensure_boundary_normal(bid):
+                c, n = self.boundaries[bid].center.reshape(-1, 1), self.boundaries[bid].normal.reshape(-1, 1)
+                r   = self.vmesh.kdt.query(c.T)[0]
+                ids = self.domain_kdt.query_ball_point(x=c.ravel(), r=r)
+                self.remove_from_centerline_domain_by_id(ids=ids)
+
+                points = (c + n*r*np.linspace(-0.75, 0, round(2/self.adjacency_factor), endpoint=False)).T
+                self.add_point_to_centerline_domain(p=points, where='end', update_kdt=False)
+
+                points = (c + n*r*np.linspace(0.75, 0, round(2/self.adjacency_factor), endpoint=False)).T
+                self.add_point_to_centerline_domain(p=points, where='end')
+
+                for cid in self.boundaries[bid].children:
+                    ensure_boundary_normal(bid=cid)
+
+            for rid in self.boundaries.roots:
+                ensure_boundary_normal(bid=rid)
 
         def add_bound_point(bid):
             self.boundaries[bid].set_data(cl_domain_id=self.add_point_to_centerline_domain(p=self.boundaries[bid].center, where='end', update_kdt=False))
