@@ -952,7 +952,7 @@ class Centerline(UniSpline, Node):
             if force_tangent == 'ini':
                 wini=2
                 wend=0
-            elif force_tangent == 'else':
+            elif force_tangent == 'end':
                 wini=0
                 wend=2
 
