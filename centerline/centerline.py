@@ -694,11 +694,16 @@ class Centerline(UniSpline, Node):
 
         if d > 0:
             bounds = [a, self.t1]
+            if abs(d) > self.get_arc_length(self.t1, a):
+                return self.t1
             def f(t):
                 return np.abs(d - self.get_arc_length(b=t, a=a))
 
         if d < 0:
             bounds = [self.t0, a]
+            if abs(d) > self.get_arc_length(a, self.t0):
+                return self.t0
+
             def f(t):
                 return np.abs(d + self.get_arc_length(b=a, a=t))
 
