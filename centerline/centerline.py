@@ -961,7 +961,7 @@ class Centerline(UniSpline, Node):
                                    norm_param=norm_param,
                                    n_weighted_ini=wini,
                                    n_weighted_end=wend,
-                                   weight_ratio=4)
+                                   weight_ratio=10)
 
         if cl is None:
             cl = Centerline()
