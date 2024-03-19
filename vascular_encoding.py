@@ -454,9 +454,10 @@ class VascularEncoding(Tree):
                 vcs = pve.cartesian_to_vcs(cl(t), rho_norm=True)
                 return abs(1-vcs[2])
 
-            res = minimize_scalar(f, bounds=(cl.t0, cl.t1), method='bounded')
-
-            cl = cl.trim(t0_=res.x)
+            res = minimize_scalar(f, bounds=(cl.t0, cl.t1), method='bounded') #Parameter at intersection
+            r, _ = vmesh.kdt.query(cl(res.x))
+            tau_ = cl.travel_distance_parameter(-1*r, res.x) #Traveling a radius distance towards inlet
+            cl = cl.trim(t0_=tau_)
             return cl
 
         def decouple_and_encode_vessel(bid):
