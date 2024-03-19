@@ -435,7 +435,7 @@ def lsq_spline_smoothing(points,
     param_values = np.array(param_values)
 
     if norm_param:
-        param_values /= param_values[-1]
+        param_values = (param_values-param_values[0]) / (param_values[-1] - param_values[0])
 
     if isinstance(knots, int):
         #Computing knots
