@@ -482,7 +482,4 @@ class VascularEncoding(Tree):
         for rid in cl_net.roots:
             decouple_and_encode_vessel(bid=rid)
     #
-
-
-
 #
