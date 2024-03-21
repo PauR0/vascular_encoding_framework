@@ -1,5 +1,7 @@
 
 
+import pyvista as pv
+from scipy.spatial import KDTree
 
 from centerline import CenterlineNetwork
 from utils._code import Tree
@@ -96,5 +98,63 @@ class VascularEncoding(Tree):
 
         for rid in cl_net.roots:
             decouple_and_encode_vessel(bid=rid)
+    #
+
+    def make_surface_mesh(self, params=None, join_at_surface=False):
+        """
+        Make a triangle mesh of the encoded vascular network.
+
+        Arguments:
+        -----------
+
+            params : dict, opt
+                Default None. A dictionary where the keys are each vessel encoding id, and
+                the values are the pairs (tau_res, theta_res), i.e. the resolution
+                for each dimension in the parametrization. If None, de VesselEncoding default
+                is assumed.
+
+            join_at_surface : bool, opt.
+                Whether to project the inlet points to closest points on parent mesh.
+
+        Returns:
+        ---------
+
+            vsl_mesh : VascularMesh
+        """
+
+        vmesh = pv.PolyData()
+
+        def append_vessel(vid):
+
+            nonlocal vmesh
+            ve = self[vid]
+
+            tau_res, theta_res = None, None
+            if params is not None:
+                tau_res, theta_res = params[vid]
+
+            if ve.parent is not None:
+                pve = self[ve.parent]
+                tau_ini = ve.centerline.t0
+                if join_at_surface:
+                    tau_ini = pve.compute_centerline_intersection(ve.centerline, mode='parameter')
+                vsl = ve.make_surface_mesh(tau_res, theta_res, tau_ini=tau_ini)
+                if join_at_surface:
+                    kdt = KDTree(vmesh.points)
+                    ids = vsl['tau'] == vsl['tau'].min()
+                    _, sids = kdt.query(vsl.points[ids])
+                    vsl.points[ids] = vmesh.points[sids]
+                vmesh += vsl
+            else:
+                vsl = ve.make_surface_mesh(tau_res, theta_res)
+                vmesh += vsl
+
+            for cid in ve.children:
+                append_vessel(cid)
+
+        for rid in self.roots:
+            append_vessel(rid)
+
+        return vmesh
     #
 #
