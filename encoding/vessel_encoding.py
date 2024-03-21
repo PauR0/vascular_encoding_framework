@@ -220,7 +220,7 @@ class VesselEncoding(Node):
                     angle = radians_to_degrees(np.arccos(q2p.dot(tg)))
                     if abs(angle-90) < thrs:
                         if use_normal:
-                            angle = radians_to_degrees(np.arccos(normals[i].dot(q2p)))
+                            angle = radians_to_degrees(np.arccos(np.clip(normals[i].dot(q2p), -1, 1)))
                             if angle < normal_thrs:
                                 ids[i] = 1
                         else:
