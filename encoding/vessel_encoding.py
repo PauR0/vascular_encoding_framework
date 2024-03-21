@@ -320,6 +320,10 @@ class VesselEncoding(Node):
         return cl(res.x)
     #
 
+    def make_surface_mesh(self, tau_res=None, theta_res=None, tau_ini=None, tau_end=None, theta_ini=None, theta_end=None, vcs=True):
+        """
+        Make a triangle mesh of the encoded vessel.
+
         Arguments:
         -----------
 
@@ -328,6 +332,11 @@ class VesselEncoding(Node):
 
             theta_res : int, opt
                 The number of angular discretizations.
+
+            tau_ini, tau_end, theta_ini, theta_end : float, opt
+                Default None. The lower and upper extrema of the interval to build,
+                for the longitudinal and angular dimensions respectively. If None,
+                the whole definition interval is used.
 
             vcs : bool
                 Defaulting to True. Whether to add the VCS coordinates of
@@ -339,22 +348,40 @@ class VesselEncoding(Node):
             vsl_mesh : VascularMesh
         """
 
+        if tau_res is None:
+            tau_res=100
 
-        taus   = np.linspace(self.centerline.t0, self.centerline.t1, tau_res)
-        thetas = np.linspace(self.radius.y0, self.radius.y1, theta_res)
+        if theta_res is None:
+            theta_res=100
+
+        if tau_ini is None:
+            tau_ini = self.centerline.t0,
+        if tau_end is None:
+            tau_end = self.centerline.t1
+
+        if theta_ini is None:
+            theta_ini = self.radius.y0
+        if theta_end is None:
+            theta_end = self.radius.y1
+
+        close=True
+        if theta_end != self.radius.y1:
+            close=False
+
+        taus   = np.linspace(tau_ini, tau_end, tau_res)
+        thetas = np.linspace(theta_ini, theta_end, theta_res)
         rhos   = [1.0]
 
         points, tau, theta, rho = self.vcs_to_cartesian(tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
-
-
         triangles = []
 
         for i in range(tau_res):
             if i > 0:
                 for j in range(theta_res):
                     if j == theta_res-1:
-                        triangles.append([3, i*theta_res + j, (i-1)*theta_res + j, (i-1)*theta_res ])
-                        triangles.append([3, i*theta_res + j,     i*theta_res,     (i-1)*theta_res ])
+                        if close:
+                            triangles.append([3, i*theta_res + j, (i-1)*theta_res + j, (i-1)*theta_res ])
+                            triangles.append([3, i*theta_res + j,     i*theta_res,     (i-1)*theta_res ])
                     else:
                         triangles.append([3, i*theta_res + j, (i-1)*theta_res + j,   (i-1)*theta_res + j+1 ])
                         triangles.append([3, i*theta_res + j,     i*theta_res + j+1, (i-1)*theta_res + j+1 ])
