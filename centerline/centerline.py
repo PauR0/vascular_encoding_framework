@@ -1050,7 +1050,7 @@ class CenterlineNetwork(Tree):
 
         ids, dists, angles = [], [], []
         for cid, cl in self.items():
-            q, t, d = cl.get_projection_point(p, method=method, full_output=True)
+            q, _, d = cl.get_projection_point(p, method=method, full_output=True)
             ids.append(cid)
             dists.append(d)
             if n is not None:
