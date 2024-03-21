@@ -5,10 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name    = "vascular_encoding_framework"
 authors = [{name="Pau Romero", email="pau.romero@uv.es"}]
-dynamic = ["dependencies", "readme", "version"]
+version = "0.0.1"
+dynamic = ["dependencies", "readme"]#, "version"]
 description = "A python implementation of the vascular encoding framework and vessel coordinate system."
-#requires-python = ">=3.8"
 #license = {text = ""}
+#requires-python = ">=3.8"
 
 classifiers = ['Topic :: Scientific/Engineering :: Medical Science Apps.',
                'Development Status :: 1 - Planning']
@@ -16,7 +17,7 @@ classifiers = ['Topic :: Scientific/Engineering :: Medical Science Apps.',
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 readme       = {file = ["README.md"]}
-version      = {attr = "vascular_encoding_framework.__version__"}
+#version      = {attr = "vascular_encoding_framework.__version__"}
 
 [project.urls]
 homepage = "https://github.com/PauR0/vascular_encoding_framework"
