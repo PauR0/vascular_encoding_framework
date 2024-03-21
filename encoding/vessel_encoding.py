@@ -2,9 +2,11 @@
 
 import pyvista as pv
 import numpy as np
+from scipy.optimize import minimize_scalar
 
 
 from centerline import Centerline
+import messages as msg
 from utils._code import Node, attribute_checker
 from utils.spatial import normalize, radians_to_degrees
 
@@ -277,9 +279,46 @@ class VesselEncoding(Node):
         self.radius = Radius.from_points(points=points_vcs, tau_knots=tau_knots, theta_knots=theta_knots, cl=cl, debug=debug)
     #
 
-    def make_surface_mesh(self, tau_res=100, theta_res=50, vcs=True):
+    def compute_centerline_intersection(self, cl, mode='point'):
         """
-        Make a triangle mesh of the encoded vessel. Parameters m and a allow
+        Given a centerline that intersects the vessel wall, this method computes the location of
+        said intersection. Depending on the mode selected it can return either the intersection
+        point or the parameter value of the intersection in the provided centerline.
+
+        Warning: If the passed centerline intersects more than one time, only the first found will
+        be returned.
+
+        Arguments:
+        --------------
+
+            cl : Centerline
+                The intersecting centerline.
+
+            mode : {'point', 'parameter'}, opt
+                Default 'point'. What to return.
+
+        Returns:
+        ---------
+            : np.ndarray or float
+                The intersection (parameter or point).
+
+        """
+
+        mode_opts = ['point', 'parameter']
+        if mode not in mode_opts:
+            msg.error_message(f"Wrong value for mode argument. It must be in {mode_opts} ")
+
+        def intersect(t):
+                vcs = self.cartesian_to_vcs(cl(t), rho_norm=True)
+                return abs(1-vcs[2])
+
+        res = minimize_scalar(intersect, bounds=(cl.t0, cl.t1), method='bounded') #Parameter at intersection
+
+        if mode == 'parameter':
+            return res.x
+
+        return cl(res.x)
+    #
 
         Arguments:
         -----------
