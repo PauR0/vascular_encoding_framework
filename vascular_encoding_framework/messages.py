@@ -1,6 +1,15 @@
 #! /usr/bin/env python3
 
+__all__ = [
+    'computing_message',
+    'done_message',
+    'error_message',
+    'warning_message',
+    'info_message',
+]
+
 import os
+
 
 LENGTH = os.get_terminal_size()[0]
 

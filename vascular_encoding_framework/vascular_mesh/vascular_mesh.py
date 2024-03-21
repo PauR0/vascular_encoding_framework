@@ -4,11 +4,11 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from vascular_mesh.boundaries import Boundaries, Boundary
-import messages as msg
-from utils.geometry import triangulate_cross_section, approximate_cross_section, extract_section
-from utils.spatial  import compute_ref_from_points, normalize
-from utils._code    import attribute_setter
+from ..messages import *
+from .boundaries import Boundaries, Boundary
+from ..utils.geometry import triangulate_cross_section, approximate_cross_section, extract_section
+from ..utils.spatial  import compute_ref_from_points, normalize
+from ..utils._code    import attribute_setter
 
 class VascularMesh(pv.PolyData):
 
@@ -49,9 +49,9 @@ class VascularMesh(pv.PolyData):
 
     def compute_kdt(self):
         """ Compute the KDTree for the points in the wall mesh """
-        msg.computing_message(info="KDTree")
+        computing_message(info="KDTree")
         self.kdt = KDTree(self.points)
-        msg.done_message(info="KDTree")
+        done_message(info="KDTree")
     #
 
     def compute_local_ref(self):
@@ -112,7 +112,7 @@ class VascularMesh(pv.PolyData):
             self.boundaries.save(boundaries_fname)
 
         if self.boundaries is None and self.mesh is None:
-            msg.error_message("There is no data to be saved....")
+            error_message("There is no data to be saved....")
     #
 
     @staticmethod
@@ -146,9 +146,9 @@ class VascularMesh(pv.PolyData):
         meshes are not supported in this library. Although pyvista does support
         them.
         """
-        msg.computing_message("mesh triangulation")
+        computing_message("mesh triangulation")
         m = super().triangulate(inplace=inplace, **kwargs)
-        msg.done_message("mesh triangulation")
+        done_message("mesh triangulation")
         return m
     #
 
@@ -158,9 +158,9 @@ class VascularMesh(pv.PolyData):
         this library inplace is set to True.
         """
 
-        msg.computing_message("mesh normals")
+        computing_message("mesh normals")
         m = super().compute_normals(cell_normals=True, point_normals=True, inplace=True, **kwargs)
-        msg.done_message("mesh normals")
+        done_message("mesh normals")
         return m
     #
 
@@ -239,9 +239,9 @@ class VascularMesh(pv.PolyData):
 
         """
 
-        msg.computing_message("mesh boundaries")
+        computing_message("mesh boundaries")
         if hierarchy is None:
-            msg.warning_message("No hierarchy defined. No relation will be assumed among boundaries.")
+            warning_message("No hierarchy defined. No relation will be assumed among boundaries.")
 
         bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
         bnds = bnds.connectivity()
@@ -252,7 +252,7 @@ class VascularMesh(pv.PolyData):
             elif isinstance(hierarchy, dict):
                 self.boundaries = Boundaries(hierarchy=hierarchy)
 
-            msg.info_message(f"Assuming the following hierarchy: \n{self.boundaries}")
+            info_message(f"Assuming the following hierarchy: \n{self.boundaries}")
             bids = self.boundaries.enumerate()
             centers = np.array([self.boundaries[bid].center for bid in bids])
 
@@ -281,7 +281,7 @@ class VascularMesh(pv.PolyData):
             self.boundaries[bid] = bd
 
         self.n_boundaries = len(self.boundaries)
-        msg.done_message("mesh boundaries")
+        done_message("mesh boundaries")
     #
 
     def translate(self, t, update_kdt=True):
@@ -298,11 +298,11 @@ class VascularMesh(pv.PolyData):
                 mesh points.
         """
 
-        msg.computing_message('vascular mesh translation')
+        computing_message('vascular mesh translation')
         super().translate(t, inplace=True)
         self.closed.translate(t)
         self.boundaries.translate(t)
-        msg.done_message('vascular mesh translation')
+        done_message('vascular mesh translation')
 
         if update_kdt:
             self.compute_kdt()
@@ -325,7 +325,7 @@ class VascularMesh(pv.PolyData):
                 mesh points
         """
 
-        msg.computing_message('vascular mesh rotation')
+        computing_message('vascular mesh rotation')
         if inverse:
             r = r.inv()
         v, d = normalize(r.as_rotvec()), np.linalg.norm(r.as_rotvec(degrees=True))
@@ -335,7 +335,7 @@ class VascularMesh(pv.PolyData):
 
         if update_kdt:
             self.compute_kdt()
-        msg.done_message('vascular mesh rotation')
+        done_message('vascular mesh rotation')
     #
 
     def scale(self, s, update_kdt=True):
@@ -353,13 +353,13 @@ class VascularMesh(pv.PolyData):
                 Default True. Whether to update the kdt for query distances on
                 mesh points
         """
-        msg.computing_message('vascular mesh scaling.')
+        computing_message('vascular mesh scaling.')
         super().scale(s, inplace=True)
         self.closed.scale(s, inplace=True)
         self.boundaries.scale(s)
         if update_kdt:
             self.compute_kdt()
-        msg.done_message('vascular mesh scaling.')
+        done_message('vascular mesh scaling.')
     #
 
     @staticmethod
@@ -512,8 +512,7 @@ class VascularMesh(pv.PolyData):
             p.show()
 
         return vmesh
-
-
+    #
 #
 
 def load_vascular_mesh(path, suffix, abs_path=False):

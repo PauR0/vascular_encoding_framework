@@ -6,9 +6,9 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from vascular_mesh.vascular_mesh import VascularMesh, Boundaries
-import messages as msg
-from utils._code import attribute_checker
+from ..messages import *
+from ..vascular_mesh import VascularMesh, Boundaries
+from ..utils._code import attribute_checker
 
 
 def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
@@ -205,7 +205,7 @@ class CenterlinePathExtractor:
 
         if isinstance(cntrln_dmn, np.ndarray):
             if cntrln_dmn.shape[0] != 3:
-                msg.error_message(f"Unable to set an array with shape {cntrln_dmn.shape} as centerline domain. " +\
+                error_message(f"Unable to set an array with shape {cntrln_dmn.shape} as centerline domain. " +\
                                   " Centerline domain must be a list of points wiht shape must be (3, N)")
                 return False
             self.centerline_domain = cntrln_dmn
@@ -331,7 +331,7 @@ class CenterlinePathExtractor:
                 else:
                     ind = list(range(n_old, n_old+len(p)))
             else:
-                msg.error_message("Wrong argument for where in add_point_to_centerline_domain method. Available options are {'ini', 'end'}.")
+                error_message("Wrong argument for where in add_point_to_centerline_domain method. Available options are {'ini', 'end'}.")
                 return False
 
             #We update the centerline domain list and the ones in correspondence (radius and inverse_radius)
@@ -346,7 +346,7 @@ class CenterlinePathExtractor:
 
             return ind
 
-        msg.error_message("Trying to insert a point into centerline's domain with bad shape." + \
+        error_message("Trying to insert a point into centerline's domain with bad shape." + \
                               "Accepted shapes are (3,) or (N,3)")
         return False
     #
@@ -486,7 +486,7 @@ class CenterlinePathExtractor:
                 pid = self.boundaries[bid].parent
                 joint = self.boundaries[bid].id_path[0] #Junction id in cl_domain
                 if joint not in self.boundaries[pid].id_path:
-                    msg.error_message(f"At node {bid} cant find joint id in parent's path (parent id {pid}). Something has crashed during path extraction...")
+                    error_message(f"At node {bid} cant find joint id in parent's path (parent id {pid}). Something has crashed during path extraction...")
                     return
                 jid = self.boundaries[pid].id_path.index(joint)
 
@@ -512,7 +512,7 @@ class CenterlinePathExtractor:
         previously transited path.
         """
 
-        msg.computing_message("centerline paths")
+        computing_message("centerline paths")
 
         def path_to_parent(bid):
 
@@ -536,7 +536,7 @@ class CenterlinePathExtractor:
         self._compose_id_paths()
         self.make_paths_multiblock()
 
-        msg.done_message("centerline paths")
+        done_message("centerline paths")
 
         return
     #
@@ -591,3 +591,8 @@ class CenterlinePathExtractor:
         """
         return self.domain_kdt.query_ball_point(self.centerline_domain[n], r=self.radius[n]*self.adjacency_factor)
     #
+#
+
+
+def extract_centerline_path():
+    ...

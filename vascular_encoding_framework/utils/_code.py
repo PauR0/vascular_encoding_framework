@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 
 import numpy as np
 
-import messages as msg
+from ..messages import *
 
 
 class Node:
@@ -140,17 +140,17 @@ class Tree(dict):
         #Checking it has parent and children attributes. Since Nones are admited, attribute_checker is not well suited.
         for att in ['parent', 'children']:
             if not hasattr(nd, att):
-                msg.error_message(f"Aborted insertion of node with id: {__key}. It has no {att} attribute.")
+                error_message(f"Aborted insertion of node with id: {__key}. It has no {att} attribute.")
                 return
 
         if nd.parent is not None and nd.parent not in self.keys():
-            msg.error_message(f"Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree.")
+            error_message(f"Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree.")
             return
 
         if not isinstance(__key, str):
-            msg.warning_message(f"node {__key} has been set with a non-string key. This may turn in troubles...")
+            warning_message(f"node {__key} has been set with a non-string key. This may turn in troubles...")
         if __key != nd.id:
-            msg.warning_message(f"node id attribute is {nd.id} and node id in tree has been set as {__key}.")
+            warning_message(f"node id attribute is {nd.id} and node id in tree has been set as {__key}.")
 
         super().__setitem__(__key, nd)
 
@@ -295,7 +295,7 @@ class Tree(dict):
 
             for k in Node().__dict__:
                 if k not in hierarchy[nid]:
-                    msg.error_message(f"cant build hierarchy base on dict. Node {nid} has no entry for {k}")
+                    error_message(f"cant build hierarchy base on dict. Node {nid} has no entry for {k}")
                     return False
 
             n = Node()
@@ -414,13 +414,13 @@ def attribute_checker(obj, atts, extra_info='', opts=None):
     if opts is None:
         for att in atts:
             if getattr(obj, att) is None:
-                msg.error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}....")
+                error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}....")
                 return False
 
     else:
         for att, opt in zip(atts, opts):
             if getattr(obj, att) not in opt:
-                msg.error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}, and it must be in {opt}....")
+                error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}, and it must be in {opt}....")
                 return False
 
     return True

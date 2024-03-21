@@ -3,8 +3,8 @@
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from centerline import CenterlineNetwork
-from utils._code import Tree
+from ..centerline import CenterlineNetwork
+from ..utils._code import Tree
 
 from .vessel_encoding import VesselEncoding
 

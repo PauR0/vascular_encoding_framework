@@ -11,8 +11,8 @@ from scipy.interpolate import (splrep, splev, make_lsq_spline,
 from skimage.morphology import dilation
 from skimage.measure import label, regionprops
 
-import messages as msg
-from utils._code import attribute_checker, attribute_setter
+from ._code import attribute_checker, attribute_setter
+from ..messages import *
 
 
 class Spline(ABC):
@@ -248,7 +248,7 @@ class BiSpline(Spline):
             return False
 
         if self.knots_x is None and self.n_knots_x is None:
-            msg.error_message("cant build bivariate splines. The knots and amount of knots for the first (x) parameter is None")
+            error_message("cant build bivariate splines. The knots and amount of knots for the first (x) parameter is None")
         elif self.knots_x is None and self.n_knots_x is not None:
             mode='complete'
             if self.extra_x == 'periodic':
@@ -256,7 +256,7 @@ class BiSpline(Spline):
             self.knots_x = knots_list(self.x0, self.x1, self.n_knots_x, mode=mode)
 
         if self.knots_y is None and self.n_knots_y is None:
-            msg.error_message("cant build bivariate splines. The knots and amount of knots for the second parameter (y) is None")
+            error_message("cant build bivariate splines. The knots and amount of knots for the second parameter (y) is None")
         elif self.knots_y is None and self.n_knots_y is not None:
             mode='complete'
             if self.extra_y == 'periodic':

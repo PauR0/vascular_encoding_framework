@@ -5,10 +5,10 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 
 
-from centerline import Centerline
-import messages as msg
-from utils._code import Node, attribute_checker
-from utils.spatial import normalize, radians_to_degrees
+from ..messages import *
+from ..centerline import Centerline
+from ..utils._code import Node, attribute_checker
+from ..utils.spatial import normalize, radians_to_degrees
 
 from .radius import Radius
 
@@ -306,7 +306,7 @@ class VesselEncoding(Node):
 
         mode_opts = ['point', 'parameter']
         if mode not in mode_opts:
-            msg.error_message(f"Wrong value for mode argument. It must be in {mode_opts} ")
+            error_message(f"Wrong value for mode argument. It must be in {mode_opts} ")
 
         def intersect(t):
                 vcs = self.cartesian_to_vcs(cl(t), rho_norm=True)

@@ -2,8 +2,8 @@
 import numpy as np
 import pyvista as pv
 
-import messages as msg
-from centerline import Centerline, CenterlineNetwork
+from ..messages import *
+from ..centerline import Centerline, CenterlineNetwork
 
 
 
@@ -65,7 +65,7 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
             plot_cl_pl(cntrln[rid])
 
     else:
-        msg.error_message("The argument cntrln must be an instance of Centerline or CenterlineNetwork.")
+        error_message("The argument cntrln must be an instance of Centerline or CenterlineNetwork.")
 
     if vmesh is not None:
         plotter.add_mesh(vmesh, opacity=0.5, color='w')

@@ -3,7 +3,7 @@ import numpy as np
 
 from sklearn.decomposition import PCA
 
-import messages as msg
+from ..messages import *
 
 def planar_coordinates(points, c0, v1, v2):
     M = np.array([v1.T,v2.T])
@@ -126,14 +126,14 @@ def compute_ref_from_points(points, message=None):
     if message is None:
         message='local PCA frame'
 
-    msg.computing_message(info=message)
+    computing_message(info=message)
     pca = PCA()
     pca.fit(points)
     center = pca.mean_
     e1 = pca.components_[0]
     e2 = pca.components_[1]
     e3 = pca.components_[2]
-    msg.done_message(info=message)
+    done_message(info=message)
 
     return center, e1, e2, e3
 #

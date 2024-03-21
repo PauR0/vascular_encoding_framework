@@ -8,8 +8,8 @@ import numpy as np
 import pyvista as pv
 from sklearn.decomposition import PCA
 
-from utils.spatial import normalize
-import messages as msg
+from .spatial import normalize
+from ..messages import *
 
 
 def approximate_cross_section(point, mesh, theta_res=30, phi_res=30, n0=None, max_d=None, min_perim=None, debug=False):
@@ -176,7 +176,7 @@ def triangulate_cross_section(cross_section, method='connected', n=None):
     elif method == 'unconnected':
         new_cs = triangulate_unconnected_cross_section(cs=cross_section, n=n)
     else:
-        msg.error_message(f"Cannot triangulate cross section with unknown method {method}."+\
+        error_message(f"Cannot triangulate cross section with unknown method {method}."+\
                             "Available options are {'connected', 'unconnected'}.")
 
     return new_cs
@@ -258,7 +258,7 @@ def triangulate_connected_cross_section(cs):
     """
 
     if cs.lines.size == 0:
-        msg.error_message("Cannot triangulate cross section with connected method."+\
+        error_message("Cannot triangulate cross section with connected method."+\
                           "The given cross section has no lines. Try unconnected method instead...")
 
     #Append the center at the end of the point array

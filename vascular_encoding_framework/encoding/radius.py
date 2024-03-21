@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from utils.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
+from ..utils.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
 
 class Radius(BiSpline):
 

@@ -6,9 +6,9 @@ from scipy.spatial import KDTree
 import numpy as np
 import pyvista as pv
 
-from vascular_mesh import VascularMesh
-import messages as msg
-from utils._code import attribute_checker, attribute_setter
+from ..messages import *
+from ..vascular_mesh import VascularMesh
+from ..utils._code import attribute_checker, attribute_setter
 
 class CenterlineDomainExtractor(ABC):
     """
@@ -112,9 +112,9 @@ class Seekers(CenterlineDomainExtractor):
         Flip the seekers directions to point inwards.
         """
 
-        msg.computing_message("flipped normals")
+        computing_message("flipped normals")
         self.seekers = self.seekers.compute_normals(flip_normals=True)
-        msg.done_message("flipped normals")
+        done_message("flipped normals")
     #
 
     def check_seekers_direction(self, n_tests=21):
@@ -289,9 +289,9 @@ class Flux(CenterlineDomainExtractor):
     #
 
     def compute_mesh_kdt(self):
-        msg.computing_message("KDTree")
+        computing_message("KDTree")
         self.mesh_kdt = KDTree(self.mesh.points)
-        msg.computing_message("KDTree")
+        computing_message("KDTree")
     #
 
     def compute_voxelization(self, update=True):
@@ -311,11 +311,11 @@ class Flux(CenterlineDomainExtractor):
             d = None
             self.dx, self.dy, self.dz = [self.mesh.length/100]*3
 
-        msg.computing_message("mesh voxelization")
+        computing_message("mesh voxelization")
         self.volume = pv.voxelize(self.mesh,
                                   density=d,
                                   check_surface=True)
-        msg.done_message("mesh voxelization")
+        done_message("mesh voxelization")
 
         if update:
             self.compute_volume_kdt()
@@ -324,9 +324,9 @@ class Flux(CenterlineDomainExtractor):
     #
 
     def compute_volume_kdt(self):
-        msg.computing_message("volume KDTree")
+        computing_message("volume KDTree")
         self.volume_kdt = KDTree(self.volume.points)
-        msg.computing_message("volume KDTree")
+        computing_message("volume KDTree")
     #
 
     def run(self):
@@ -342,7 +342,7 @@ class Flux(CenterlineDomainExtractor):
 
         """
 
-        msg.computing_message("centerline domain extraction using the flux...")
+        computing_message("centerline domain extraction using the flux...")
         if not attribute_checker(self, atts=['mesh'], extra_info="Cannot run seekers."):
             return False
 
@@ -355,7 +355,7 @@ class Flux(CenterlineDomainExtractor):
         if self.volume_kdt is None:
             self.compute_volume_kdt()
 
-        msg.computing_message("flux field")
+        computing_message("flux field")
         self.volume['radius'] = self.mesh_kdt.query(self.volume.points)[0]
         self.volume = self.volume.compute_derivative(scalars='radius')
 
@@ -367,14 +367,14 @@ class Flux(CenterlineDomainExtractor):
             return np.sum(fluxes)
 
         self.volume['flux'] = list(map(net_flux, self.volume.points))
-        msg.done_message("flux field")
+        done_message("flux field")
 
         # Normalize and make it positive
         normalize_field = lambda arr: arr / np.abs(arr).min() + 1
         self.volume['flux'] = normalize_field(self.volume['flux'])
         self.output_domain  = self.volume.threshold(value=self.thrs, scalars='flux', all_scalars=self.relax, method='lower').connectivity(extraction_mode='largest')
 
-        msg.done_message("centerline domain extraction using the flux...")
+        done_message("centerline domain extraction using the flux...")
 
         if self.debug:
             p = pv.Plotter()
@@ -414,7 +414,7 @@ def extract_centerline_domain(mesh, method='seekers', method_params=None, debug=
     """
 
     if method not in ['seekers', 'flux']:
-        msg.error_message(f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {method}.")
+        error_message(f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {method}.")
         return False
 
     if method == 'seekers':

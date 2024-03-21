@@ -9,11 +9,11 @@ from scipy.spatial.transform import Rotation
 from scipy.integrate import quad
 from scipy.misc import derivative
 
-import messages as msg
-from utils._code import Tree, Node, attribute_checker
-from utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
-from utils.splines import UniSpline, lsq_spline_smoothing
-from utils.geometry import polyline_from_points
+from ..messages import error_message
+from ..utils._code import Tree, Node, attribute_checker
+from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
+from ..utils.splines import UniSpline, lsq_spline_smoothing
+from ..utils.geometry import polyline_from_points
 
 
 class ParallelTransport(UniSpline):
@@ -24,6 +24,7 @@ class ParallelTransport(UniSpline):
 
         #The initial vector to be transported.
         self.v0 : np.ndarray = None
+    #
 
     @staticmethod
     def compute_parallel_transport_on_centerline(cl, v0):
@@ -219,12 +220,12 @@ class Centerline(UniSpline, Node):
 
         elif mode == 'as_is':
             if p is None:
-                msg.error_message(f"Cannot build parallel transport with mode: {mode} and p: {p}")
+                error_message(f"Cannot build parallel transport with mode: {mode} and p: {p}")
 
             else:
                 v0 = p
         else:
-            msg.error_message(f"Wrong mode passed: mode = {mode}. Available options are {'project', 'as_is'}.")
+            error_message(f"Wrong mode passed: mode = {mode}. Available options are {'project', 'as_is'}.")
             return False
 
         v = ParallelTransport.compute_parallel_transport_on_centerline(cl=self, v0=v0)
@@ -899,7 +900,7 @@ class Centerline(UniSpline, Node):
             cl.compute_adapted_frame(mode='as_is', p=self.v1(t0_))
 
         return cl
-
+    #
 
     @staticmethod
     def from_points(points, knots, cl=None, pt_mode='project', p=None, force_tangent=True, norm_param=True):
@@ -979,7 +980,7 @@ class Centerline(UniSpline, Node):
         cl.compute_adapted_frame(mode=pt_mode, p=p)
 
         return cl
-        #
+    #
 #
 
 
@@ -997,7 +998,7 @@ class CenterlineNetwork(Tree):
         """
         #Checking it has parent attribute.
         if not hasattr(cl, 'parent'):
-            msg.error_message(f"Aborted insertion of branch with id: {__key}. It has no parent attribute. Not even None.")
+            error_message(f"Aborted insertion of branch with id: {__key}. It has no parent attribute. Not even None.")
             return
 
         if cl.parent is not None:
@@ -1270,7 +1271,7 @@ class CenterlineNetwork(Tree):
         """
 
         if not paths.is_all_polydata:
-            msg.error_message("Can make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
+            error_message("Can make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
             return None
 
 
