@@ -19,5 +19,15 @@ dependencies = {file = ["requirements.txt"]}
 readme       = {file = ["README.md"]}
 #version      = {attr = "vascular_encoding_framework.__version__"}
 
+[tool.setuptools]
+packages = [
+            "vascular_encoding_framework",
+            "vascular_encoding_framework.centerline",
+            "vascular_encoding_framework.config_files",
+            "vascular_encoding_framework.encoding",
+            "vascular_encoding_framework.utils",
+            "vascular_encoding_framework.vascular_mesh",
+            ]
+
 [project.urls]
 homepage = "https://github.com/PauR0/vascular_encoding_framework"
