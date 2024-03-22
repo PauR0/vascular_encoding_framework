@@ -241,6 +241,23 @@ class Tree(dict):
             return copy(self)
     #
 
+    def set_data_to_nodes(self, data):
+        """
+        This method allows to use the set_data method on the nodes of the tree using its id.
+        The data argument is expected to be a dictionary of dictionaries containing the data
+        for each Node, i.e.
+        data = {
+                 'id1' : {'center' : [x,y,z], 'normal' :[x1, y1, z1] }
+                 'id2' : {'normal' :[x2, y2, z2] }
+                 'id3' : {'center' : [x3,y3,z3]}
+        }
+
+        """
+
+        for nid, ndata in data.items():
+            self[nid].set_data(ndata)
+    #
+
     @staticmethod
     def from_hierarchy_dict(hierarchy):
         """
