@@ -73,3 +73,47 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
     if show:
         plotter.show()
 #
+
+def plot_open_boundary_ids(poly, plotter=None, show=True):
+    """
+    Detect open boundaries at a polydata and display them with the assigned ids.
+
+    Arguments:
+    -------------
+
+        poly : pv.PolyData
+            The polydata
+
+        plotter : pv.Plotter
+            A plotter object to add the plots on. Otherwise it is created.
+
+        show : bool, opt
+            Wheter to plot or not at the end of the function.
+
+    Returns:
+    ----------
+        plotter : pv.Plotter
+            The potter object.
+    """
+
+    if plotter is None:
+        plotter = pv.Plotter()
+
+    if poly.is_manifold:
+        warning_message("No boundary edges found.")
+        return plotter
+
+    boundaries = poly.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
+    boundaries = boundaries.connectivity()
+
+    plotter.add_mesh(poly, opacity=0.5)
+    print("."*20)
+    for i in np.unique(boundaries['RegionId']):
+        boundary = boundaries.extract_points(boundaries['RegionId'] == i)
+        plotter.add_point_labels(np.array(boundary.center), [str(i)])
+        print(f"{i} : {boundary.center}")
+    print("."*20)
+
+    if show:
+        plotter.show()
+#
