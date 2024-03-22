@@ -474,7 +474,10 @@ class VascularMesh(pv.PolyData):
             cl = cl_net[cid]
             if root:
                 inlet = compute_boundary(p=cl(cl.t0), n=cl.get_tangent(cl.t0))
-                inlet.set_data(id       = f"root_{len(boundaries.roots)}",
+                iid = f"root_{len(boundaries.roots)}"
+                if cl.parent not in [None, 'None']:
+                    iid = cl.parent
+                inlet.set_data(id       = iid,
                                parent   = None)
                 boundaries[inlet.id] = inlet
 
