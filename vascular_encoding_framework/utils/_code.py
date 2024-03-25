@@ -1,5 +1,5 @@
 
-from copy import copy, deepcopy
+from copy import deepcopy
 
 import numpy as np
 
@@ -240,11 +240,19 @@ class Tree(dict):
         rm_child(k)
     #
 
-    def copy(self, deep=True):
-        if deep:
-            return deepcopy(self)
-        else:
-            return copy(self)
+    def copy(self):
+
+        new_tree = self.__class__()
+
+        def copy_and_insert(nid):
+            new_node = deepcopy(self[nid])
+            new_tree[nid] = new_node
+            for cid in new_node.children:
+                copy_and_insert(cid)
+
+        for rid in self.roots:
+            copy_and_insert(rid)
+        return new_tree
     #
 
     def set_data_to_nodes(self, data):
