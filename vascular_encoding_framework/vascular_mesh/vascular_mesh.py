@@ -197,91 +197,47 @@ class VascularMesh(pv.PolyData):
         return self.closed
     #
 
-    def compute_boundaries(self, hierarchy=None, by_center=True, by_id=False):
+    def compute_open_boundaries(self, overwrite=False):
         """
-        Method to build the boundary tree based on the boundary edges
-        on the mesh attribute. Attribute can be set through a hierarchy dict,
-        however, if none is passed this method leaves the hierarcy undefined.
-
-        Example of a valid hierarcy using by_centers=True:
-        Ex. hierarchy = {"1" : {"parent"     : None,
-                            "center"   : [ x1, y1, z1],
-                            "children" : {"2"}
-                           }
-                     "2" : {"parent"     : '1',
-                            "center"   : [ x2, y2, z2],
-                            "children" : {"0"}
-                           }
-                     "0" : {"parent"     : '2',
-                            "center"   : [ x0, y0, z0],
-                            "children" : {}
-                           }
-                    }
+        Method to compute the open boundary edges and build a Boundaries object with no hierarchy.
+        If boundaries attribute is None or overwrite is True, boundaries attribute is set as the
+        computed boundaries.
 
         Arguments:
-        ------------
+        -------------
 
-            hierarchy : dict or Boundaries, opt
-                Default None. A hierarchical dictionary or a Boundary object.
+            overwrite : bool, opt
+                Default False. Whether to overwrite the boundaries attribute.
 
-            by_center : bool, opt
-                Default True. If True, the hierarchy dictionary must be passed.
-                In addition, each node-dict must have a center attribute with
-                the coordinates of the center. The closest centroid of boundaris
-                will be used to match each computed boundary.
-
-            by_id : bool, opt
-                Default False. If True, the hierarchy dictionary must be passed.
-                In contrast with by_center, the id must be the id inferred by
-                pyvista while computing boundary_edges. This should only be used
-                if the ids have been already inspected and the ids are known
-                beforehand.
-
+        Returns:
+        ---------
+            boundaries : Boundaries
+                The computed boundaries object.
         """
 
         computing_message("mesh boundaries")
-        if hierarchy is None:
-            warning_message("No hierarchy defined. No relation will be assumed among boundaries.")
-
         bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
         bnds = bnds.connectivity()
-
-        if hierarchy is not None:
-            if isinstance(hierarchy, Boundaries):
-                self.boundaries = hierarchy
-            elif isinstance(hierarchy, dict):
-                self.boundaries = Boundaries(hierarchy=hierarchy)
-
-            info_message(f"Assuming the following hierarchy: \n{self.boundaries}")
-            bids = self.boundaries.enumerate()
-            centers = np.array([self.boundaries[bid].center for bid in bids])
-
-        else:
-            self.boundaries = Boundaries()
+        boundaries = Boundaries()
 
         for i in np.unique(bnds['RegionId']):
-            ii = str(i)
+            ii = str(int(i))
+
             b = bnds.extract_cells(bnds['RegionId'] == i).extract_surface(pass_pointid=False, pass_cellid=False)
             b = triangulate_cross_section(b)
 
-            if hierarchy is None:
-                bd = Boundary()
-                bid = ii
-
-            elif by_id:
-                bd = Boundary(self.boundaries[ii])
-                bid = ii
-
-            elif by_center:
-                aux = np.argmin(np.linalg.norm(centers - np.array(b.center), axis=1))
-                bid = bids[aux]
-                bd = Boundary(self.boundaries[bid])
-
+            bd = Boundary()
+            bd.id = ii
             bd.extract_from_polydata(b)
-            self.boundaries[bid] = bd
 
-        self.n_boundaries = len(self.boundaries)
+            boundaries[ii] = bd
+
+        if self.boundaries is None or overwrite:
+            self.boundaries   = boundaries
+            self.n_boundaries = len(self.boundaries)
+
         done_message("mesh boundaries")
+        return boundaries
     #
 
     def set_boundary_data(self, data):
