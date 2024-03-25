@@ -270,6 +270,18 @@ class Tree(dict):
 
         for nid, ndata in data.items():
             self[nid].set_data(ndata)
+    def is_consistent(self):
+        """
+        Check if the parent - children attributes of the nodes are consisten among them.
+        If not, report unconsistencies.
+        """
+        out=True
+        for nid, node in self.items():
+            if node.parent is not None:
+                if nid not in self[node.parent].children:
+                    warning_message(f"Inconsistency found: {nid} has {node.parent} as parent, but it is not in its children set.")
+                    out=False
+        return out
     #
 
     @staticmethod
