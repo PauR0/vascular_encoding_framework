@@ -269,7 +269,12 @@ class Tree(dict):
         """
 
         for nid, ndata in data.items():
-            self[nid].set_data(ndata)
+            self[nid].set_data(**ndata)
+            if nid in self.roots and self[nid].parent is not None:
+                self.roots.remove(nid)
+        self.is_consistent()
+    #
+
     def is_consistent(self):
         """
         Check if the parent - children attributes of the nodes are consisten among them.
