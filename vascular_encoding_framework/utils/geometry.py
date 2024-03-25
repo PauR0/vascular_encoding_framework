@@ -8,7 +8,7 @@ import numpy as np
 import pyvista as pv
 from sklearn.decomposition import PCA
 
-from .spatial import normalize
+from .spatial import normalize, sort_glob_ids_by_angle
 from ..messages import *
 
 
