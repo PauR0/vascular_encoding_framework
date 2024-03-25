@@ -284,6 +284,21 @@ class VascularMesh(pv.PolyData):
         done_message("mesh boundaries")
     #
 
+    def set_boundary_data(self, data):
+        """
+        This method allows setting new attributes to the boundaries by means of the set_data
+        node method. Argument data is expected to be a dictionary of dictionaries with the desired
+        new data as follows:
+
+        data = {
+                 'id1' : {'center' : [x,y,z], 'normal' :[x1, y1, z1] }
+                 'id2' : {'normal' :[x2, y2, z2] }
+                 'id3' : {'center' : [x3,y3,z3]}
+        }
+        """
+
+        self.boundaries.set_data_to_nodes(data=data)
+    #
     def translate(self, t, update_kdt=True):
         """
         Apply a translation to the mesh and boundaries.
