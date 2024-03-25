@@ -384,10 +384,12 @@ class CenterlinePathExtractor:
         """
 
         if vm is None:
-            attribute_checker(self, ['vmesh'], extra_info="no VascularMesh has been passed and...")
+            if not attribute_checker(self, ['vmesh'], extra_info="no VascularMesh has been passed and..."):
+                return
             vm = self.vmesh
 
-        attribute_checker(vm, ['boundaries'], extra_info="can't compute hirarchy from vmesh.")
+        if not attribute_checker(vm, ['boundaries'], extra_info="can't compute hirarchy from vmesh."):
+            return
 
         self.set_boundaries(bndrs=vm.boundaries, force_tangent=force_tangent, copy=copy)
     #
