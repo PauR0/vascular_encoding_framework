@@ -45,6 +45,8 @@ class VascularMesh(pv.PolyData):
             self.compute_normals()
         if p.is_manifold:
             self.closed = p
+        else:
+            self.compute_open_boundaries()
     #
 
     def compute_kdt(self):
@@ -164,11 +166,17 @@ class VascularMesh(pv.PolyData):
         return m
     #
 
-    def compute_closed_mesh(self):
+    def compute_closed_mesh(self, w=False):
 
         """
         Method to get a polydata with the boundaries closed. It is also set in the closed
         attribute.
+
+        Arguments:
+        -------------
+
+            w : bool, opt
+                Default False. Whether to rewritte existing self.closed attribute.
 
         Returns:
         -----------
@@ -176,23 +184,24 @@ class VascularMesh(pv.PolyData):
                 The closed mesh.
         """
 
+        if self.closed is None or w:
 
-        meshes = []
-        if self.boundaries is None:
-            self.compute_boundaries()
+            if self.is_manifold:
+                self.closed = self.copy()
 
-        for _, b in self.boundaries.items():
-            p = pv.PolyData(b.points)
-            method = 'unconnected'
-            if b.faces.size > 0:
-                p.faces = b.faces
-                p = p.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=True)
-                method = 'connected'
-            p = triangulate_cross_section(p, method=method, n=b.normal)
-            meshes.append(p)
+            else:
+                if self.boundaries is None:
+                    self.compute_open_boundaries()
+                polys=[]
+                for _, b in self.boundaries.items():
+                    p = pv.PolyData(b.points)
+                    if hasattr(b, 'faces'):
+                        p.faces = b.faces
+                    else:
+                        p = triangulate_cross_section(p, method='unconnected', n=b.normal)
+                    polys.append(p)
 
-        self.closed = pv.PolyData(self.append_polydata(*meshes, inplace=False))
-        self.closed.clean(inplace=True)
+                self.closed = pv.PolyData(self.append_polydata(*polys)).clean().triangulate()
 
         return self.closed
     #
@@ -295,6 +304,7 @@ class VascularMesh(pv.PolyData):
 
         return
     #
+
     def translate(self, t, update_kdt=True):
         """
         Apply a translation to the mesh and boundaries.
