@@ -436,7 +436,7 @@ class CenterlinePathExtractor:
 
         if isinstance(bndrs, Boundaries):
             if copy:
-                self.boundaries = bndrs.copy(deep=True)
+                self.boundaries = bndrs.copy()
             else:
                 self.boundaries = bndrs
         elif isinstance(bndrs, dict):
