@@ -299,6 +299,46 @@ class VascularMesh(pv.PolyData):
 
         self.boundaries.set_data_to_nodes(data=data)
     #
+
+    def plot_boundary_ids(self, print_data=False, edge_color="red", line_width=None):
+        """
+        If boundaries attribute is not None. This method shows a plot of the highlighted boundaries
+        with the id at the center.
+
+        Arguments:
+        -------------
+
+            print_data : bool
+
+            edge_color : str
+
+            line_width : int
+
+        """
+
+        if self.boundaries is None:
+            error_message(f"can't plot boundary ids, boundaries attribute is {self.boundaries}")
+            return
+
+        p = pv.Plotter()
+        p.add_mesh(self, color='w')
+        p.add_point_labels(np.array([b.center for _, b in self.boundaries.items()]), self.boundaries.enumerate())
+
+        for _, b in self.boundaries.items():
+            poly = pv.PolyData()
+            if hasattr(b, 'points'):
+                poly.points=b.points
+            if hasattr(b, 'faces'):
+                poly.faces=b.faces
+            p.add_mesh(poly, style='wireframe', color=edge_color, line_width=line_width)
+
+        if print_data:
+            print(self.boundaries)
+
+        p.show()
+
+        return
+    #
     def translate(self, t, update_kdt=True):
         """
         Apply a translation to the mesh and boundaries.
