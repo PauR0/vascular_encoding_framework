@@ -22,10 +22,16 @@ class Node:
     #
 
     def __str__(self):
-        strout="\n".join([f"{k}".ljust(10, '.')+f": {v}" for k, v in self.__dict__.items() if k!='points' and v is not None])
-        if 'points' in self.__dict__:
-            if self.points is not None:
-                strout += "\npoints shape".ljust(10, '.')+f"{self.points.shape}"
+        long_atts = ['points', 'faces']
+        strout="\n".join([f"{k}".ljust(20, '.')+f": {v}" for k, v in self.__dict__.items() if k not in long_atts])
+        for att in long_atts:
+            if att in self.__dict__:
+                val = getattr(self, att)
+                if val is not None:
+                    n = len(val)
+                    if att == 'faces':
+                        n /= 4
+                    strout += f"\nn_{att}".ljust(20, '.')+f": {n}"
 
         return strout
     #
