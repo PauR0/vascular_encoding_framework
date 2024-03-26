@@ -136,7 +136,9 @@ class VascularMesh(pv.PolyData):
         """
 
         p = pv.read(filename)
-        vmesh = VascularMesh(p=p)
+        comp_bounds = True if boundaries_fname is not None else False
+
+        vmesh = VascularMesh(p=p, compute_boundary=comp_bounds)
         if boundaries_fname is not None:
             vmesh.boundaries = Boundaries.read(boundaries_fname)
 
