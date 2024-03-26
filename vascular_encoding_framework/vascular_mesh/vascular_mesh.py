@@ -264,6 +264,12 @@ class VascularMesh(pv.PolyData):
                  'id2' : {'normal' :[x2, y2, z2] }
                  'id3' : {'center' : [x3,y3,z3]}
         }
+
+        Arguments:
+        ------------
+
+            data : dict
+                The data to be added to the boundaries.
         """
 
         self.boundaries.set_data_to_nodes(data=data)
