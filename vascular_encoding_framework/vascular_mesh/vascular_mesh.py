@@ -145,7 +145,7 @@ class VascularMesh(pv.PolyData):
         return vmesh
     #
 
-    def triangulate(self,inplace=True, **kwargs):
+    def triangulate(self, inplace=True, **kwargs):
         """
         Triangulate the mesh. This is better performed after instantiation to
         prevent possible crashes with other methods and modules. Non triangular
