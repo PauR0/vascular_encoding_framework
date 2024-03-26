@@ -170,7 +170,7 @@ class VascularMesh(pv.PolyData):
         return m
     #
 
-    def compute_closed_mesh(self, w=False):
+    def compute_closed_mesh(self, overwrite=False):
 
         """
         Method to get a polydata with the boundaries closed. It is also set in the closed
@@ -188,7 +188,7 @@ class VascularMesh(pv.PolyData):
                 The closed mesh.
         """
 
-        if self.closed is None or w:
+        if self.closed is None or overwrite:
 
             if self.is_manifold:
                 self.closed = self.copy()
