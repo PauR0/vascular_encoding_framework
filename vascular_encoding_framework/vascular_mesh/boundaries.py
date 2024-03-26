@@ -207,7 +207,7 @@ class Boundary(Node):
         return cart_to_polar(pts.T, sort=sort).T
     #
 
-    def from_3D_to_polar(self, pts=None, sort=True):
+    def from_3D_to_polar(self, pts=None, sort=False):
         """
         Tansform 3D Cartesian points to plannar polar coordinates
         and return them.
