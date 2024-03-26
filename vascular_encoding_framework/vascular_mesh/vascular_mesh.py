@@ -21,7 +21,7 @@ class VascularMesh(pv.PolyData):
     Furthermore, it is usually not in the method's signature.
     """
 
-    def __init__(self, p:pv.PolyData=None) -> None:
+    def __init__(self, p:pv.PolyData=None, compute_boundary=True) -> None:
 
 
         self.boundaries   : Boundaries = None
@@ -43,9 +43,11 @@ class VascularMesh(pv.PolyData):
             self.compute_kdt()
             self.compute_local_ref()
             self.compute_normals()
+
         if p.is_manifold:
             self.closed = p
-        else:
+
+        if compute_boundary:
             self.compute_open_boundaries()
     #
 
