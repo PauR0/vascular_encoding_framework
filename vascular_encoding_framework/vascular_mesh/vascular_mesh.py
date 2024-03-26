@@ -165,7 +165,7 @@ class VascularMesh(pv.PolyData):
         """
 
         computing_message("mesh normals")
-        m = super().compute_normals(cell_normals=True, point_normals=True, inplace=True, **kwargs)
+        m = super().compute_normals(inplace=inplace, **kwargs)
         done_message("mesh normals")
         return m
     #
