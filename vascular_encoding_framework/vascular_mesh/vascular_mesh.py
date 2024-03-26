@@ -538,25 +538,3 @@ class VascularMesh(pv.PolyData):
         return vmesh
     #
 #
-
-def load_vascular_mesh(path, suffix, abs_path=False):
-    """
-    Load a vascular mesh with all the available data at a given
-    case path, with the given suffix.
-
-    Parameters
-    ----------
-    path : string
-        The path to the wall mesh.
-
-    suffix : string
-        A string indicating a suffix in the mesh name. E.g. suffix="_orig"
-        means wall_orig.stl
-
-    abs_path : bool, optional
-        If true, the path passed must be the path to the file containing
-        the vascular mesh wall. If true, no inlet/outlet information will
-        be written. If True, suffix is ignored.
-    """
-    pass
-#
