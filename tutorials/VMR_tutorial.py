@@ -14,6 +14,7 @@ import os
 import numpy as np
 import pyvista as pv
 import vascular_encoding_framework as vef
+from vascular_encoding_framework.utils.graphic import plot_adapted_frame
 
 case_path  = f"{os.path.expanduser('~')}/tmp/0008_H_AO_H" #Modify if needed
 mesh_path  = os.path.join(case_path, 'Meshes', '0091_0001.vtp')
@@ -55,7 +56,7 @@ c_domain = vef.centerline.extract_centerline_domain(mesh=vmesh,
 
 #Once the centerline domain has been extracted, we can compute the path tree according to the hierarchy we defined.
 cp_xtractor = vef.centerline.CenterlinePathExtractor()
-cp_xtractor.debug = False #Again setting this argument to true, results in some plots of the procedure..
+cp_xtractor.debug = True #Again setting this argument to true, results in some plots of the procedure..
 cp_xtractor.set_centerline_domain(c_domain)
 cp_xtractor.set_vascular_mesh(vmesh, update_boundaries=True)
 cp_xtractor.compute_paths()
@@ -74,14 +75,19 @@ knot_params = {
 #We are in conditions of defining the centerline network.
 cl_net = vef.CenterlineNetwork.from_multiblock_paths(cp_xtractor.paths, knots={k:v['cl_knots'] for k, v in knot_params.items()})
 
-#The centerline on its own allows us to compute some useful fields like the Vessel Coordinates
+#The centerline on its own allows us to compute some useful fields like the Vessel Coordinates, but
+#first, let's check that centerline has been well computed and let us inspect how the adapted frame looks
+plot_adapted_frame(cl_net, vmesh, scale=.5)
 
+#The computation of centerline association and the vessel coordinates usually takes a while, specially for dense meshes.
 bid = [cl_net.get_centerline_association(p=vmesh.points[i], n=vmesh.get_array(name='Normals', preference='point')[i], method='scalars', thrs=60) for i in range(vmesh.n_points)]
 vcs = np.array([cl_net.cartesian_to_vcs(p=vmesh.points[i], cl_id=bid[i]) for i in range(vmesh.n_points)])
 vmesh['cl_association'] = bid
 vmesh['tau'] = vcs[:,0]
 vmesh['theta'] = vcs[:,1]
 vmesh['rho'] = vcs[:,2]
+
+#Now, lets visualize the computations.
 vmesh.plot(scalars='cl_association')
 vmesh.plot(scalars='tau')
 vmesh.plot(scalars='theta')
