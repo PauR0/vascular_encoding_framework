@@ -46,6 +46,34 @@ class Boundary(Node):
             self.set_data(**nd.__dict__)
     #
 
+    def to_dict(self, serialize=True):
+        """
+        Make a dictionary with the non-None attributes. Similar to __dict__ but without Nones.
+
+        Arguments:
+        ----------
+
+            serialize : bool, opt
+                Default True. Whether to serialize objects such as numpy array, to be
+                json-writable.
+
+        Returns:
+        --------
+
+            outdict : dict
+                The boundary attributes stored in a dictionary.
+        """
+
+        outdict = {}
+        for k, v in self.__dict__:
+            if v is not None:
+                if serialize and isinstance(v, np.ndarray):
+                    v = v.tolist()
+                outdict[k] = v
+
+        return outdict
+    #
+
     def save(self, fname):
         """
         Method to save a boundary dict.
