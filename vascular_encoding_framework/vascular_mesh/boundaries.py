@@ -87,16 +87,27 @@ class Boundary(Node):
         return outdict
     #
 
-    def set_data(self, update=False, build_splines=False, **kwargs):
+    def set_data(self, to_numpy=True, update=False, build_splines=False, **kwargs):
         """
         Method to set attributes by means of kwargs.
         E.g.
             a = Boundary()
             a.set_data(center=np.zeros((3,)))
 
+        Arguments:
+        -------------
+
+            to_numpy : bool, opt
+                Default True. Whether to cast numeric array-like sequences to numpy ndarray.
+
+            update : bool, opt
+                Default False. Whether to update points2D* attributes after setting passing points att.
+
+            build_splines : bool, opt
+                Default False. Whether to build the rho spline attribute for the boundary object.
         """
 
-        super().set_data(**kwargs)
+        super().set_data(to_numpy=to_numpy, **kwargs)
 
         if "points" in kwargs and update:
             self.from_3D_to_polar()
@@ -129,7 +140,7 @@ class Boundary(Node):
 
         """
 
-        attribute_checker(self, ['points', 'center', 'v1', 'v2'], extra_info='Cannot compute plannar coordinates.'+\
+        attribute_checker(self, ['points', 'center', 'v1', 'v2'], info='Cannot compute plannar coordinates.'+\
                                                                             f'Boundary with id {self.id} has no v1 and v2....')
 
         if pts is None:
@@ -165,7 +176,7 @@ class Boundary(Node):
         """
 
         if pts is None:
-            attribute_checker(self, atts=['points2d_cart'], extra_info=f'No points available to transform in polar coordinates at boundary {self.id}')
+            attribute_checker(self, atts=['points2d_cart'], info=f'No points available to transform in polar coordinates at boundary {self.id}')
             self.points2D_polar = cart_to_polar(self.points2D_cart.T, sort=sort).T
             return self.points2D_polar.copy()
 
