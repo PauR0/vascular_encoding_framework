@@ -46,12 +46,17 @@ class Boundary(Node):
             self.set_data(**nd.__dict__)
     #
 
-    def to_dict(self, serialize=True):
+    def to_dict(self, compact=True, serialize=True):
         """
-        Make a dictionary with the non-None attributes. Similar to __dict__ but without Nones.
+        Make a dictionary with the Boundary object atributes. If compact == True, only main Node
+        attributes with the main Boundary attributes are added to the dictionary, otherwise, each
+        one is added.
 
         Arguments:
         ----------
+
+            compact : bool, opt
+                Default True. Whether to exclude non essential attributes in the outdict..
 
             serialize : bool, opt
                 Default True. Whether to serialize objects such as numpy array, to be
@@ -65,11 +70,19 @@ class Boundary(Node):
         """
 
         outdict = {}
-        for k, v in self.__dict__:
-            if v is not None:
-                if serialize and isinstance(v, np.ndarray):
-                    v = v.tolist()
-                outdict[k] = v
+        if compact:
+            atts = list(Node().__dict__.keys()) + ['center', 'normal', 'v1', 'v2']
+        else:
+            atts = self.__dict__.keys()
+
+        for k in atts:
+            v = self.__dict__[k]
+            if serialize and isinstance(v, (set, np.ndarray)):
+                if isinstance(v, np.ndarray):
+                    if v.dtype == 'float32': v=v.astype(float)
+                    v = v.astype(float)
+                v = list(v)
+            outdict[k] = v
 
         return outdict
     #
