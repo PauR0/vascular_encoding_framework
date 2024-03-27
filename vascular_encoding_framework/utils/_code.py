@@ -433,7 +433,7 @@ def is_arrayable(seq):
     return True
 #
 
-def attribute_checker(obj, atts, extra_info='', opts=None):
+def attribute_checker(obj, atts, info=None, opts=None):
     """
     Function to check if attribute has been set and print error message.
 
@@ -446,9 +446,9 @@ def attribute_checker(obj, atts, extra_info='', opts=None):
         atts : list[str]
             The names of the attributes to be checked for.
 
-        extra_info : str, opt
-            An extra information string to be added to error message befor
-            'Attribute {att} is None....'
+        info : str, opt
+            An information string to be added to error message before
+            'Attribute {att} is None....'. If None, no message is printed.
 
         opts : List[Any], optional.
             Default None. A list containing accepted values for attribute.
@@ -462,13 +462,15 @@ def attribute_checker(obj, atts, extra_info='', opts=None):
     if opts is None:
         for att in atts:
             if getattr(obj, att) is None:
-                error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}....")
+                if info is not None:
+                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}....")
                 return False
 
     else:
         for att, opt in zip(atts, opts):
             if getattr(obj, att) not in opt:
-                error_message(info=f"{extra_info}. Attribute {att} is {getattr(obj, att)}, and it must be in {opt}....")
+                if info is not None:
+                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}, and it must be in {opt}....")
                 return False
 
     return True

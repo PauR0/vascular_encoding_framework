@@ -108,7 +108,7 @@ class UniSpline(Spline):
                 The evaluation of t. If coeffs are N-dimensional, the output so will.
         """
 
-        if not attribute_checker(self, ['_spl'], extra_info="can't evaluate spline, it has not been built..."):
+        if not attribute_checker(self, ['_spl'], info="can't evaluate spline, it has not been built..."):
             return False
 
 
@@ -160,7 +160,7 @@ class UniSpline(Spline):
 
     def build(self):
 
-        if not attribute_checker(self, ['k', 'n_knots', 'coeffs'], extra_info="cant build splines."):
+        if not attribute_checker(self, ['k', 'n_knots', 'coeffs'], info="cant build splines."):
             return False
 
         if self.knots is None:
@@ -244,7 +244,7 @@ class BiSpline(Spline):
 
     def build(self):
 
-        if not attribute_checker(self, ['kx', 'ky', 'coeffs'], extra_info="cant build splines."):
+        if not attribute_checker(self, ['kx', 'ky', 'coeffs'], info="cant build splines."):
             return False
 
         if self.knots_x is None and self.n_knots_x is None:

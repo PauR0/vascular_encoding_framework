@@ -269,7 +269,7 @@ class Centerline(UniSpline, Node):
         """
         This method builds the splines and sets up other useful attributes.
         """
-        if not attribute_checker(self, ['knots', 'coeffs'], extra_info="cant build splines."):
+        if not attribute_checker(self, ['knots', 'coeffs'], info="cant build splines."):
             return False
 
         super().build()
@@ -445,7 +445,7 @@ class Centerline(UniSpline, Node):
 
         """
 
-        if not attribute_checker(self, ['tangent', 'v1', 'v2'], extra_info='Cant compute adapted frame: '):
+        if not attribute_checker(self, ['tangent', 'v1', 'v2'], info='Cant compute adapted frame: '):
             return False
 
         t_  = self.get_tangent(t)

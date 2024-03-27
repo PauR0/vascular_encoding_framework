@@ -231,10 +231,10 @@ class CenterlinePathExtractor:
         field.
         """
 
-        if not attribute_checker(self, ['vmesh'], extra_info='Cant compute radius field.'):
+        if not attribute_checker(self, ['vmesh'], info='Cant compute radius field.'):
             return False
 
-        if not attribute_checker(self.vmesh, ['kdt'], extra_info='Cant compute radius field. The vascular mesh provided has no kdt'):
+        if not attribute_checker(self.vmesh, ['kdt'], info='Cant compute radius field. The vascular mesh provided has no kdt'):
             return False
 
         self.radius = self.vmesh.kdt.query(self.centerline_domain)[0]
@@ -384,11 +384,11 @@ class CenterlinePathExtractor:
         """
 
         if vm is None:
-            if not attribute_checker(self, ['vmesh'], extra_info="no VascularMesh has been passed and..."):
+            if not attribute_checker(self, ['vmesh'], info="no VascularMesh has been passed and..."):
                 return
             vm = self.vmesh
 
-        if not attribute_checker(vm, ['boundaries'], extra_info="can't compute hirarchy from vmesh."):
+        if not attribute_checker(vm, ['boundaries'], info="can't compute hirarchy from vmesh."):
             return
 
         self.set_boundaries(bndrs=vm.boundaries, force_tangent=force_tangent, copy=copy)
@@ -478,7 +478,7 @@ class CenterlinePathExtractor:
         mode attribute.
         """
 
-        if not attribute_checker(self, ['mode'], extra_info="wrong mode chosen to extract centerline paths...", opts=[['i2o', 'j2o']]):
+        if not attribute_checker(self, ['mode'], info="wrong mode chosen to extract centerline paths...", opts=[['i2o', 'j2o']]):
             return False
 
         def arrange_path(bid):

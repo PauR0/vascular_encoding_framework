@@ -87,12 +87,12 @@ class VesselEncoding(Node):
 
         """
 
-        if not attribute_checker(self, atts=['centerline'], extra_info="cant compute VCS."):
+        if not attribute_checker(self, atts=['centerline'], info="cant compute VCS."):
             return False
 
         tau, theta, rho = self.centerline.cartesian_to_vcs(p=p, method=method)
         if rho_norm:
-            if not attribute_checker(self, atts=['radius'], extra_info="cant compute normalized VCS."):
+            if not attribute_checker(self, atts=['radius'], info="cant compute normalized VCS."):
                 return False
             rho /= self.radius(tau, theta)
 
@@ -201,7 +201,7 @@ class VesselEncoding(Node):
         if cl is not None:
             self.set_centerline(cl=cl)
 
-        if not attribute_checker(self, ['centerline'], extra_info="cannot extract Vessel from network."):
+        if not attribute_checker(self, ['centerline'], info="cannot extract Vessel from network."):
             return False
 
         if 'Normals' not in vmesh.point_data:
