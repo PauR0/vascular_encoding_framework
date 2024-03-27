@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+
 
 import numpy as np
 import pyvista as pv
@@ -21,7 +21,7 @@ class VascularMesh(pv.PolyData):
     Furthermore, it is usually not in the method's signature.
     """
 
-    def __init__(self, p:pv.PolyData=None, compute_boundary=True) -> None:
+    def __init__(self, p:pv.PolyData=None, compute_boundaries=True) -> None:
 
 
         self.boundaries   : Boundaries = None
@@ -47,7 +47,7 @@ class VascularMesh(pv.PolyData):
         if p.is_manifold:
             self.closed = p
 
-        if compute_boundary:
+        if compute_boundaries:
             self.compute_open_boundaries()
     #
 
@@ -92,13 +92,13 @@ class VascularMesh(pv.PolyData):
         attribute_setter(self, **kwargs)
     #
 
-    def save(self, filename, binary=True, boundaries_fname=None, **kwargs):
+    def save(self, fname, binary=True, boundaries_fname=None, **kwargs):
         """
         Save the vascular mesh. kwargs are passed to PolyData.save method.
 
         Arguments:
         ------------
-            filename : str
+            fname : str
                 The name of the file to store the polydata.
 
             binary : bool, opt
@@ -109,14 +109,15 @@ class VascularMesh(pv.PolyData):
 
         """
 
-        if self.n_points is not None:
-            super().save(filename=filename, binary=binary, **kwargs)
+        if self.boundaries is None and not self.n_points:
+            error_message("There is no data to be saved....")
+            return
+
+        if self.n_points:
+            super().save(filename=fname, binary=binary, **kwargs)
 
         if self.boundaries is not None and boundaries_fname is not None:
             self.boundaries.save(boundaries_fname)
-
-        if self.boundaries is None and self.mesh is None:
-            error_message("There is no data to be saved....")
     #
 
     @staticmethod
@@ -136,9 +137,9 @@ class VascularMesh(pv.PolyData):
         """
 
         p = pv.read(filename)
-        comp_bounds = True if boundaries_fname is not None else False
+        comp_bounds = True if boundaries_fname is None else False
 
-        vmesh = VascularMesh(p=p, compute_boundary=comp_bounds)
+        vmesh = VascularMesh(p=p, compute_boundaries=comp_bounds)
         if boundaries_fname is not None:
             vmesh.boundaries = Boundaries.read(boundaries_fname)
 
