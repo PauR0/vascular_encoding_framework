@@ -299,6 +299,29 @@ class Boundary(Node):
                       faces  = pdt.faces
                      )
     #
+
+    def to_polydata(self):
+        """
+        If points attribute is not None, build a pyvista PolyData object with them. If
+        faces are not None, they are also added to PolyData.
+
+        Returns:
+        ---------
+            poly : pv.PolyData
+                The polydata containing the Boundaries.
+        """
+
+        if not attribute_checker(self, atts=['points', 'faces']):
+            return None
+
+        poly = pv.PolyData()
+        if self.points is not None:
+            poly.point = self.points
+        if self.faces is not None:
+            poly.faces = self.faces
+
+        return poly
+    #
 #
 
 class Boundaries(Tree):
