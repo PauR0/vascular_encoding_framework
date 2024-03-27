@@ -341,8 +341,6 @@ class Boundaries(Tree):
                 self[i] = Boundary(nd=n)
     #
 
-    def save(self, filename):
-        pass
     #
 
     @staticmethod
