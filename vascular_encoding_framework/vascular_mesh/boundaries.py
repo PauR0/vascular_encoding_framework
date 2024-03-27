@@ -1,12 +1,15 @@
 
-import numpy as np
 
+import os
+
+import numpy as np
+import pyvista as pv
 from scipy.interpolate import BSpline
 
 from ..utils.spatial import planar_coordinates, cart_to_polar, normalize
 from ..utils.splines import knots_list, compute_rho_spline
 from ..utils._code   import Tree, Node, attribute_checker
-
+from ..utils.writers import write_json
 
 class Boundary(Node):
 
@@ -341,6 +344,62 @@ class Boundaries(Tree):
                 self[i] = Boundary(nd=n)
     #
 
+    def to_dict(self, compact=True, serialize=True):
+        """
+        Convert the Boundaries object into a python dictionary. If the serialize argument is True,
+        numpy arrays will be casted to python lists (for json writability).
+
+        Arguments:
+        ------------
+
+            compact : bool, opt
+                Default True. Whether to exclude non-essential attribute of the boundary objects,
+                or include them all. To see which attributes are essential see Boundary.to_dict docs.
+
+            serialize : bool, opt
+                Default True. Whether to turn numpy arrays to lists.
+
+        Reutrns:
+        ---------
+            outdict : dict
+                The ouput python dictionary.
+        """
+
+        outdict = { i : node.to_dict(compact=compact, serialize=serialize) for i, node in self.items()}
+
+        return outdict
+    #
+
+    def save(self, fname, binary=True):
+        """
+        Method to write Boundaries objects. Given an fname, this method writes the essential
+        data from each boundary in a json file. If possible it builds a pv.MultiBlock with
+        a PolyData of the boundaries.
+
+        Arguments:
+        ------------
+
+            fname : str
+                The boundaries json file name.
+
+            binary : bool, opt
+                Default True. Whether to write boundary multiblock in binary or ascii.
+        """
+
+        fname, _ = os.path.splitext(fname)
+
+        outdict = self.to_dict(compact=True, serialize=True)
+
+        write_json(f"{fname}.json", outdict, overwrite=True)
+
+        mbfname = f"{fname}.vtm"
+        outmultiblock = pv.MultiBlock()
+        for i, bd in self.items():
+            polybd = bd.to_polydata()
+            if polybd is not None:
+                outmultiblock[i] = polybd
+        if outmultiblock.n_blocks:
+            outmultiblock.save(filename=mbfname, binary=binary)
     #
 
     @staticmethod
