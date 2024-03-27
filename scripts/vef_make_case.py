@@ -4,13 +4,12 @@ import os
 import sys
 import argparse
 
-import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
 
-from .case_io import load_vascular_mesh
+from case_io import load_vascular_mesh, save_vascular_mesh
 
 
-def handle_mesh_and_case_name(mesh, case, ow=False):
+def handle_case_and_mesh_name(case, mesh, ow=False):
     """
     Auxiliar function to handle paths as stated in script description.
 
@@ -30,20 +29,24 @@ def handle_mesh_and_case_name(mesh, case, ow=False):
     """
 
     base_dir = os.getcwd()
+    if case is None:
+        case_dir = 'vef_case'
+    else:
+        case_dir = case
+
     if mesh is not None:
         base_dir = os.path.dirname(mesh)
         if case is None:
-            case = 'vef_case'
-        case = os.path.join(base_dir, case)
+            case_dir = os.path.join(base_dir, case_dir)
 
-    if os.path.exists(case) and not ow:
-        msg.warning_message(f"the case: {case} already exists and overwritting is set to False. Nothing will be created.")
+    if os.path.exists(case_dir) and not ow:
+        msg.warning_message(f"The case: {case_dir} already exists and overwritting is set to False. Nothing will be created.")
         return None, None
 
     return mesh, case
 #
 
-def make_case(case_dir, mesh_fname=None, hierarchy=None):
+def make_case(case_dir, mesh_fname=None, hierarchy=None, overwrite=False):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -51,16 +54,20 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None):
     attempts to compute the boundaries and save them at the Meshes directory.
     """
 
+    print(case_dir, mesh_fname)
     os.makedirs(case_dir, exist_ok=True)
 
     meshes_dir = os.path.join(case_dir, 'Meshes')
     if mesh_fname is not None or hierarchy is not None:
-        os.makedirs(meshes_dir)
+        print(case_dir, mesh_fname)
+        os.makedirs(meshes_dir, exist_ok=True)
 
+    print(case_dir, mesh_fname, mesh_fname.__class__)
     if mesh_fname is not None:
         vmesh = load_vascular_mesh(path=mesh_fname, abs_path=True)
         if hierarchy is not None:
             vmesh.set_boundary_data(hierarchy)
+        save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, ext='vtk', overwrite=overwrite)
 #
 
 
@@ -71,8 +78,11 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="""Script to generate a directory according to \
-    the Vascular Encoding Framework case requirements. The directory path can be provided using
-    the -c or --case flag. If no mesh file is provided the current directory is used.""")
+    the Vascular Encoding Framework case requirements. The script works as follows. With no arguments
+    a directory called, vef_case is created. If a mesh is pased, then the vef_case is created in the same
+    directory where the mesh is located and the mesh is set as the input mesh at Meshes directory. If a case
+    path is provided, it is used (in combination or not with the mesh). All this cases check existence of the
+    files/directories before creating them, and if overwritting is set to false, the creation is skipped printing a message to terminal.""")
 
     parser.add_argument('-w',
                         action='store_true',
@@ -89,15 +99,16 @@ if __name__ == '__main__':
                         '--case',
                         dest='case',
                         action='store',
-                        default='None',
+                        default=None,
                         help="""The path/name with the case to be created. If none is provided,
                         a directory called vef_case.""")
 
     args = parser.parse_args()
 
-    mesh_path, case_path = handle_mesh_and_case_name(args.case, args.mesh, ow=args.w)
+    print(args.case, args.mesh)
+    mesh_path, case_path = handle_case_and_mesh_name(case=args.case, mesh=args.mesh, ow=args.w)
     if case_path is None:
         sys.exit(0)
 
-    make_case(case_path, mesh_path)
+    make_case(case_path, mesh_path, overwrite=args.w)
 #
