@@ -5,6 +5,7 @@ Input/output module for vef case directories.
 import os
 
 import vascular_encoding_framework as vef
+from vascular_encoding_framework.utils.writers import is_writable
 from vascular_encoding_framework import messages as msg
 
 
@@ -77,3 +78,49 @@ def load_vascular_mesh(path, suffix="", ext="vtk", abs_path=False):
         return None
 #
 
+def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=False, overwrite=False):
+    """
+    Save a vascular mesh with all the available data at a given path. By default
+    this function assumes path is a case directory and uses default name convention.
+
+
+    Parameters
+    ----------
+
+        path : string
+            The path to the wall mesh.
+
+        suffix : string
+            A string indicating a suffix in the mesh name. E.g. suffix="_input"
+            means mesh_input.vtk
+
+        binary : bool, opt.
+            Default True. Wheteher to save vtk files in binary format.
+
+        ext : str opt,
+            Default vtk. File extension compatible with pyvista.read.
+
+        abs_path : bool, optional
+            Default False. Whether the path argument if the path-name to the file containing
+            the vascular mesh or to a case directory.
+
+        overwrite : bool, opt
+            Default False. Whether to overwirte existing files.
+    """
+
+    if not abs_path:
+        mesh_fname   = os.path.join(path, 'Meshes', f'mesh{suffix}.{ext}')
+        bounds_fname = os.path.join(path, 'Meshes', f'boundaries{suffix}')
+
+    else:
+        dirname, nameext = os.path.split(path)
+        name, _ = os.path.splitext(nameext)
+        mesh_fname   = path
+        bounds_fname = os.path.join(dirname, f"{name}_boundaries")
+
+    if is_writable(mesh_fname, overwrite=overwrite) and is_writable(bounds_fname, overwrite=overwrite):
+        vmesh.save(fname=mesh_fname, binary=binary, boundaries_fname=bounds_fname)
+
+    else:
+        msg.warning_message(f"Overwritting is set to false, and {mesh_fname} or {bounds_fname} already exists. Nothig will be written.")
+#
