@@ -87,54 +87,6 @@ class Boundary(Node):
         return outdict
     #
 
-    def save(self, fname):
-        """
-        Method to save a boundary dict.
-
-        Arguments:
-        -----------
-
-            fname : str
-                Filename for the json file containing the boundary data.
-        """
-
-        pass
-        """
-        boundary_dict = read_boundary_json()
-        for k in boundary_dict['data']:
-            v = getattr(self, k, None)
-            if isinstance(v, np.ndarray):
-                v=v.tolist()
-            boundary_dict['data'][k] = v
-
-        write_boundary_json(path=fname, data=boundary_dict, abs_path=True)
-        """
-    #
-
-    def load(self, fname):
-        """
-        Method to load a boundary dict.
-
-        Arguments:
-        -----------
-
-            fname : str
-                Filename for the json file containing the boundary data.
-        """
-
-        pass
-        """
-        boundary_dict = read_boundary_json(path=fname, abs_path=True)['data']
-        for k in ["center", "normal", "v1", "v2", "rho_coef"]:
-            if boundary_dict[k] is not None:
-                boundary_dict[k] = np.array(boundary_dict[k])
-
-        self.set_data(**boundary_dict)
-        if self.rho_coef is not None and self.n_knots_rho is not None:
-            self.build_rho_spline()
-        """
-    #
-
     def set_data(self, update=False, build_splines=False, **kwargs):
         """
         Method to set attributes by means of kwargs.
