@@ -199,7 +199,7 @@ class Boundary(Node):
                 Defaulting to None.
 
             sort : bool
-                Default True. Whether to sort the returned list by angular coord.
+                Default False. Whether to sort the returned list by angular coord.
 
         Returns:
         ---------
@@ -210,7 +210,7 @@ class Boundary(Node):
 
         pts2D = None
         if pts is None:
-            self.from_3D_to_2D(pts=pts)
+            self.from_3D_to_2D(pts=pts, sort=True)
         else:
             pts2D = self.from_3D_to_2D(pts=pts)
 
@@ -222,6 +222,7 @@ class Boundary(Node):
     def build_rho_spline(self):
         """
         Method to build rho function spline.
+        TODO: Sorting the points by theta coord should be exclusively done here, there will be explosions if I don't sort this out.
         """
         if self.rho_coef is None:
             if self.points2D_polar is not None:
