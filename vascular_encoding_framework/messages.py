@@ -8,12 +8,12 @@ __all__ = [
     'info_message',
 ]
 
-import os
+import os as _os
 
 
-LENGTH = os.get_terminal_size()[0]
+_LENGTH = _os.get_terminal_size()[0]
 
-def split_and_pad(input_string, max_length=LENGTH, pad_direction='right', pad_symb='.'):
+def split_and_pad(input_string, max_length=_LENGTH, pad_direction='right', pad_symb='.'):
 
     if not input_string:
         return []
