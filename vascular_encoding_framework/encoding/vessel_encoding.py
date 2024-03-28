@@ -231,7 +231,7 @@ class VesselEncoding(Node):
             p = pv.Plotter()
             p.add_mesh(vmesh, scalars=ids, n_colors=2, opacity=0.4)
             p.add_mesh(vsl_mesh, color='g', opacity=0.7)
-            p.add_mesh(self.centerline.as_polydata(), render_lines_as_tubes=True, color='g', line_width=10)
+            p.add_mesh(self.centerline.to_polydata(), render_lines_as_tubes=True, color='g', line_width=10)
             p.show()
 
         return vsl_mesh

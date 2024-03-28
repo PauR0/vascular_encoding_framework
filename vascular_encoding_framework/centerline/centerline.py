@@ -822,7 +822,7 @@ class Centerline(UniSpline, Node):
         return k
     #
 
-    def as_polydata(self, t_res=None):
+    def to_polydata(self, t_res=None, add_attributes=False):
         """
         Transform centerline into a PolyData based on points and lines.
 
@@ -839,12 +839,27 @@ class Centerline(UniSpline, Node):
             params = np.linspace(self.t0, self.t1, t_res)
             points = self(params)
 
-        pline = polyline_from_points(points)
+        poly = polyline_from_points(points)
 
-        pline['v1'] = self.v1(params)
-        pline['v2'] = self.v1(params)
+        poly['v1'] = self.v1(params)
+        poly['v2'] = self.v2(params)
 
-        return pline
+        if add_attributes:
+            #Adding Node atts:
+            poly.add_field_data(np.array([self.id]),      'id',       deep=True)
+            poly.add_field_data(np.array([self.parent]),  'parent',   deep=True)
+            poly.add_field_data(np.array(self.children),  'children', deep=True)
+            poly.add_field_data(np.array([self.joint_t]), 'joint_t',  deep=True)
+
+            #Adding Spline atts:
+            poly.add_field_data(np.array([self.t0, self.t1]), 'interval',      deep=True)
+            poly.add_field_data(np.array([self.k]),           'k',             deep=True)
+            poly.add_field_data(np.array(self.knots),         'knots',         deep=True)
+            poly.add_field_data(np.array(self.coeffs),        'coeffs',        deep=True)
+            poly.add_field_data(np.array([self.extra]),       'extrapolation', deep=True)
+
+        return poly
+    #
     #
 
     def trim(self, t0_, t1_=None, pass_atts=True, n_samps=100):
