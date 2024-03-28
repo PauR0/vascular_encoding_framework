@@ -1,9 +1,10 @@
 
 
+import os
 import json
 
 from .readers import read_json
-from ..config import _defaults_dir
+from . import _defaults_dir
 
 def pretty_write(j, fname, write_replacements=None):
     """
@@ -35,9 +36,9 @@ def pretty_write(j, fname, write_replacements=None):
 #
 
 
-def get_json_writer(default_fname, template_file):
+def get_json_writer(default_fname):
 
-    params = read_json(template_file)
+    params = read_json(os.path.join(_defaults_dir, default_fname))
     fname = default_fname
 
     def write_json(path, data=None, abs_path=False):
@@ -45,7 +46,7 @@ def get_json_writer(default_fname, template_file):
         if abs_path:
             json_file = path
         else:
-            json_file = path + "/" + fname
+            json_file = os.path.join(path, fname)
 
         try:
             if data:
