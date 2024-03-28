@@ -879,6 +879,57 @@ class Centerline(UniSpline, Node):
         poly = self.to_polydata(add_attributes=True)
         poly.save(filename=fname, binary=binary)
     #
+
+    def from_polydata(self, poly):
+        """
+        Build a centerline object from a pyvista PolyData object that contains the required
+        attributes as field_data. The minimum required data are the parameters involving the spline
+        creation, namely, {'interval' 'k' 'knots' 'coeffs' 'extrapolation'}. Additionally, if the
+        centerline belong to a network, it is required to provide the attributes {'id', 'parent',
+        'children', 'joint_t'}.
+
+        Arguments:
+        ----------
+
+            poly : pv.PolyData
+
+        Returns:
+        -----------
+            self : Centerline
+                The centerline object with the attributes already set.
+        """
+
+        spl_atts = ['interval' 'k' 'knots' 'coeffs' 'extrapolation']
+        for att in spl_atts:
+            if not att in poly.field_data:
+                error_message(f"Could not find attribute: {att} in polydat. Wont build centerline object")
+                return None
+
+        for att in spl_atts:
+            value = poly.get_field_data(att)
+            if att == 'interval':
+                self.set_parameters(t0=value[0], t1=value[1])
+            elif att == 'extrapolation':
+                self.set_parameters(extra=str(value))
+            elif att == 'knots':
+                self.set_parameters(knots=value, n_knots=len(value))
+            else:
+                self.set_parameters(**{att:str(value[0])})
+        self.build()
+
+        node_atts = list(Node()) + ['joint_t']
+        for att in node_atts:
+            if att in poly.field_data:
+                value = poly.get_field_data(att)
+                if att in ['id', 'parent']:
+                    self.set_data(**{att:str(value[0])})
+                elif att == 'joint_t':
+                    self.set_data(**{att:float(value[0])})
+                elif att == 'children':
+                    self.set_data(**{att:list(value)})
+
+        return self
+    #
     #
 
     def trim(self, t0_, t1_=None, pass_atts=True, n_samps=100):
