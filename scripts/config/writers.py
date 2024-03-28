@@ -62,3 +62,7 @@ def get_json_writer(default_fname):
 
     return write_json
 #
+
+
+write_centerline_config = get_json_writer('centerline.json')
+#
