@@ -257,8 +257,8 @@ class Flux(CenterlineDomainExtractor):
         self.output_domain     : pv.PolyData = None
 
         self.volume     : pv.UnstructuredGrid = None
-        self.mesh_kdt   : KDTree
-        self.volume_kdt : KDTree
+        self.mesh_kdt   : KDTree = None
+        self.volume_kdt : KDTree = None
 
         # Parameters
         self.dx    : float = None
