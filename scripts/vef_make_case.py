@@ -54,7 +54,6 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, overwrite=False):
     attempts to compute the boundaries and save them at the Meshes directory.
     """
 
-    print(case_dir, mesh_fname)
     os.makedirs(case_dir, exist_ok=True)
 
     meshes_dir = os.path.join(case_dir, 'Meshes')
@@ -62,7 +61,6 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, overwrite=False):
         print(case_dir, mesh_fname)
         os.makedirs(meshes_dir, exist_ok=True)
 
-    print(case_dir, mesh_fname, mesh_fname.__class__)
     if mesh_fname is not None:
         vmesh = load_vascular_mesh(path=mesh_fname, abs_path=True)
         if hierarchy is not None:
@@ -105,7 +103,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    print(args.case, args.mesh)
     mesh_path, case_path = handle_case_and_mesh_name(case=args.case, mesh=args.mesh, ow=args.w)
     if case_path is None:
         sys.exit(0)
