@@ -124,3 +124,9 @@ def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=
     else:
         msg.warning_message(f"Overwritting is set to false, and {mesh_fname} or {bounds_fname} already exists. Nothig will be written.")
 #
+
+def load_centerline(path, suffix, abs_path):
+    ...
+
+def save_centerline(path, suffix, abs_path):
+    ...
