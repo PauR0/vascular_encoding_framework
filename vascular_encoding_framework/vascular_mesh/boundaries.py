@@ -319,7 +319,7 @@ class Boundary(Node):
 
         poly = pv.PolyData()
         if self.points is not None:
-            poly.point = self.points
+            poly.points = self.points
         if self.faces is not None:
             poly.faces = self.faces
 
