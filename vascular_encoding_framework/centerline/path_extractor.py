@@ -8,7 +8,7 @@ from scipy.spatial import KDTree
 
 from ..messages import *
 from ..vascular_mesh import VascularMesh, Boundaries
-from ..utils._code import attribute_checker
+from ..utils._code import attribute_checker, attribute_setter
 
 
 def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
@@ -151,6 +151,15 @@ class CenterlinePathExtractor:
 
         self.id_paths : list[list[int]] = None
         self.paths    : pv.MultiBlock   = None
+    #
+
+    def set_parameters(self, **kwargs):
+        """
+        Method to set parameters of the path extractor.
+        """
+        cl = self.__class__()
+        params = {k:v for k,v in kwargs if k in cl.__dict__}
+        attribute_setter(self, **params)
     #
 
     def set_vascular_mesh(self, vm, check_radius=True, update_boundaries=True):
