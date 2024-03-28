@@ -1,0 +1,12 @@
+{
+    "metadata" : {
+        "type" : "centerline",
+        "version" : "0.0.1"
+    },
+
+    "domain_alg"    : "seekers",
+    "params_domain" : "FILE::seekers.json",
+    "params_path"   : "FILE::cl_path.json",
+    "graft_rate"    : 0.5,
+    "force_tangent" :true
+}
