@@ -49,10 +49,8 @@ def get_json_writer(default_fname, template_file):
 
         try:
             if data:
-                for k in data['metadata']:
-                    params['metadata'][k] = data['metadata'][k]
-                for k in data['data']:
-                    params['data'][k] = data['data'][k]
+                for k in data:
+                    params[k] = data[k]
             pretty_write(json.dumps(params), json_file)
         except FileNotFoundError:
             pass
