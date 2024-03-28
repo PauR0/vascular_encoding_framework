@@ -1,0 +1,11 @@
+{
+    "metadata" : {
+        "type" : "cl_path",
+        "version" : "0.0.1"
+    },
+
+    "mode"              : "j2o",
+    "reverse"           : false,
+    "adjacency_factor"  : "0.33",
+    "pass_pointid"      : true
+}
