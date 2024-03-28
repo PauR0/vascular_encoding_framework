@@ -860,6 +860,25 @@ class Centerline(UniSpline, Node):
 
         return poly
     #
+
+    def save(self, fname, binary=True):
+        """
+        Save the centerline object as a vtk PolyData, appending the essential attributes as field
+        data entries.
+
+        Arguments:
+        -----------
+
+            fname : str
+                Filename to write to. If does not end in .vtk, the extension is appended.
+
+            binary : bool, opt
+                Default True. Whether to write the file in binary or ASCII format.
+        """
+
+        poly = self.to_polydata(add_attributes=True)
+        poly.save(filename=fname, binary=binary)
+    #
     #
 
     def trim(self, t0_, t1_=None, pass_atts=True, n_samps=100):
