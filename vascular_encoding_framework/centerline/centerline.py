@@ -1,5 +1,6 @@
 
 
+import pyvista as pv
 import numpy as np
 
 from scipy.interpolate import BSpline, make_lsq_spline
@@ -9,6 +10,9 @@ from scipy.spatial.transform import Rotation
 from scipy.integrate import quad
 from scipy.misc import derivative
 
+
+from .domain_extractors import extract_centerline_domain
+from .path_extractor import extract_centerline_path
 from ..messages import error_message
 from ..utils._code import Tree, Node, attribute_checker
 from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
@@ -1413,3 +1417,46 @@ class CenterlineNetwork(Tree):
         return cl_net
     #
 #
+
+
+def extract_centerline(vmesh, params, params_domain=None, params_path=None, debug=False):
+    """
+    Provided a VascularMesh object with its boundaries propperly defined, this function
+    computes the CenterlineNetwork of it.
+
+    Arguments:
+    ------------
+
+        vmesh : VascularMesh
+            The VascularMesh object where centerline is to be computed.
+
+        params : dict
+            The parameters for the spline approximation for each boundary, together with the grafting rate
+            and tangent forcing parameters.
+
+        params_domain : dict, opt
+            The parameters for the domain extraction algorithm. More information about it in the
+            domain_extractors module.
+
+        params_path : dict
+            The parameters for the path extraction algorithm. More information about it in the
+            path_extractor module.
+
+        debug : bool, opt
+            Defaulting to False. Running in debug mode shows some plots at certain steps.
+
+
+    Returns:
+    ---------
+
+        cl_net : CenterlineNetwork
+            The computed Centerline
+    """
+
+    cl_domain = extract_centerline_domain(vmesh=vmesh, params=params_domain, debug=debug)
+    cl_paths  = extract_centerline_path(vmesh=vmesh, cl_domain=cl_domain, params=params_path)
+    cl_net    = CenterlineNetwork.from_multiblock_paths(cl_paths,
+                                                        knots=params['knots'],
+                                                        graft_rate=params['graft_rate'],
+                                                        force_tangent=params['force_tangent'])
+    return cl_net
