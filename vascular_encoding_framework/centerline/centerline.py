@@ -1350,7 +1350,7 @@ class CenterlineNetwork(Tree):
                 called 'parent', that has to be a list with a single id (present in the multiblock names).
                 The names of the polydatas must be separable in "path_" + "id" as in path_AsAo
 
-            n_knots : dict[str]
+            knots : dict[str]
                 A dictionary with the knots to perform the spline curve least squares fitting of each polydata.
                 The id is accessed by the centerline id, and the value can be the list of knots to use, or a int
                 in the latter, a uniform spline is built with the number provided.
