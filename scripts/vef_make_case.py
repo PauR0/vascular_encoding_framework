@@ -46,7 +46,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
     return mesh, case
 #
 
-def make_case(case_dir, mesh_fname=None, hierarchy=None, overwrite=False):
+def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, overwrite=False):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -65,6 +65,9 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, overwrite=False):
         vmesh = load_vascular_mesh(path=mesh_fname, abs_path=True)
         if hierarchy is not None:
             vmesh.set_boundary_data(hierarchy)
+        if show_bounds:
+            vmesh.plot_boundaries_ids()
+
         save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, ext='vtk', overwrite=overwrite)
 #
 
@@ -81,6 +84,12 @@ if __name__ == '__main__':
     directory where the mesh is located and the mesh is set as the input mesh at Meshes directory. If a case
     path is provided, it is used (in combination or not with the mesh). All this cases check existence of the
     files/directories before creating them, and if overwritting is set to false, the creation is skipped printing a message to terminal.""")
+
+    parser.add_argument('--plot-boundaries',
+                        dest="plot_bounds",
+                        action='store_true',
+                        help="""Plot the estimated boundaries with its ids. If no mesh
+                        have been passed, this flag is ignored.""")
 
     parser.add_argument('-w',
                         action='store_true',
