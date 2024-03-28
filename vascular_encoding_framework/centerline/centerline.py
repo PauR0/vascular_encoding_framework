@@ -930,6 +930,21 @@ class Centerline(UniSpline, Node):
 
         return self
     #
+
+    @staticmethod
+    def read(fname):
+        """
+        Read centerline object from a vtk file.
+
+        Arguments:
+        ------------
+
+            fname : str
+                The name of the file storing the centerline.
+        """
+
+        poly = pv.read(fname)
+        return Centerline().from_polydata(poly)
     #
 
     def trim(self, t0_, t1_=None, pass_atts=True, n_samps=100):
