@@ -605,5 +605,49 @@ class CenterlinePathExtractor:
 #
 
 
-def extract_centerline_path():
-    ...
+def extract_centerline_path(vmesh, cl_domain, params):
+    """
+    Compute the discrete centerline path of a vascular mesh based on a discretization of the lumen.
+    It is computed as the polylines definig the minimum cost path between the boundary centers of a
+    vascular mesh. If the boundary normal is provided, extra points are added to the domain to
+    ensure appropriate boundary conditions.
+
+    Warning: The minimum cost path is computed using A* algorithm without heuristic function (what
+    makes it Dikjsta's algorithm), for which the adjacency (neighborhood) is built using the radius
+    field scalated by an adjacency_factor (default .33). If this function fails to extract the path
+    try providing a more dense discretizatión of the lumen or increasing the adjacency_factor.
+
+    Arguments:
+    ----------
+
+        vmesh : VascularMesh
+            The VascularMesh object where centerline path is to be computed.
+
+        cntrln_dmn : np.ndarray | pv.DataSet
+            The lumen discretization. It can be a numpy array in shape (N,3)
+            or a pyvista object (PolyData, UnstructuredGrid...) with
+            the points attribute. Additionally if the point_data 'radius' exists
+            the computation is skipped.
+
+        params : dict
+            A dictionary with the parameters for the path extraction. The keys of
+            the dictionaries have to be as the attributes defined in the constructor
+            of the CenterlinePathExtractor object. Other dictionary entries are ignored.
+
+    Returns:
+    --------
+        outpaths : pv.MultiBlock
+
+    """
+
+    cp_xtractor = CenterlinePathExtractor()
+    cp_xtractor.set_centerline_domain(cl_domain)
+    cp_xtractor.set_vascular_mesh(vmesh, update_boundaries=True)
+
+    if params is not None:
+        cp_xtractor.set_parameters(**params)
+
+    cp_xtractor.compute_paths()
+    outpaths = cp_xtractor.paths
+
+    return outpaths
