@@ -1,4 +1,5 @@
 
+import os
 import json
 from copy import deepcopy
 
@@ -21,6 +22,23 @@ def read_json(file):
     params = None
     with open(file, 'r') as param_file:
         params = json.load(param_file)
+
+    return params
+#
+
+def param_from_file(params, path):
+    """
+    Provide support to redirect parameter to another json to prevent nested jsons.
+    """
+
+    for k, v in params.items():
+        if isinstance(v, str):
+            if v.startswith("FILE::"): #Two semicolon -> _defaults_dir
+                params[k] = read_json(os.path.join(_defaults_dir, v.removeprefix("FILE::")))
+            elif v.startswith("FILE:"): #One semicolon -> same_dir
+                params[k] = read_json(v.removeprefix("FILE:"))
+        elif isinstance(v, dict):
+            params[k] = param_from_file(v, path)
 
     return params
 #
@@ -66,7 +84,7 @@ def get_json_reader(default_name):
         except (FileNotFoundError, TypeError):
             print(f"Could not find {json_file}. Assuming default parameters.")
 
-        return params
+        new_params = param_from_file(params=new_params, path=path)
         return new_params
     #
 
