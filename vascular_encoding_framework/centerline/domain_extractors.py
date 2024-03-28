@@ -388,7 +388,7 @@ class Flux(CenterlineDomainExtractor):
 
 
 
-def extract_centerline_domain(mesh, method='seekers', method_params=None, debug=False):
+def extract_centerline_domain(vmesh, params=None, debug=False):
     """
     Function to extract the centerline domain. The centerline domain extraction is the
     first step to compute the centerline. Here an unordered discrete representation of
@@ -413,13 +413,19 @@ def extract_centerline_domain(mesh, method='seekers', method_params=None, debug=
 
     """
 
-    if method not in ['seekers', 'flux']:
-        error_message(f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {method}.")
+    if params is None:
+        params = {}
+
+    if 'method' not in params:
+        params['method'] = 'seekers'
+
+    if params['method'] not in ['seekers', 'flux']:
+        error_message(f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {params['method']}.")
         return False
 
-    if method == 'seekers':
+    if params['method'] == 'seekers':
         alg = Seekers()
-    elif method == 'flux':
+    elif params['method'] == 'flux':
         alg = Flux()
     else:
         print("How the hell have we arrived here?")
@@ -427,20 +433,18 @@ def extract_centerline_domain(mesh, method='seekers', method_params=None, debug=
     alg.debug = debug
 
     update=True
-    input_mesh = mesh
-    if isinstance(mesh, VascularMesh):
-        if mesh.closed is None:
-            mesh.compute_closed_mesh()
-        input_mesh = mesh.closed.compute_normals(cell_normals=False, point_normals=True)
-        if mesh.kdt is not None and method == 'flux':
-            alg.mesh_kdt = mesh.kdt
+    input_mesh = vmesh
+    if isinstance(vmesh, VascularMesh):
+        if vmesh.closed is None:
+            vmesh.compute_closed_mesh()
+        input_mesh = vmesh.closed.compute_normals(cell_normals=False, point_normals=True)
+        if vmesh.kdt is not None and params['method'] == 'flux':
+            alg.mesh_kdt = vmesh.kdt
             update=False
 
     alg.set_mesh(m=input_mesh, update=update)
 
-    if method_params is not None:
-        alg.set_parameters(**method_params)
-
+    alg.set_parameters(**params)
     alg.run()
 
     return alg.output_domain

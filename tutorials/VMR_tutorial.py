@@ -48,7 +48,7 @@ vmesh.set_boundary_data(hierarchy)
 #First we extract a domain approximation of the lumen, here we chose de seekers mode, it works
 #well with more tubelike geometries and we can add some parameter tunning using the method_params
 #argument. If debug argument is set to True, some plots are shown of the process.
-c_domain = vef.centerline.extract_centerline_domain(mesh=vmesh,
+c_domain = vef.centerline.extract_centerline_domain(vmesh=vmesh,
                                                     method='seekers',
                                                     method_params={'reduction_rate':0.75, 'eps': 1e-3},
                                                     debug=False)
