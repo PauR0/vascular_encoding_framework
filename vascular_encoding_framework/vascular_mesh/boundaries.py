@@ -332,8 +332,6 @@ class Boundaries(Tree):
     A class containing the boundaries inheriting structure from Tree class.
     """
 
-    #No init required since parent init suffice.
-
     def __init__(self, hierarchy=None) -> None:
 
         super().__init__()
