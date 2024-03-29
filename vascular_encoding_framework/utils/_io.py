@@ -58,3 +58,30 @@ def write_json(fname, data, indent=4, overwrite=True):
         with open(fname, 'w', encoding="utf-8") as f:
             f.write(json.dumps(data, indent=indent))
 #
+
+def read_json(file):
+    """
+    Read a json from file
+
+    Arguments:
+    -----------
+
+        file : str
+
+    Returns:
+    ---------
+
+        params : dict
+
+    See Also
+    ---------
+        :py:func:`save`
+
+    """
+
+    params = None
+    with open(file, 'r', encoding='utf-8') as param_file:
+        params = json.load(param_file)
+
+    return params
+#
