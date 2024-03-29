@@ -347,8 +347,8 @@ class Boundaries(Tree):
         Convert the Boundaries object into a python dictionary. If the serialize argument is True,
         numpy arrays will be casted to python lists (for json writability).
 
-        Arguments:
-        ------------
+        Arguments
+        ---------
 
             compact : bool, opt
                 Default True. Whether to exclude non-essential attribute of the boundary objects,
@@ -357,10 +357,14 @@ class Boundaries(Tree):
             serialize : bool, opt
                 Default True. Whether to turn numpy arrays to lists.
 
-        Reutrns:
-        ---------
+        Reutrns
+        -------
             outdict : dict
                 The ouput python dictionary.
+
+        See Also
+        --------
+        :py:meth:`from_dict`
         """
 
         outdict = { i : node.to_dict(compact=compact, serialize=serialize) for i, node in self.items()}
@@ -382,6 +386,10 @@ class Boundaries(Tree):
 
             binary : bool, opt
                 Default True. Whether to write boundary multiblock in binary or ascii.
+
+        See Also
+        ----------
+        :py:meth:`read`
         """
 
         fname, _ = os.path.splitext(fname)
