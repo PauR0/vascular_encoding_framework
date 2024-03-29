@@ -6,10 +6,11 @@ import numpy as np
 import pyvista as pv
 from scipy.interpolate import BSpline
 
+from ..messages import *
 from ..utils.spatial import planar_coordinates, cart_to_polar, normalize
 from ..utils.splines import knots_list, compute_rho_spline
 from ..utils._code   import Tree, Node, attribute_checker
-from ..utils._io import, read_json
+from ..utils._io import write_json, read_json
 
 class Boundary(Node):
 
@@ -409,8 +410,76 @@ class Boundaries(Tree):
     #
 
     @staticmethod
-    def read(filename):
-        pass
+    def from_dict(bds_dict):
+        """
+        Define Boundary entries from a dictionary.
+
+        Arguments
+        -----------
+
+                bdict : dict
+                    A python dictionary composed with Boundary dicts as
+                    "k" : boundary_dict.
+
+        See Also
+        ---------
+        :py:meth:`to_dict`
+        """
+
+
+        boundaries = Boundaries(bds_dict)
+        for i, nd in boundaries.items():
+            if not isinstance(nd, Boundary):
+                boundaries[i] = Boundary(nd)
+
+        return boundaries
+
+    @staticmethod
+    def read(fname):
+        """
+        Read boundaries from a json file.
+
+        The expected format is a json file containing the essential geometrical and topological
+        information. Additionally, if there exist a vtk MultiBlock (with same name but with ext
+        .vtm) it is also loaded.
+
+
+        Arguments
+        ----------
+
+            fname : str
+                The file name of the boundaries. Should have json extension (.json).
+
+        Returns:
+        ---------
+
+            boundaries : Boundaries
+                The Loaded boundaries object.
+
+        See Also
+        ---------
+            :py:meth:`save`
+        """
+
+        fname_, ext = os.path.splitext(fname)
+        if ext != '.json':
+            error_message(f"Can't read boundaries from {fname}. Only .json files are supported.")
+            return None
+
+        bds_dict = read_json(fname)
+        boundaries = Boundaries.from_dict(bds_dict=bds_dict)
+        mb_name = fname_+'.vtm'
+
+
+        if os.path.exists(mb_name):
+
+            mb = pv.read(mb_name).as_polydata_blocks()
+            block_names = [mb.get_block_name(i) for i in range(mb.n_blocks)]
+            for i, bd in boundaries.items():
+                if i in block_names:
+                    bd.extract_from_polydata(pdt=mb[i])
+
+        return boundaries
     #
 
     def translate(self):
