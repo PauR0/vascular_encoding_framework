@@ -58,7 +58,6 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, over
 
     meshes_dir = os.path.join(case_dir, 'Meshes')
     if mesh_fname is not None or hierarchy is not None:
-        print(case_dir, mesh_fname)
         os.makedirs(meshes_dir, exist_ok=True)
 
     if mesh_fname is not None:
