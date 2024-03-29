@@ -158,7 +158,7 @@ class CenterlinePathExtractor:
         Method to set parameters of the path extractor.
         """
         cl = self.__class__()
-        params = {k:v for k,v in kwargs if k in cl.__dict__}
+        params = {k:v for k,v in kwargs.items() if k in cl.__dict__}
         attribute_setter(self, **params)
     #
 

@@ -36,7 +36,7 @@ class CenterlineDomainExtractor(ABC):
         Method to set parameters as attributes of the objects.
         """
         cl = self.__class__()
-        params = {k:v for k,v in kwargs if k in cl.__dict__.items()}
+        params = {k:v for k,v in kwargs.items() if k in cl.__dict__}
         attribute_setter(self, **params)
     #
 
