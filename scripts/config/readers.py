@@ -9,6 +9,8 @@ def read_json(file):
     """
     Read a json from file
 
+
+    TODO: Use utils._io.read_json
     Arguments:
     -----------
 

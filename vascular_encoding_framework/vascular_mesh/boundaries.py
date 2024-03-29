@@ -9,7 +9,7 @@ from scipy.interpolate import BSpline
 from ..utils.spatial import planar_coordinates, cart_to_polar, normalize
 from ..utils.splines import knots_list, compute_rho_spline
 from ..utils._code   import Tree, Node, attribute_checker
-from ..utils.writers import write_json
+from ..utils._io import, read_json
 
 class Boundary(Node):
 

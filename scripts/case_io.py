@@ -5,7 +5,7 @@ Input/output module for vef case directories.
 import os
 
 import vascular_encoding_framework as vef
-from vascular_encoding_framework.utils.writers import is_writable
+from vascular_encoding_framework.utils._io import is_writable
 from vascular_encoding_framework import messages as msg
 
 
