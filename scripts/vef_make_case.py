@@ -8,6 +8,8 @@ from vascular_encoding_framework import messages as msg
 
 from case_io import load_vascular_mesh, save_vascular_mesh
 
+from config.readers import read_centerline_config
+from config.writers import write_centerline_config
 
 def handle_case_and_mesh_name(case, mesh, ow=False):
     """
@@ -46,7 +48,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
     return mesh, case
 #
 
-def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, overwrite=False):
+def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, overwrite=False, cl_params=None):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -55,6 +57,7 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, over
     """
 
     os.makedirs(case_dir, exist_ok=True)
+    write_centerline_config(cl_params)
 
     meshes_dir = os.path.join(case_dir, 'Meshes')
     if mesh_fname is not None or hierarchy is not None:
@@ -83,6 +86,15 @@ if __name__ == '__main__':
     directory where the mesh is located and the mesh is set as the input mesh at Meshes directory. If a case
     path is provided, it is used (in combination or not with the mesh). All this cases check existence of the
     files/directories before creating them, and if overwritting is set to false, the creation is skipped printing a message to terminal.""")
+
+    parser.add_argument('--cl-config',
+                        '--centerline-config',
+                        dest="cl_config",
+                        type=str,
+                        action='store',
+                        default=None,
+                        help="""Path to a json with the configuration parameters for the centerline
+                        computation.""")
 
     parser.add_argument('--plot-boundaries',
                         dest="plot_bounds",
@@ -115,5 +127,7 @@ if __name__ == '__main__':
     if case_path is None:
         sys.exit(0)
 
-    make_case(case_path, mesh_path, overwrite=args.w)
+    cl_params = read_centerline_config(args.cl_config, abs_path=True)
+
+    make_case(case_path, mesh_path, overwrite=args.w, cl_params=cl_params)
 #
