@@ -523,8 +523,6 @@ class CenterlinePathExtractor:
         previously transited path.
         """
 
-        computing_message("centerline paths")
-
         def path_to_parent(bid):
 
             if self.boundaries[bid].parent is None:
@@ -546,8 +544,6 @@ class CenterlinePathExtractor:
 
         self._compose_id_paths()
         self.make_paths_multiblock()
-
-        done_message("centerline paths")
 
         return
     #
