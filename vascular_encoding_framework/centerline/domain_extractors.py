@@ -76,7 +76,7 @@ class Seekers(CenterlineDomainExtractor):
         self.reduction_rate  : float = 0.75
         self.smooth_iters    : int   = 100
         self.eps             : float = 1e-3
-        self.check_dirs      : bool  = False,
+        self.check_dirs      : bool  = True,
         self.check_inside    : bool  = False,
         self.multi_ray_trace : bool  = False
 
