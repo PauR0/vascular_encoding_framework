@@ -14,7 +14,7 @@ def in_case(case_dir, subdir, name):
     Modify the provided path according to fit to case directory structure.
 
 
-    Arguments:
+    Arguments
     -----------
 
         case_dir : str
@@ -27,7 +27,7 @@ def in_case(case_dir, subdir, name):
         name : str
             The filename.
 
-    Returns:
+    Returns
     ----------
         :  str
             The appropriate path/to/file fulfilling the case directory criteria.
@@ -44,7 +44,7 @@ def load_vascular_mesh(path, suffix="", ext="vtk", abs_path=False):
     Load a vascular mesh with all the available data at a given case directory.
 
 
-    Parameters
+    Arguments
     ----------
         path : string
             The path to the wall mesh.
@@ -84,7 +84,7 @@ def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=
     this function assumes path is a case directory and uses default name convention.
 
 
-    Parameters
+    Arguments
     ----------
 
         path : string
