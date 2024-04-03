@@ -84,7 +84,7 @@ def get_json_reader(default_name):
             for k in read_params:
                     new_params[k] = read_params[k]
         except (FileNotFoundError, TypeError):
-            print(f"Could not find {json_file}. Assuming default parameters.")
+            pass
 
         new_params = param_from_file(params=new_params, path=path)
         return new_params
