@@ -1414,7 +1414,7 @@ class CenterlineNetwork(Tree):
         """
 
         if not paths.is_all_polydata:
-            error_message("Can make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
+            error_message("Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
             return None
 
 
