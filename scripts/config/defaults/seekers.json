@@ -3,11 +3,11 @@
         "type" : "seekers",
         "version" : "0.0.1"
     },
-
+    "method"          : "seekers",
     "reduction_rate"  : 0.75,
     "smooth_iters"    : 100,
     "eps"             : 1e-3,
-    "check_dirs"      : false,
+    "check_dirs"      : true,
     "check_inside"    : false,
     "multi_ray_trace" : false
 }

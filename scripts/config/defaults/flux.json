@@ -3,10 +3,10 @@
         "type" : "flux",
         "version" : "0.0.1"
     },
-
-    "dx"    : null,
-    "dy"    : null,
-    "dz"    : null,
-    "thrs"  : 0.0,
-    "relax" : false
+    "method" : "flux",
+    "dx"     : null,
+    "dy"     : null,
+    "dz"     : null,
+    "thrs"   : 0.0,
+    "relax"  : false
 }
