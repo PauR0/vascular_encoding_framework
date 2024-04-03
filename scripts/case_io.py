@@ -210,3 +210,71 @@ def save_centerline_domain(case_dir, cl_domain, binary=True, overwrite=False):
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_domain.save(fname, binary=binary)
 #
+
+def load_centerline_path(case_dir):
+    """
+    Load the centerline path under the case directory convention.
+
+    Using UNIX path format, the centerline path is expected to be at subdir Centerline, with name,
+    path.vtm, i.e.:
+
+    case_dir/Centerline/path.vtm
+
+    Due to the MultiBlock save format of vtk, a directory called path is expected to be
+    found at Centerline subdir containing the path data.
+
+    Arguments
+    ---------
+        case_dir : str
+            The path to the case directory.
+
+    Returns
+    -------
+        cl_paths : pv.MultiBlock
+            The loaded paths optimizing the distance to the wall.
+    """
+
+    fname = in_case(case_dir, 'Centerline', 'paths.vtm')
+
+    cl_paths = None
+    if os.path.exists(fname):
+        cl_paths = pv.read(fname)
+
+    return cl_paths
+#
+
+def save_centerline_path(case_dir, cl_path, binary=True, overwrite=False):
+    """
+    Save the centerline path under the case directory convention.
+
+    Using UNIX path format, the centerline path is expected to be at subdir Centerline, with name,
+    path.vtm, i.e.:
+
+        case_dir/Centerline/path.vtm
+
+    Due to the MultiBlock save format of vtk, a directory called path is also created at Centerline
+    subdir containing the path data.
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The path to the case directory.
+
+        cl_path : pv.MultiBlock
+            The computed centerline paths as a pyvista MultiBlock.
+
+        binary : bool, opt.
+            Default True. Wheteher to save vtk files in binary format.
+
+        overwrite : bool, opt
+            Default False. Whether to overwrite existing files.
+    """
+
+    make_subdirs(case_dir, 'Centerline')
+    fname = in_case(case_dir, 'Centerline', 'path.vtm')
+    message = f"{fname} exists and overwritting is set to False."
+    if is_writable(fname, overwrite=overwrite, message=message):
+        cl_path.save(fname, binary=binary)
+#
+
