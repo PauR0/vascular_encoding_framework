@@ -1384,8 +1384,8 @@ class CenterlineNetwork(Tree):
         Each polydata must have a field_data called 'parent' and has to be a list with
         a single id (present in the multiblock names).
 
-        Arguments:
-        ------------
+        Arguments
+        ---------
 
             paths : pv.MultiBlock
                 The multiblock containing the centerline paths. All the elements in the paths
@@ -1406,8 +1406,8 @@ class CenterlineNetwork(Tree):
                 Default True. If True, the first and last two points are specially weighted to ensure boundary conditions on the
                 centerline.
 
-        Returns:
-        -----------
+        Returns
+        -------
 
             clnet : CenterlineNetwork
                 The centerline network extracted from the passed MultiBlock.
