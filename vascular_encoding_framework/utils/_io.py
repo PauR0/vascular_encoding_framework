@@ -2,15 +2,16 @@
 import os
 import json
 
+from ..messages import error_message
 
-def is_writable(fname, overwrite=True):
+def is_writable(fname, overwrite=True, message=None):
     """
     Check if file exists or should be overwritten.
 
     Warning: This function assume overwrite by default.
 
-    Arguments:
-    -----------
+    Arguments
+    ---------
 
         fname : str
             The file name to check.
@@ -18,16 +19,24 @@ def is_writable(fname, overwrite=True):
         overwrite : bool, opt
             Default True. Whether to overwrite or not.
 
-    Returns:
-    ----------
-        True if fname can be written False otherwise.
+        message : str, opt
+            Default None. If passed, it is printed as the description
+            of an error message.
+
+    Returns
+    -------
+        out : bool
+            True if fname can be written False otherwise.
 
     """
 
+    out = True
     if os.path.exists(fname) and not overwrite:
-        return False
+        if message is not None:
+            error_message(message)
+        out = False
 
-    return True
+    return out
 #
 
 def write_json(fname, data, indent=4, overwrite=True):
