@@ -6,6 +6,6 @@
 
     "mode"              : "j2o",
     "reverse"           : false,
-    "adjacency_factor"  : "0.33",
+    "adjacency_factor"  : 0.33,
     "pass_pointid"      : true
 }
