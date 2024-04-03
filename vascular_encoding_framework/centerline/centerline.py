@@ -830,11 +830,20 @@ class Centerline(UniSpline, Node):
         """
         Transform centerline into a PolyData based on points and lines.
 
-        Arguments:
-        -------------
+        Arguments
+        ---------
 
             tau_res : int, opt
                 The number of points in which to discretize the curve.
+
+            add_attributes : bool, opt
+                Default False. If true, all the attributes necessary to buil the
+                splines and its hierarchical relations are added as field data.
+
+        Returns
+        -------
+            poly : pv.PolyData
+                A PolyData object with polyline topology defined.
         """
 
         params = self.parameter_samples
