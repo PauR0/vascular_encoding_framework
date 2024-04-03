@@ -4,6 +4,8 @@ Input/output module for vef case directories.
 
 import os
 
+import pyvista as pv
+
 import vascular_encoding_framework as vef
 from vascular_encoding_framework.utils._io import is_writable
 from vascular_encoding_framework import messages as msg
@@ -149,8 +151,62 @@ def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=
         msg.warning_message(f"Overwritting is set to false, and {mesh_fname} or {bounds_fname} already exists. Nothig will be written.")
 #
 
-def load_centerline(path, suffix, abs_path):
-    ...
+def load_centerline_domain(case_dir):
+    """
+    Load the centerline domain under the case directory convention.
 
-def save_centerline(path, suffix, abs_path):
-    ...
+    Using UNIX path format, the centerline domain is expected to be at subdir Centerline, with name,
+    domain.vtk, i.e.:
+
+    case_dir/Centerline/domain.vtk
+
+    Arguments
+    ---------
+        case_dir : str
+            The path to the case directory.
+
+    Returns
+    -------
+        cl_domain : pv.UnstructuredGrid
+            The loaded lumen discretization.
+    """
+
+    fname = in_case(case_dir, 'Centerline', 'domain.vtk')
+    cl_domain = None
+    if os.path.exists(fname):
+        cl_domain = pv.read(fname)
+
+    return cl_domain
+#
+
+def save_centerline_domain(case_dir, cl_domain, binary=True, overwrite=False):
+    """
+    Save the centerline domain under the case directory convention.
+
+    Using UNIX path format, the centerline domain is expected to be at subdir Centerline, with name,
+    domain.vtk, i.e.:
+
+        case_dir/Centerline/domain.vtk
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The path to the case directory.
+
+        cl_domain : pv.UnstructuredGrid
+            The computed centerline domain as a pyvista UnstructuredGrid.
+
+        binary : bool, opt.
+            Default True. Wheteher to save vtk files in binary format.
+
+        overwrite : bool, opt
+            Default False. Whether to overwrite existing files.
+    """
+
+    make_subdirs(case_dir, 'Centerline')
+    fname = in_case(case_dir, 'Centerline', 'domain.vtk')
+    message = f"{fname} exists and overwritting is set to False."
+    if is_writable(fname, overwrite=overwrite, message=message):
+        cl_domain.save(fname, binary=binary)
+#
