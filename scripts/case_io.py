@@ -278,3 +278,75 @@ def save_centerline_path(case_dir, cl_path, binary=True, overwrite=False):
         cl_path.save(fname, binary=binary)
 #
 
+def load_centerline(case_dir):
+    """
+    Load the centerline network under the case directory convention.
+
+    Using UNIX path format, the centerline path is expected to be at subdir Centerline with name
+    centerline.vtm, i.e.:
+
+        case_dir/Centerline/centerline.vtm
+
+    Due to the MultiBlock save format of vtk, a directory called centerline is also expecterd to be
+    at Centerline subdir containing the centerline data.
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The path to the case directory.
+
+        cl_net : vef.CenterlineNetwork
+            The computed centerline paths as a pyvista MultiBlock.
+
+        binary : bool, opt.
+            Default True. Wheteher to save vtk files in binary format.
+
+        overwrite : bool, opt
+            Default False. Whether to overwrite existing files.
+    """
+
+    fname = in_case(case_dir, 'Centerline', 'centerline.vtm')
+
+    cl_mb = None
+    if os.path.exists(fname):
+        cl_mb = pv.read(fname)
+
+    return cl_mb
+#
+
+def save_centerline(case_dir, cl_net, binary=True, overwrite=False):
+    """
+    Save the centerline network under the case directory convention.
+
+    Using UNIX path format, the centerline path is expected to be at subdir Centerline, with name,
+    centerline.vtm, i.e.:
+
+        case_dir/Centerline/centerline.vtm
+
+    Due to the MultiBlock save format of vtk, a directory called centerline is also created at
+    Centerline subdir containing the centerline data.
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The path to the case directory.
+
+        cl_net : vef.CenterlineNetwork
+            The computed centerline paths as a pyvista MultiBlock.
+
+        binary : bool, opt.
+            Default True. Wheteher to save vtk files in binary format.
+
+        overwrite : bool, opt
+            Default False. Whether to overwrite existing files.
+    """
+
+    make_subdirs(case_dir, 'Centerline')
+    fname = in_case(case_dir, 'Centerline', 'centerline.vtm')
+    message = f"{fname} exists and overwritting is set to False."
+    cl_mb = cl_net.to_multiblock()
+    if is_writable(fname=fname, overwrite=overwrite, message=message):
+        cl_mb.save(fname, binary)
+#
