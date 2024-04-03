@@ -1346,6 +1346,36 @@ class CenterlineNetwork(Tree):
         return self[cl_id].cartesian_to_vcs(p=p)
     #
 
+    def to_multiblock(self, add_attributes=False):
+        """
+        Return a pyvista MultiBlock with the centerline branches as pyvista PolyData objects.
+
+        Arguments
+        ---------
+
+            add_attributes : bool, opt
+                Default False. Whether to add all the required attributes to built the
+                CenterlineNetwork back.
+
+
+        Returns
+        -------
+
+            mb : pv.MultiBlock
+                The multiblock with the polydata paths.
+
+        See Also
+        --------
+        :py:meth:`Centerline.to_polyadta`
+
+        """
+
+        mb = pv.MultiBlock()
+        for i, cl in self.items():
+            mb[i] = cl.to_polydata(t_res=None, add_attributes=add_attributes)
+        return mb
+    #
+
     @staticmethod
     def from_multiblock_paths(paths, knots, graft_rate=0.5, force_tangent=True):
         """
