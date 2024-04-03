@@ -39,6 +39,29 @@ def in_case(case_dir, subdir, name):
     return os.path.join(case_dir, subdir, name)
 #
 
+def make_subdirs(case_dir, subdir):
+    """
+    Make the subdir at case dir
+
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The case directory
+
+        subdir : str, list[str]
+            The subdirectory to be created
+    """
+
+
+    sd = os.path.join(case_dir, subdir)
+    if isinstance(subdir, list):
+        sd = os.path.join(case_dir, *subdir)
+
+    os.makedirs(sd, exist_ok=True)
+#
+
 def load_vascular_mesh(path, suffix="", ext="vtk", abs_path=False):
     """
     Load a vascular mesh with all the available data at a given case directory.
