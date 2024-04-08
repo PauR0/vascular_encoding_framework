@@ -924,15 +924,21 @@ class Centerline(UniSpline, Node):
 
             if att == 'interval':
                 self.set_parameters(t0=value[0], t1=value[1])
-            elif att == 'extrapolation':
-                self.set_parameters(extra=str(value))
+
+            elif att == 'k':
+                self.set_parameters(k=int(value[0]))
+
             elif att == 'knots':
                 self.set_parameters(knots=value, n_knots=len(value))
-            else:
-                self.set_parameters(**{att:str(value[0])})
+
+            elif att == 'coeffs':
+                self.set_parameters(coeffs=np.array(value))
+
+            elif att == 'extrapolation':
+                self.set_parameters(extra=str(value[0]))
         self.build()
 
-        node_atts = list(Node()) + ['joint_t']
+        node_atts = list(Node().__dict__) + ['joint_t']
         for att in node_atts:
             if att in poly.field_data:
                 value = poly.get_array(att, preference='field')
