@@ -311,8 +311,9 @@ def load_centerline(case_dir, suffix=""):
     cl_mb = None
     if os.path.exists(fname):
         cl_mb = pv.read(fname)
+        cl_net = vef.CenterlineNetwork().from_multiblock(mb=cl_mb)
 
-    return cl_mb
+    return cl_net
 #
 
 def save_centerline(case_dir, cl_net, binary=True, overwrite=False):
