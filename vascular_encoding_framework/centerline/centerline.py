@@ -920,7 +920,8 @@ class Centerline(UniSpline, Node):
                 return None
 
         for att in spl_atts:
-            value = poly.get_field_data(att)
+            value = poly.get_array(att, preference='field')
+
             if att == 'interval':
                 self.set_parameters(t0=value[0], t1=value[1])
             elif att == 'extrapolation':
@@ -934,8 +935,8 @@ class Centerline(UniSpline, Node):
         node_atts = list(Node()) + ['joint_t']
         for att in node_atts:
             if att in poly.field_data:
-                value = poly.get_field_data(att)
-                if att in ['id', 'parent']:
+                value = poly.get_array(att, preference='field')
+                if att == 'id':
                     self.set_data(**{att:str(value[0])})
                 elif att == 'joint_t':
                     self.set_data(**{att:float(value[0])})
