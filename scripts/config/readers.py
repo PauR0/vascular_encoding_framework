@@ -106,4 +106,5 @@ def get_json_reader(default_name):
 
 
 read_centerline_config = get_json_reader(default_name="centerline.json")
+read_encoding_config   = get_json_reader('encoding.json')
 #
