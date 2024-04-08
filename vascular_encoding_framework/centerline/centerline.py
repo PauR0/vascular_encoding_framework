@@ -1398,6 +1398,49 @@ class CenterlineNetwork(Tree):
     #
 
     @staticmethod
+    def from_multiblock(mb):
+        """
+        Make a CenterlineNetwork object from a pyvista MultiBlock made polydatas.
+
+        As the counterpart of :py:meth:`to_multiblock`, this static method is meant for building
+        CenterlineNetwork objects from a pyvista MultiBlock, where each element of the MultiBlock
+        is a PolyData with the information required to build the Tree structure and the Spline
+        information.
+
+        Arguments
+        ---------
+
+            mb : pv.MultiBlock
+                The multiblock containing the required data.
+
+        Returns
+        -------
+
+            cl_net : CenterlineNetwork
+                The centerline network extracted from the passed MultiBlock.
+        """
+
+        if not mb.is_all_polydata:
+            error_message("Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type.")
+            return None
+
+
+        cl_dict = {cid:Centerline().from_polydata(poly=mb[cid]) for cid in mb.keys()}
+        roots = [cid for cid, cl in cl_dict.items() if cl.parent in [None, 'None']]
+
+        cl_net = CenterlineNetwork()
+        def add_to_network(i):
+            cl_net[i] = cl_dict[i]
+            for chid in cl_dict[i].children:
+                add_to_network(chid)
+
+        for rid in roots:
+            add_to_network(rid)
+
+        return cl_net
+    #
+
+    @staticmethod
     def from_multiblock_paths(paths, knots, graft_rate=0.5, force_tangent=True):
         """
         Create a CenterlineTree from a pyvista MultiBlock made polydatas with
