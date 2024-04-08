@@ -133,8 +133,8 @@ def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=
             Default False. Whether to overwirte existing files.
     """
 
-    make_subdirs(case_dir, 'Meshes')
     if not abs_path:
+        make_subdirs(path, 'Meshes')
         mesh_fname   = os.path.join(path, 'Meshes', f'mesh{suffix}.{ext}')
         bounds_fname = os.path.join(path, 'Meshes', f'boundaries{suffix}')
 
