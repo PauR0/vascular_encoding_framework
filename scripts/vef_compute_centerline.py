@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 import argparse
 
 import vascular_encoding_framework as vef
