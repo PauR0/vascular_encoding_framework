@@ -913,7 +913,7 @@ class Centerline(UniSpline, Node):
                 The centerline object with the attributes already set.
         """
 
-        spl_atts = ['interval' 'k' 'knots' 'coeffs' 'extrapolation']
+        spl_atts = ['interval', 'k', 'knots', 'coeffs', 'extrapolation']
         for att in spl_atts:
             if not att in poly.field_data:
                 error_message(f"Could not find attribute: {att} in polydat. Wont build centerline object")
