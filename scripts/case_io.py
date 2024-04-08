@@ -357,3 +357,43 @@ def save_centerline(case_dir, cl_net, suffix="", binary=True, overwrite=False):
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         cl_mb.save(fname, binary)
 #
+
+def load_vascular_encoding(case_dir, suffix=""):
+    """
+    Load the vascular encoding under the case directory convention.
+
+    Using UNIX path format, the vascular encoding is expected to be at subdir Encoding with name
+    encoding.vtm, i.e.:
+
+        case_dir/Encoding/encoding.vtm
+
+    Due to the MultiBlock save format of vtk, a directory called encoding is also expected to be
+    at Encoding subdir containing the vascular encoding data.
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The path to the case directory.
+
+        suffix : str, opt
+            Default an empty string. A suffix to be added before the extension.
+
+    Returns
+    -------
+
+        vsc_enc : vef.VascularEncoding
+            The loaded vascular encoding
+    """
+
+    fname = in_case(case_dir, 'Encoding', f'encoding{suffix}.vtm')
+
+    vsc_enc = None
+    if os.path.exists(fname):
+        enc_mb = pv.read(fname)
+        vsc_enc = vef.VascularEncoding()
+        vsc_enc.from_multiblock(mb=enc_mb)
+
+    return vsc_enc
+#
+
