@@ -13,7 +13,7 @@ from case_io import (load_centerline_domain, save_centerline_domain,
                     load_vascular_mesh, save_centerline)
 
 
-def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrite=False):
+def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrite=False, force=False):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -27,7 +27,7 @@ def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrit
         params = read_centerline_config(case_dir)
 
     cl_domain = load_centerline_domain(case_dir)
-    if cl_domain is None or overwrite:
+    if cl_domain is None or force:
         msg.computing_message("cenerline domain")
         cl_domain = vef.centerline.extract_centerline_domain(vmesh=vmesh,
                                                              params=params['params_domain'],
@@ -36,7 +36,7 @@ def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrit
         save_centerline_domain(case_dir=case_dir, cl_domain=cl_domain, binary=binary, overwrite=overwrite)
 
     cl_path = load_centerline_path(case_dir)
-    if cl_path is None or overwrite:
+    if cl_path is None or force:
         msg.computing_message("centerline paths")
         cl_path = vef.centerline.extract_centerline_path(vmesh=vmesh,
                                                           cl_domain=cl_domain,
@@ -64,6 +64,12 @@ if __name__ == '__main__':
     structure using the Vascular Encoding Framework conventions. The computation of the centerline
     requires a vascular mesh with _input suffix to exist in the case. Parameters can be tuned using
     a centerline.json file stored in the case directory, otherwise default values are used.""")
+
+    parser.add_argument('-f',
+                        '--force',
+                        dest='force',
+                        action='store_true',
+                        help="""Force the computation of domain and path.""")
 
     parser.add_argument('-w',
                         action='store_true',
@@ -93,6 +99,5 @@ if __name__ == '__main__':
     if args.params is not None:
         params = read_centerline_config(path=args.params, abs_path=True)
 
-    #compute_centerline(case_dir=args.case, params=params, overwrite=args.w)
-    compute_centerline(case_dir='/Users/pau/tmp/test_case', params=None, overwrite=False)
+    compute_centerline(case_dir=args.case, params=params, overwrite=args.w, force=args.force)
     #
