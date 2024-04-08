@@ -938,10 +938,21 @@ class Centerline(UniSpline, Node):
                 value = poly.get_array(att, preference='field')
                 if att == 'id':
                     self.set_data(**{att:str(value[0])})
+
+                elif att =='parent':
+                    if value in [None, 'None']:
+                        self.set_data(parent=None)
+                    else:
+                        self.set_data(parent=str(value[0]))
+
                 elif att == 'joint_t':
-                    self.set_data(**{att:float(value[0])})
+                    if value in [None, 'None']:
+                        self.set_data(joint_t=None)
+                    else:
+                        self.set_data(joint_t=float(value[0]))
+
                 elif att == 'children':
-                    self.set_data(**{att:list(value)})
+                    self.set_data(children=list(value))
 
         return self
     #
