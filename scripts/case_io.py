@@ -316,7 +316,7 @@ def load_centerline(case_dir, suffix=""):
     return cl_net
 #
 
-def save_centerline(case_dir, cl_net, binary=True, overwrite=False):
+def save_centerline(case_dir, cl_net, suffix="", binary=True, overwrite=False):
     """
     Save the centerline network under the case directory convention.
 
@@ -345,7 +345,7 @@ def save_centerline(case_dir, cl_net, binary=True, overwrite=False):
     """
 
     make_subdirs(case_dir, 'Centerline')
-    fname = in_case(case_dir, 'Centerline', 'centerline.vtm')
+    fname = in_case(case_dir, 'Centerline', f'centerline{suffix}.vtm')
     message = f"{fname} exists and overwritting is set to False."
     cl_mb = cl_net.to_multiblock()
     if is_writable(fname=fname, overwrite=overwrite, message=message):
