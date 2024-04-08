@@ -347,7 +347,7 @@ def save_centerline(case_dir, cl_net, suffix="", binary=True, overwrite=False):
     make_subdirs(case_dir, 'Centerline')
     fname = in_case(case_dir, 'Centerline', f'centerline{suffix}.vtm')
     message = f"{fname} exists and overwritting is set to False."
-    cl_mb = cl_net.to_multiblock()
+    cl_mb = cl_net.to_multiblock(add_attributes=True)
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         cl_mb.save(fname, binary)
 #
