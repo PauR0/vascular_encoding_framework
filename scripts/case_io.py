@@ -234,7 +234,7 @@ def load_centerline_path(case_dir):
             The loaded paths optimizing the distance to the wall.
     """
 
-    fname = in_case(case_dir, 'Centerline', 'paths.vtm')
+    fname = in_case(case_dir, 'Centerline', 'path.vtm')
 
     cl_paths = None
     if os.path.exists(fname):
