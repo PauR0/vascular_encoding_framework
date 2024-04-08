@@ -1,5 +1,8 @@
 """
 Input/output module for vef case directories.
+
+TODO: Implement an alternative to prevent code duplication for loaders and savers.
+A function-factory seems to be incompatible with docstring.
 """
 
 import os
