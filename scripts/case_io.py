@@ -278,7 +278,7 @@ def save_centerline_path(case_dir, cl_path, binary=True, overwrite=False):
         cl_path.save(fname, binary=binary)
 #
 
-def load_centerline(case_dir):
+def load_centerline(case_dir, suffix=""):
     """
     Load the centerline network under the case directory convention.
 
@@ -306,7 +306,7 @@ def load_centerline(case_dir):
             Default False. Whether to overwrite existing files.
     """
 
-    fname = in_case(case_dir, 'Centerline', 'centerline.vtm')
+    fname = in_case(case_dir, 'Centerline', f'centerline{suffix}.vtm')
 
     cl_mb = None
     if os.path.exists(fname):
