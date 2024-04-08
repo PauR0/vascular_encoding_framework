@@ -35,10 +35,21 @@ def param_from_file(params, path):
 
     for k, v in params.items():
         if isinstance(v, str):
+
             if v.startswith("FILE::"): #Two semicolon -> _defaults_dir
                 params[k] = read_json(os.path.join(_defaults_dir, v.removeprefix("FILE::")))
+
             elif v.startswith("FILE:"): #One semicolon -> same_dir
-                params[k] = read_json(v.removeprefix("FILE:"))
+                params[k] = read_json(os.path.join(path, v.removeprefix("FILE:")))
+
+            elif v.startswith("PARAM:") : #Two semicolon -> _defaults_dir
+                p, fname = v[v.find('('):v.rfind(')')].replace(' ', '').split(',')
+
+                if v.startswith("PARAM::") : #Two semicolon -> _defaults_dir
+                    params[k] = read_json(os.path.join(_defaults_dir, fname))[p]
+                if v.startswith("PARAM:") : ##One semicolon -> same_dir
+                    params[k] = read_json(os.path.join(path, fname))[p]
+
         elif isinstance(v, dict):
             params[k] = param_from_file(v, path)
 
