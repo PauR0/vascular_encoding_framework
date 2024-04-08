@@ -15,10 +15,41 @@ from case_io import (load_centerline_domain, save_centerline_domain,
 
 def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrite=False, force=False):
     """
-    Function to make a vef case directory at path provided in case_dir argument.
-    Additionally, the filename of a mesh can be passed, and it is copied and saved
-    in Meshes directory inside the case. If the mesh_fname is passed, the module also
-    attempts to compute the boundaries and save them at the Meshes directory.
+    Given a vef case directory with an existing mesh with the '_input' suffix, this function-script
+    allows the computation of the centerline and its storing at the Centerline subdir.
+
+    By default this function wont overwrite any file, however overwritting can be handled with the
+    overwrite and force arguments. If a preexisting centerline exists, the overwrite argument allow
+    to overwrite the centerline file. However, if domain and path files already exists, to force
+    the recomputaion the argument force must be used.
+
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The case directory under the vef convention.
+
+        params : dict, opt
+            Default None. The parameters for the centerline computation. If None, params are read
+            from centerline.json at case_dir. If centerline.json is not found, default parameters
+            are assumed.
+
+        binary : bool, opt
+            Default True. Whether to write vtk files in binary mode. Binary is recomended to save
+            disk space.
+
+        overwrite : bool, opt
+            Default False. Whether to overwrite centerline.vtm file
+
+        force : bool, opt
+            Default False. Whether to force recomputation even if files exist at case_dir.
+            WARNING: Forcing recomputation does not imply overwritting!
+
+    Return
+    ------
+        cl_net : CenterlineNetwork
+            The computed centerline.
     """
 
     vmesh = load_vascular_mesh(case_dir, suffix='_input')
