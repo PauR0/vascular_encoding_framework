@@ -397,3 +397,38 @@ def load_vascular_encoding(case_dir, suffix=""):
     return vsc_enc
 #
 
+def save_vascular_encoding(case_dir, vsc_enc, suffix="", binary=True, overwrite=False):
+    """
+    Save the vascular encoding under the case directory convention.
+
+    Using UNIX path format, the vascular encoding is saved at subdir Encoding with name
+    encoding.vtm, i.e.:
+
+        case_dir/Encoding/encoding.vtm
+
+    Due to the MultiBlock save format of vtk, a directory called encoding is also created
+    at Encoding subdir containing the vascular encoding data.
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The path to the case directory.
+
+        vsc_enc : vef.VascularEncoding
+            The computed vascular encoding.
+
+        binary : bool, opt.
+            Default True. Wheteher to save vtk files in binary format.
+
+        overwrite : bool, opt
+            Default False. Whether to overwrite existing files.
+    """
+
+    make_subdirs(case_dir, 'Encoding')
+    fname = in_case(case_dir, 'Encoding', f'encoding{suffix}.vtm')
+    message = f"{fname} exists and overwritting is set to False."
+    enc_mb = vsc_enc.to_multiblock()
+    if is_writable(fname=fname, overwrite=overwrite, message=message):
+        enc_mb.save(fname, binary)
+#
