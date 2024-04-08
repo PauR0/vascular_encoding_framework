@@ -854,6 +854,7 @@ class Centerline(UniSpline, Node):
 
         poly = polyline_from_points(points)
 
+        poly['params'] = params
         poly['v1'] = self.v1(params)
         poly['v2'] = self.v2(params)
 
