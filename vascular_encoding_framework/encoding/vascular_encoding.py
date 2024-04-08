@@ -157,4 +157,18 @@ class VascularEncoding(Tree):
 
         return vmesh
     #
+
+    def to_multiblock(self):
+        """
+        TODO
+        """
+    #
+
+    @staticmethod
+    def from_multiblock():
+        """
+        TODO
+        """
+    #
+
 #
