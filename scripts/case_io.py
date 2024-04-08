@@ -320,7 +320,7 @@ def save_centerline(case_dir, cl_net, suffix="", binary=True, overwrite=False):
     """
     Save the centerline network under the case directory convention.
 
-    Using UNIX path format, the centerline path is expected to be at subdir Centerline, with name,
+    Using UNIX path format, the centerline network is expected to be at subdir Centerline, with name,
     centerline.vtm, i.e.:
 
         case_dir/Centerline/centerline.vtm
@@ -335,7 +335,10 @@ def save_centerline(case_dir, cl_net, suffix="", binary=True, overwrite=False):
             The path to the case directory.
 
         cl_net : vef.CenterlineNetwork
-            The computed centerline paths as a pyvista MultiBlock.
+            The computed centerline network.
+
+        suffix : str, opt
+            Default an empty string. A suffix to be added before the extension.
 
         binary : bool, opt.
             Default True. Wheteher to save vtk files in binary format.
