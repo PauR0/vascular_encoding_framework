@@ -1443,7 +1443,7 @@ class CenterlineNetwork(Tree):
     @staticmethod
     def from_multiblock_paths(paths, knots, graft_rate=0.5, force_tangent=True):
         """
-        Create a CenterlineTree from a pyvista MultiBlock made polydatas with
+        Create a CenterlineNetwork from a pyvista MultiBlock made polydatas with
         points joined by lines, basically like the ouput of CenterlinePathExtractor.
         Each polydata must have a field_data called 'parent' and has to be a list with
         a single id (present in the multiblock names).
@@ -1473,7 +1473,7 @@ class CenterlineNetwork(Tree):
         Returns
         -------
 
-            clnet : CenterlineNetwork
+            cl_net : CenterlineNetwork
                 The centerline network extracted from the passed MultiBlock.
         """
 
