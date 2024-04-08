@@ -51,6 +51,8 @@ def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrit
 
     write_centerline_config(path=case_dir, data=params)
     save_centerline(case_dir=case_dir, cl_net=cl_net, binary=binary, overwrite=overwrite)
+
+    return cl_net
 #
 
 
