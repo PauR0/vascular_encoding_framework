@@ -282,7 +282,7 @@ def load_centerline(case_dir, suffix=""):
     """
     Load the centerline network under the case directory convention.
 
-    Using UNIX path format, the centerline path is expected to be at subdir Centerline with name
+    Using UNIX path format, the centerline network is expected to be at subdir Centerline with name
     centerline.vtm, i.e.:
 
         case_dir/Centerline/centerline.vtm
@@ -296,14 +296,14 @@ def load_centerline(case_dir, suffix=""):
         case_dir : str
             The path to the case directory.
 
+        suffix : str, opt
+            Default an empty string. A suffix to be added before the extension.
+
+    Returns
+    -------
+
         cl_net : vef.CenterlineNetwork
-            The computed centerline paths as a pyvista MultiBlock.
-
-        binary : bool, opt.
-            Default True. Wheteher to save vtk files in binary format.
-
-        overwrite : bool, opt
-            Default False. Whether to overwrite existing files.
+            The loaded centerline
     """
 
     fname = in_case(case_dir, 'Centerline', f'centerline{suffix}.vtm')
