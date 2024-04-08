@@ -902,6 +902,8 @@ class Centerline(UniSpline, Node):
         centerline belong to a network, it is required to provide the attributes {'id', 'parent',
         'children', 'joint_t'}.
 
+        TODO: Think a bit more about turning if-elif into match-case
+
         Arguments:
         ----------
 
