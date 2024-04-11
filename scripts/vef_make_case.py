@@ -48,7 +48,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
     return mesh, case
 #
 
-def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, overwrite=False, cl_params=None):
+def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, overwrite=False, cl_params=None):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -67,7 +67,7 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, over
         vmesh = load_vascular_mesh(path=mesh_fname, abs_path=True)
         if hierarchy is not None:
             vmesh.set_boundary_data(hierarchy)
-        if show_bounds:
+        if show_boundaries:
             vmesh.plot_boundary_ids()
 
         save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, ext='vtk', overwrite=overwrite)
