@@ -456,7 +456,7 @@ class CenterlinePathExtractor:
         if force_tangent:
             def ensure_boundary_normal(bid):
                 c, n = self.boundaries[bid].center.reshape(-1, 1), self.boundaries[bid].normal.reshape(-1, 1)
-                r   = self.vmesh.kdt.query(c.T)[0]
+                r    = self.vmesh.kdt.query(c.T)[0] * self.adjacency_factor * 1.5
                 ids = self.domain_kdt.query_ball_point(x=c.ravel(), r=r)
                 self.remove_from_centerline_domain_by_id(ids=ids)
 
