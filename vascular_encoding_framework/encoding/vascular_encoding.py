@@ -134,13 +134,13 @@ class VascularEncoding(Tree):
         Arguments:
         -----------
 
-            params : dict, opt
+            params : dict, optional
                 Default None. A dictionary where the keys are each vessel encoding id, and
                 the values are the pairs (tau_res, theta_res), i.e. the resolution
                 for each dimension in the parametrization. If None, de VesselEncoding default
                 is assumed.
 
-            join_at_surface : bool, opt.
+            join_at_surface : bool, optional.
                 Whether to project the inlet points to closest points on parent mesh.
 
         Returns:
