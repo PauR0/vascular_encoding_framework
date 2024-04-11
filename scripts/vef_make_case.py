@@ -57,7 +57,7 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, over
     """
 
     os.makedirs(case_dir, exist_ok=True)
-    write_centerline_config(cl_params)
+    write_centerline_config(case_dir, cl_params)
 
     meshes_dir = os.path.join(case_dir, 'Meshes')
     if mesh_fname is not None or hierarchy is not None:
