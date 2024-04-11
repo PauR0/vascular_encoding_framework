@@ -185,10 +185,41 @@ class VascularEncoding(Tree):
         return vmesh
     #
 
-    def to_multiblock(self):
+    def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None):
         """
-        TODO
+        Make a multiblock composed of other multiblocks from each encoded vessel of the vascular
+        structure.
+
+        Arguments
+        ---------
+
+            add_attributes : bool, optional
+                Default True. Whether to add all the attributes required to convert the multiblock
+                back to a VesselEncoding object.
+
+            tau_res, theta_res : int, optional
+                The resolution to build all the vessel walls. Defaulting to make_surface_mesh method
+                default values.
+
+        Return
+        ------
+            vsc_mb : pv.MultiBlock
+                The built multiblock object.
+
+        See Also
+        --------
+        :py:meth:`from_multiblock`
+        :py:meth:`VesselEncoding.to_multiblock`
+        :py:meth:`VesselEncoding.from_multiblock`
+        :py:meth:`Centerline.to_polydata`
+        :py:meth:`Centerline.from_polydata`
         """
+
+        vsc_mb = pv.MultiBlock()
+        for vid, vsl_enc in self.items():
+            vsc_mb[vid] = vsl_enc.to_multiblock(add_attributes=add_attributes, tau_res=tau_res, theta_res=theta_res)
+
+        return vsc_mb
     #
 
     @staticmethod
