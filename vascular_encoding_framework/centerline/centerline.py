@@ -860,10 +860,10 @@ class Centerline(UniSpline, Node):
 
         if add_attributes:
             #Adding Node atts:
-            poly.add_field_data(np.array([self.id]),      'id',       deep=True)
-            poly.add_field_data(np.array([self.parent]),  'parent',   deep=True)
+            poly.add_field_data(np.array([self.id]),            'id',       deep=True)
+            poly.add_field_data(np.array([self.parent]),        'parent',   deep=True)
             poly.add_field_data(np.array(list(self.children)),  'children', deep=True)
-            poly.add_field_data(np.array([self.joint_t]), 'joint_t',  deep=True)
+            poly.add_field_data(np.array([self.joint_t]),       'joint_t',  deep=True)
 
             #Adding Spline atts:
             poly.add_field_data(np.array([self.t0, self.t1]), 'interval',      deep=True)
