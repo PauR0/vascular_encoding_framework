@@ -67,13 +67,30 @@ class VascularEncoding(Tree):
         the track of the vessel junctions by mean of the vessel coordinates of the
         inlet in the parent branch.
 
-        Arguments:
-        ------------
-            TBD.
-
-        Returns:
+        Arguments
         ---------
-            TBD.
+            vmesh : VascularMesh
+                The vascular network to encode.
+
+            cl_net : CenterlineNetwork
+                The centerlines of the vascular network.
+
+            params : dict.
+                A dictionary with the parameters for the encoding.
+
+            debug : bool, optional
+                A mode running mode that display plots of the process.
+
+        Returns
+        -------
+            self : VascularEncoding
+                The vascular mesh encoded in a Vascular Encoding object.
+
+
+        See Also
+        --------
+        :py:meth:`encode_vascular_mesh`
+
         """
 
         def remove_centerline_graft(bid):
