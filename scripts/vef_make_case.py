@@ -96,8 +96,8 @@ if __name__ == '__main__':
                         help="""Path to a json with the configuration parameters for the centerline
                         computation.""")
 
-    parser.add_argument('--plot-boundaries',
-                        dest="plot_bounds",
+    parser.add_argument('--show-boundaries',
+                        dest="show_boundaries",
                         action='store_true',
                         help="""Plot the estimated boundaries with its ids. If no mesh
                         have been passed, this flag is ignored.""")
@@ -129,5 +129,5 @@ if __name__ == '__main__':
 
     cl_params = read_centerline_config(args.cl_config, abs_path=True)
 
-    make_case(case_path, mesh_path, overwrite=args.w, cl_params=cl_params)
+    make_case(case_path, mesh_path, show_boundaries=args.show_boundaries, overwrite=args.w, cl_params=cl_params)
 #
