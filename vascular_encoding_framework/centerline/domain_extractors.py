@@ -151,6 +151,19 @@ class Seekers(CenterlineDomainExtractor):
 
         pts = pv.PolyData((start+intersection)/2)
         pts = pts.select_enclosed_points(self.mesh)
+
+        if self.debug:
+            p = pv.Plotter()
+            p.add_mesh(self.mesh, opacity=0.5)
+            p.add_mesh(start, color='b', render_points_as_spheres=True, label='start')
+            p.add_mesh(stop, color='r', render_points_as_spheres=True, label='stop')
+            p.add_mesh(intersection, color='pink', render_points_as_spheres=True, label='intersection')
+            p.add_mesh(pts, color='orange', render_points_as_spheres=True, label='midpoint')
+            arrows = pv.PolyData().append_polydata(*[pv.Line(pointa=s, pointb=b) for s, b in zip(start, intersection)])
+            p.add_mesh(arrows, color='g', label='Normals')
+            p.add_legend()
+            p.show()
+
         if pts["SelectedPoints"].sum() < n_tests * (2/3):
             self.flip_seekers_directions()
     #
