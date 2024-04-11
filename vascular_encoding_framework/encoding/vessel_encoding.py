@@ -450,4 +450,66 @@ class VesselEncoding(Node):
         return wall
     #
 
+    @staticmethod
+    def from_multiblock(vsl_mb):
+        """
+        Make a VesselEncoding object from a multiblock containing two PolyData objects, one for
+        the centerline and another for the radius.
+
+        This static method is the counterpart of to_multiblock. To propperly work, this method
+        requires the passed MultiBlock entries to contain the essential attributes as though
+        returned by to_multiblock with add_attributes argument set to True.
+
+
+        Arguments
+        ---------
+
+            vsl_mb : pv.MultiBlock
+                Default True. Whether to add all the attributes required to convert the multiblock
+                back to a VesselEncoding object.
+
+        Return
+        ------
+            vsl_enc : VesselEncoding
+                The VesselEncoding object built with the attributes stored as field data.
+
+        See Also
+        --------
+        :py:meth:`to_multiblock`
+
+        """
+
+        for name in ['centerline', 'wall']:
+            if name not in vsl_mb:
+                error_message(info=f"Cannot build vessel encoding from multiblock. It lacks the {name}")
+            return None
+
+
+        vsl_enc = VesselEncoding()
+
+        cl = Centerline().from_polydata(poly=vsl_mb['centerline'])
+        vsl_enc.set_centerline(cl)
+
+        radius = Radius()
+        #Setting tau params
+        radius.set_parameters(x0      = vsl_mb.get_array('tau_interval',        preference='field')[0],
+                              x1      = vsl_mb.get_array('tau_interval',        preference='field')[1],
+                              kx      = vsl_mb.get_array('tau_k',               preference='field'),
+                              knots_x = vsl_mb.get_array('tau_knots',           preference='field'),
+                              extra_x = vsl_mb.get_array('tau_extrapolation',   preference='field'),
+        )
+
+        #Setting theta params
+        radius.set_parameters(y0      = vsl_mb.get_array('theta_interval',      preference='field')[0],
+                              y1      = vsl_mb.get_array('theta_interval',      preference='field')[1],
+                              ky      = vsl_mb.get_array('theta_k',             preference='field'),
+                              knots_y = vsl_mb.get_array('theta_knots',         preference='field'),
+                              extra_y = vsl_mb.get_array('theta_extrapolation', preference='field'))
+
+        radius.set_parameters(build=True, coeffs  = vsl_mb.get_array('coeffs',preference='field'))
+
+        vsl_enc.set_data(radius=radius)
+
+        return vsl_enc
+    #
 #
