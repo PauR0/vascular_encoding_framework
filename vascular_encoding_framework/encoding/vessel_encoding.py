@@ -395,4 +395,59 @@ class VesselEncoding(Node):
 
         return vsl_mesh
     #
+
+    def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None):
+        """
+        Make a multiblock with two PolyData objects, one for the centerline and another for the radius.
+
+
+        Arguments
+        ---------
+
+            add_attributes : bool, opt
+                Default True. Whether to add all the attributes required to convert the multiblock
+                back to a VesselEncoding object.
+
+            tau_res, theta_res : int, opt
+                The resolution to build the vessel wall. Defaulting to make_surface_mesh default
+                values.
+
+        Return
+        ------
+            vsl_mb : pv.MultiBlock
+                The multiblock with the required data to restore the vessel encoding.
+
+        See Also
+        --------
+        :py:meth:`from_multiblock`
+
+        """
+
+        if not attribute_checker(self, ['centerline', 'radius'], info=f"Cannot convert vessel encoding {self.id} multiblock."):
+            return None
+
+        vsl_mb = pv.MultiBlock()
+        vsl_mb['centerline'] = self.centerline.to_polydata(add_attributes=add_attributes, t_res=tau_res)
+
+        wall = self.make_surface_mesh(tau_res=tau_res, theta_res=theta_res)
+        if add_attributes:
+
+            #Adding tau atts
+            wall.add_field_data(np.array([self.radius.x0, self.radius.x1]), 'tau_interval',      deep=True)
+            wall.add_field_data(np.array([self.radius.kx]),                 'tau_k',             deep=True)
+            wall.add_field_data(np.array( self.radius.knots_x),             'tau_knots',         deep=True)
+            wall.add_field_data(np.array([self.radius.extra_x]),            'tau_extrapolation', deep=True)
+
+            #Adding theta atts
+            wall.add_field_data(np.array([self.radius.y0, self.radius.y1]), 'theta_interval',      deep=True)
+            wall.add_field_data(np.array([self.radius.ky]),                 'theta_k',             deep=True)
+            wall.add_field_data(np.array( self.radius.knots_y),             'theta_knots',         deep=True)
+            wall.add_field_data(np.array([self.radius.extra_y]),            'theta_extrapolation', deep=True)
+
+            wall.add_field_data(np.array( self.radius.coeffs), 'coeffs', deep=True)
+        vsl_mb['wall'] = wall
+
+        return wall
+    #
+
 #
