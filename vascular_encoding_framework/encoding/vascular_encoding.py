@@ -223,10 +223,51 @@ class VascularEncoding(Tree):
     #
 
     @staticmethod
-    def from_multiblock():
+    def from_multiblock(vsc_mb):
         """
-        TODO
+        Make a VascularEncoding object from a pyvista MultiBlock.
+
+        The MultiBlock is expected to contain each vessel as a multiblock itself whose data is stored as
+        field data.
+
+        Arguments
+        ---------
+
+            add_attributes : bool, optional
+                Default True. Whether to add all the attributes required to convert the multiblock
+                back to a VesselEncoding object.
+
+            tau_res, theta_res : int, optional
+                The resolution to build all the vessel walls. Defaulting to make_surface_mesh method
+                default values.
+
+        Return
+        ------
+            vsc_enc : VascularEncoding
+                The VascularEncoding object built from the passed multiblock.
+
+        See Also
+        --------
+        :py:meth:`to_multiblock`
+        :py:meth:`VesselEncoding.to_multiblock`
+        :py:meth:`VesselEncoding.from_multiblock`
+        :py:meth:`Centerline.to_polydata`
+        :py:meth:`Centerline.from_polydata`
         """
+
+        enc_dict = {vid:VesselEncoding.from_multiblock(vsl_mb=vsc_mb[vid]) for vid in vsc_mb.keys()}
+        roots = [vid for vid, enc in enc_dict.items() if enc.parent in [None, 'None']]
+
+        vsc_enc = VascularEncoding()
+        def add_to_tree(i):
+            vsc_enc[i] = enc_dict[i]
+            for chid in enc_dict[i].children:
+                add_to_tree(chid)
+
+        for rid in roots:
+            add_to_tree(rid)
+
+        return vsc_enc
     #
 
 #
