@@ -269,7 +269,6 @@ class VascularEncoding(Tree):
 
         return vsc_enc
     #
-
 #
 
 def encode_vascular_mesh(vmesh, cl_net, params, debug):
