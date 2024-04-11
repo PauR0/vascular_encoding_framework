@@ -148,6 +148,8 @@ class CenterlinePathExtractor:
         self.reverse          : bool  = False
         self.adjacency_factor : float = 0.33
         self.pass_pointid     : bool  = True
+        self.debug            : bool = False
+
 
         self.id_paths : list[list[int]] = None
         self.paths    : pv.MultiBlock   = None
@@ -523,8 +525,16 @@ class CenterlinePathExtractor:
         previously transited path.
         """
 
-        def path_to_parent(bid):
+        if self.debug:
+            p = pv.Plotter()
+            p.add_mesh(self.vmesh, opacity=0.4)
+            p.add_mesh(self.centerline_domain, scalars=self.radius, render_points_as_spheres=True)
+            p.add_point_labels(points=np.array([b.center for _, b in self.boundaries.items()]),
+                               labels=self.boundaries.enumerate(), font_size=20, point_color='red',
+                               point_size=20, render_points_as_spheres=True, always_visible=True)
+            p.show()
 
+        def path_to_parent(bid):
             if self.boundaries[bid].parent is None:
                 self.boundaries[bid].set_data(to_numpy=False, id_path=[self.boundaries[bid].cl_domain_id])
             else:
@@ -601,7 +611,7 @@ class CenterlinePathExtractor:
 #
 
 
-def extract_centerline_path(vmesh, cl_domain, params):
+def extract_centerline_path(vmesh, cl_domain, params, debug=False):
     """
     Compute the discrete centerline path of a vascular mesh based on a discretization of the lumen.
     It is computed as the polylines definig the minimum cost path between the boundary centers of a
@@ -630,6 +640,9 @@ def extract_centerline_path(vmesh, cl_domain, params):
             the dictionaries have to be as the attributes defined in the constructor
             of the CenterlinePathExtractor object. Other dictionary entries are ignored.
 
+        debug : bool, optional
+            Default False. Whether to run path extraction in debug mode.
+
     Returns:
     --------
         outpaths : pv.MultiBlock
@@ -639,6 +652,7 @@ def extract_centerline_path(vmesh, cl_domain, params):
     cp_xtractor = CenterlinePathExtractor()
     cp_xtractor.set_centerline_domain(cl_domain)
     cp_xtractor.set_vascular_mesh(vmesh, update_boundaries=True)
+    cp_xtractor.debug = debug
 
     if params is not None:
         cp_xtractor.set_parameters(**params)
