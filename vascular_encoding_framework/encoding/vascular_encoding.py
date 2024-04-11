@@ -271,3 +271,37 @@ class VascularEncoding(Tree):
     #
 
 #
+
+def encode_vascular_mesh(vmesh, cl_net, params, debug):
+    """
+    Encode a vascular mesh using the provided parameters.
+
+    Arguments
+    ---------
+
+        vmesh : VascularMesh
+            The vascular mesh to be encoded.
+
+        cl_net : CenterlineNetwork
+            The centerline network of the vascular mesh.
+
+        params : dict
+            A dictionary containing all the parameters to compute the vascular encoding.
+
+    Return
+    ------
+
+        vsc_enc : VascularEncoding
+            The vascular encoding object.
+
+    """
+
+    vsc_enc = VascularEncoding()
+
+    if params['method'] == 'decoupling':
+        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_net, params['knots'], debug=debug)
+
+    else:
+        vsc_enc.encode_vascular_mesh(vmesh, cl_net, params['knots'])
+
+    return vsc_enc
