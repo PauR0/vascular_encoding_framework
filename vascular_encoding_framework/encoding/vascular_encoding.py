@@ -105,6 +105,8 @@ class VascularEncoding(Tree):
 
         for rid in cl_net.roots:
             decouple_and_encode_vessel(bid=rid)
+
+        return self
     #
 
     def make_surface_mesh(self, params=None, join_at_surface=False):
