@@ -540,12 +540,14 @@ class CenterlinePathExtractor:
             else:
                 pid = self.boundaries[bid].parent
                 parent_path = self.boundaries[pid].id_path
-                self.boundaries[bid].set_data(to_numpy=False,
-                                              id_path=minimum_cost_path(heuristic = self._heuristic,
-                                                                        cost      = self._cost,
-                                                                        adjacency = self._adjacency,
-                                                                        initial=self.boundaries[bid].cl_domain_id,
-                                                                        ends=parent_path))
+                id_path=minimum_cost_path(heuristic = self._heuristic,
+                                        cost      = self._cost,
+                                        adjacency = self._adjacency,
+                                        initial=self.boundaries[bid].cl_domain_id,
+                                        ends=parent_path)
+                if not id_path:
+                    error_message("Could not found path between boundaries {bid} and {pid}. This may happen due to a too tiny adjacency_ratio or a too sparse centerline domain...")
+                self.boundaries[bid].set_data(to_numpy=False, id_path=id_path)
             for cid in self.boundaries[bid].children:
                 path_to_parent(cid)
 
