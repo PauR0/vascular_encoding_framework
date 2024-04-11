@@ -60,7 +60,8 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False, for
 
     print(params)
 
-    vsc_enc=None
+    vsc_enc = vef.encode_vascular_mesh(vmesh=vmesh, cl_net=cl_net, params=params, debug=debug)
+
     write_encoding_config(path=case_dir, data=params)
     save_vascular_encoding(case_dir=case_dir, vsc_enc=vsc_enc, binary=binary, overwrite=overwrite)
 
