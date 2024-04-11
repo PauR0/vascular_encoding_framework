@@ -4,16 +4,8 @@
         "version" : "0.0.1"
     },
 
+    "method" : "decoupling",
     "knots" : {
-        "id_0" : {
-            "cl_params" : null,
-            "tau_params" : null,
-            "theta_params" : null
-            },
-        "id_n" : {
-            "cl_params" : null,
-            "tau_params" : null,
-            "theta_params" : null
-        }
+        "default" : {"tau_knots" : null, "theta_knots" : null}
     }
 }
