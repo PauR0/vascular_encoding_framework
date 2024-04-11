@@ -119,7 +119,7 @@ class Seekers(CenterlineDomainExtractor):
         done_message("flipped normals")
     #
 
-    def check_seekers_direction(self, n_tests=21):
+    def check_seekers_direction(self, n_tests=50):
         """
         Ensure the seekers directions point inwards. This method requires mesh to
         be a closed surface to work properly. It works by performing a step of the
