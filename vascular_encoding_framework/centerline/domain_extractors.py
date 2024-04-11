@@ -135,8 +135,8 @@ class Seekers(CenterlineDomainExtractor):
         start = self.seekers.points[ids] + dirs * eps
         stop  = self.seekers.points[ids] + dirs * self.mesh.length
         intersection = []
-        for (stt, stp) in zip(start, stop):
-            p = np.array([self.mesh.ray_trace(origin=stt, end_point=stp, first_point=True)[0]])
+        for stt, stp in zip(start, stop):
+            p = np.array([self.seekers.ray_trace(origin=stt, end_point=stp, first_point=True)[0]])
             if p.size == 0:
                 p = stp
             intersection.append(p.ravel())
