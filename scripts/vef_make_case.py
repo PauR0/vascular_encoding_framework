@@ -68,7 +68,7 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_bounds=False, over
         if hierarchy is not None:
             vmesh.set_boundary_data(hierarchy)
         if show_bounds:
-            vmesh.plot_boundaries_ids()
+            vmesh.plot_boundary_ids()
 
         save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, ext='vtk', overwrite=overwrite)
 #
