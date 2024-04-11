@@ -13,7 +13,7 @@ from case_io import (load_centerline_domain, save_centerline_domain,
                     load_vascular_mesh, save_centerline)
 
 
-def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrite=False, force=False):
+def compute_centerline(case_dir, params=None, binary=True, overwrite=False, force=False, debug=False):
     """
     Given a vef case directory with an existing mesh with the '_input' suffix, this function-script
     allows the computation of the centerline and its storing at the Centerline subdir.
@@ -46,6 +46,9 @@ def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrit
             Default False. Whether to force recomputation even if files exist at case_dir.
             WARNING: Forcing recomputation does not imply overwritting!
 
+        debug : bool, opt
+            Default False. Whether to run the script in debug mode.
+
     Return
     ------
         cl_net : CenterlineNetwork
@@ -71,7 +74,8 @@ def compute_centerline(case_dir, params=None, binary=True, debug=False, overwrit
         msg.computing_message("centerline paths")
         cl_path = vef.centerline.extract_centerline_path(vmesh=vmesh,
                                                           cl_domain=cl_domain,
-                                                          params=params['params_path'])
+                                                          params=params['params_path'],
+                                                          debug=debug)
         msg.done_message("centerline paths")
         save_centerline_path(case_dir=case_dir, cl_path=cl_path, binary=binary, overwrite=overwrite)
 
