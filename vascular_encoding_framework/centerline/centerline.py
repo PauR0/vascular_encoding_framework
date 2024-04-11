@@ -947,7 +947,7 @@ class Centerline(UniSpline, Node):
                 if att == 'id':
                     self.set_data(**{att:str(value[0])})
 
-                elif att =='parent':
+                elif att == 'parent':
                     if value in [None, 'None']:
                         self.set_data(parent=None)
                     else:
