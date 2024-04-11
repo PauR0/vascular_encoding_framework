@@ -243,7 +243,7 @@ class Seekers(CenterlineDomainExtractor):
             p.subplot(0, 1)
             p.add_mesh(self.mesh, opacity=0.5)
             p.add_mesh(start, style='points', render_points_as_spheres=True, point_size=5, color='r')
-            p.add_arrows(start, dirs, mag=1)
+            p.add_arrows(start, dirs)
 
             p.subplot(0, 2)
             p.add_mesh(self.mesh, opacity=0.3)
