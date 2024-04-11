@@ -116,6 +116,13 @@ class Seekers(CenterlineDomainExtractor):
 
         computing_message("flipped normals")
         self.seekers = self.seekers.compute_normals(flip_normals=True)
+        if self.debug:
+            p=pv.Plotter()
+            p.add_mesh(self.mesh, opacity=0.5)
+            p.add_mesh(self.seekers, render_points_as_spheres=True, style='points')
+            p.add_mesh(self.seekers.glyph(orient="Normals", scale="Normals"))
+            p.show()
+
         done_message("flipped normals")
     #
 
