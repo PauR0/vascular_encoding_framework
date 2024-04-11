@@ -63,6 +63,7 @@ class VascularEncoding(Tree):
     def encode_vascular_mesh_decoupling(self, vmesh, cl_net, params, debug=False):
         """
         Encode a vascular mesh decoupling each branch as an independent vessel.
+
         Although using this method returns independent branches, the encoding keeps
         the track of the vessel junctions by mean of the vessel coordinates of the
         inlet in the parent branch.
