@@ -17,25 +17,32 @@ class VascularEncoding(Tree):
 
     def encode_vascular_mesh(self, vmesh, cl_net, params):
         """
-        Encode a VascularMesh.
+        Encode a VascularMesh using a centerline network.
 
+        This method encodes the vascular mesh as it currently is. This may lead to redundance in
+        the encoding coefficients if centerline children branches are born at the centerline father
+        rather than being born at the surface of the parent's vessel wall.
 
-        Arguments:
-        -------------
-
-                vmesh : VascularMesh
-                    The vascular network to encode.
-
-                cl_net : CenterlineNetwork
-                    The centerlines of the vascular network.
-
-                params : dict.
-                    A dictionary with the parameters for the encoding.
-
-        Returns:
+        Arguments
         ---------
+
+            vmesh : VascularMesh
+                The vascular network to encode.
+
+            cl_net : CenterlineNetwork
+                The centerlines of the vascular network.
+
+            params : dict.
+                A dictionary with the parameters for the encoding.
+
+        Returns
+        -------
             self : VascularEncoding
                 The vascular mesh encoded in a Vascular Encoding object.
+
+        See Also
+        --------
+        :py:meth:`encode_vascular_mesh_decoupling`
 
         """
 
