@@ -51,8 +51,10 @@ class VascularEncoding(Tree):
             vsl_enc.set_centerline(cl=cl_net[bid])
             vsl_mesh = vsl_enc.extract_vessel_from_network(vmesh=vmesh)
             vsl_enc.encode_vessel_mesh(vsl_mesh    = vsl_mesh,
-                                       tau_knots   = params[bid]['tau_knots'],
-                                       theta_knots = params[bid]['theta_knots'])
+                                       tau_knots   = params['knots'][bid]['tau_knots'],
+                                       theta_knots = params['knots'][bid]['theta_knots'],
+                                       filling     = params['filling'])
+
             for cid in vsl_enc.children:
                 encode_and_add_vessel(cid)
 
@@ -113,8 +115,9 @@ class VascularEncoding(Tree):
             ve.set_centerline(cl)
             vsl_mesh = ve.extract_vessel_from_network(vmesh, debug=debug)
             ve.encode_vessel_mesh(vsl_mesh,
-                                  tau_knots=params[bid]['tau_knots'],
-                                  theta_knots=params[bid]['theta_knots'],
+                                  tau_knots=params['knots'][bid]['tau_knots'],
+                                  theta_knots=params['knots'][bid]['theta_knots'],
+                                  filling=params['filling'],
                                   debug=debug)
 
             self[bid] = ve
@@ -298,9 +301,9 @@ def encode_vascular_mesh(vmesh, cl_net, params, debug):
     vsc_enc = VascularEncoding()
 
     if params['method'] == 'decoupling':
-        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_net, params['knots'], debug=debug)
+        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_net, params=params, debug=debug)
 
     else:
-        vsc_enc.encode_vascular_mesh(vmesh, cl_net, params['knots'])
+        vsc_enc.encode_vascular_mesh(vmesh, cl_net, params)
 
     return vsc_enc
