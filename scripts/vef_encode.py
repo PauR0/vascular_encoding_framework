@@ -79,6 +79,11 @@ if __name__ == '__main__':
     to be stored in the Centerline subdir. Parameters can be tuned by means of an encoding.json
     file stored in the case directory, otherwise default values are used.""")
 
+    parser.add_argument('--debug',
+                        dest='debug',
+                        action='store_true',
+                        help="""Run in debug mode. This mode shows some plots at different stages of the process.""")
+
     parser.add_argument('-f',
                         '--force',
                         dest='force',
@@ -113,5 +118,5 @@ if __name__ == '__main__':
     if args.params is not None:
         params = read_encoding_config(path=args.params, abs_path=True)
 
-    encode(case_dir=args.case, params=params, overwrite=args.w, force=args.force)
+    encode(case_dir=args.case, params=params, overwrite=args.w, force=args.force, debug=args.debug)
     #
