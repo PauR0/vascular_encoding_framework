@@ -39,8 +39,8 @@ class Radius(BiSpline):
         by performing a least squares approximation using the longitudinal and angular coordinates
         to model the radius.
 
-        Arguments:
-        ------------
+        Arguments
+        ---------
 
             points : np.ndarray (N, 3)
                 The vessel coordinates point array to be approximated.
@@ -49,14 +49,14 @@ class Radius(BiSpline):
                 The number of internal knots in longitudinal and angular dimensions respectively.
                 TODO: Allow building non-uniform BSplines.
 
-            cl : Centerline, opt
+            cl : Centerline, optional
                 Default None. The centerline associated to the radius.
 
-            debug : bool, opt
+            debug : bool, optional
                 Default False. Whether to show plots during the fitting process.
 
-        Returns:
-        ----------
+        Returns
+        -------
             rd : Radius
                 The radius object built based on the passed points.
         """
