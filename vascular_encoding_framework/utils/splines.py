@@ -719,12 +719,21 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
     d = ty[1] - ty[0]
 
     pts = np.concatenate((x.reshape(-1,1), y.reshape(-1,1), z.reshape(-1,1)), axis=1)
-    pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb, d_max=ext*d)
 
-    if fill:
-        fill_xy, fill_z = fill_gaps(pts_ext[:, [0, 1]], pts_ext[:, 2], debug=debug)
-        fill_pts = np.hstack([fill_xy, fill_z[:,None]])
-        pts_ext = np.concatenate([pts_ext, fill_pts])
+    if filling:
+        #A previous extension is required for if the hole lies in the extrema of the periodic interval
+        pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb)
+
+        rbf_interp = True if filling == 'rbf' else False
+        fill_xy, fill_z = fill_gaps(pts_ext[:, [0, 1]], pts_ext[:, 2], rbf_interp=rbf_interp, debug=debug)
+
+        if fill_xy is not None and fill_z is not None:
+            fill_pts = np.hstack([fill_xy, fill_z[:,None]])
+            pts_ext = np.concatenate([pts_ext, fill_pts])
+            ids = (xb <= pts_ext[:,0]) & (pts_ext[:,0] <= xe) & (yb <= pts_ext[:,1]) & (pts_ext[:,1] <= ye)
+            pts = pts_ext[ids]
+
+    pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb, d_max=ext*d)
 
     x_ext, y_ext, z_ext = pts_ext[:,0], pts_ext[:,1], pts_ext[:,2]
     yb_ext, ye_ext = y_ext.min(), y_ext.max()
