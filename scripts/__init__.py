@@ -21,4 +21,6 @@ case_dir/
 Not all the scripts require the existence of all the files and directories, for instance,
 vef_compute_centerline does not require the Encoding directory to exist or to contain anything.
 
+TODO: Study the option of emedding this package onto vef __main__.py at top level.
+PEP-338: https://peps.python.org/pep-0338/
 """
