@@ -659,7 +659,7 @@ def extend_periodically_point_cloud(pts, col=1, T=None, d_max=None):
     return np.unique(pts_out,axis=0)
 #
 
-def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ext=None, kx=3, ky=3, bounds=None, fill=True, debug=False):
+def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ext=None, kx=3, ky=3, bounds=None, filling='mean', debug=False):
     """
     A function to perform a LSQ approximation of a bivariate function, f(x,y),
     that is periodic wrt the y axis, by means of uniform bivariate splines. To emulate periodicity
@@ -693,8 +693,9 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
             The interval extrema of the parameters domain in the form
             (xmin, xmax, ymin, ymax).
 
-        fill : bool, opt
-            Whether to add interpolated points at detected gaps in the x-y point cloud.
+        filling : {False, 'mean', 'rbf'}, optional
+            Default 'mean'. Whether to add interpolated points at detected gaps in the x-y point cloud.
+            If False, the hole filling is skipped.
 
         degbug : bool, opt
             Display a plot with the extension of the data and the fitting result.
