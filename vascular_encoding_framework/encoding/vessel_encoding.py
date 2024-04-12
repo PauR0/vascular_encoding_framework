@@ -133,7 +133,7 @@ class VesselEncoding(Node):
             p : np.ndarray (N, 3)
                 The point in cartesian coordinates.
 
-            tau, theta, rho : np.ndarray (N, ), opt.
+            tau, theta, rho, rho_norm : np.ndarray (N, ), opt.
                 If full_output is True, the vessel coordinates of the points are returned.
         """
 
@@ -144,11 +144,14 @@ class VesselEncoding(Node):
             rho   = gr[2].reshape(-1, 1)
 
         if rho_norm:
+            rho_norm = rho.copy()
             rho *= self.radius(tau, np.ravel(theta)).reshape(rho.shape)
+        else:
+            rho_norm = rho / self.radius(tau, np.ravel(theta)).reshape(rho.shape)
 
         p = self.centerline.vcs_to_cartesian(tau, theta, rho)
         if full_output:
-            return p, tau, theta, rho
+            return p, tau, theta, rho, rho_norm
 
         return p
     #
