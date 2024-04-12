@@ -450,7 +450,7 @@ class VesselEncoding(Node):
             wall.add_field_data(np.array( self.radius.coeffs), 'coeffs', deep=True)
         vsl_mb['wall'] = wall
 
-        return wall
+        return vsl_mb
     #
 
     @staticmethod
