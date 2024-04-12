@@ -32,7 +32,7 @@ class Radius(BiSpline):
     #
 
     @staticmethod
-    def from_points(points, tau_knots, theta_knots, cl=None, debug=False):
+    def from_points(points, tau_knots, theta_knots, filling='mean', cl=None, debug=False):
         """
         Function to build a Radius object from an array of points in the Vessel Coordinate System.
         Radius object are a specialized Bivarate Splines. This function allow to build such objects
@@ -48,6 +48,9 @@ class Radius(BiSpline):
             tau_knots, theta_knots : int
                 The number of internal knots in longitudinal and angular dimensions respectively.
                 TODO: Allow building non-uniform BSplines.
+
+            filling : {'mean', 'rbf'}, optional
+                The method used to fill detected holes.
 
             cl : Centerline, optional
                 Default None. The centerline associated to the radius.
@@ -78,6 +81,7 @@ class Radius(BiSpline):
                                                                                        rd.x1,
                                                                                        rd.y0,
                                                                                        rd.y1),
+                                                                               filling=filling,
                                                                                debug=debug))
         return rd
     #
