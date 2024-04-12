@@ -5,6 +5,7 @@
     },
 
     "method" : "decoupling",
+    "filling" : "mean",
     "knots" : {
         "default" : {"tau_knots" : null, "theta_knots" : null}
     }
