@@ -9,9 +9,11 @@ __all__ = [
 ]
 
 import os as _os
+import sys as _sys
 
-
-_LENGTH = _os.get_terminal_size()[0]
+_LENGTH = 100
+if _sys.stdout.isatty():
+    _LENGTH = _os.get_terminal_size()[0]
 
 def _split_and_pad(input_string, max_length=_LENGTH, pad_direction='right', pad_symb='.'):
 
