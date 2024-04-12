@@ -375,7 +375,7 @@ class VesselEncoding(Node):
         thetas = np.linspace(theta_ini, theta_end, theta_res)
         rhos   = [1.0]
 
-        points, tau, theta, rho = self.vcs_to_cartesian(tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
+        points, tau, theta, rho, rho_n = self.vcs_to_cartesian(tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
         triangles = []
 
         for i in range(tau_res):
@@ -394,7 +394,7 @@ class VesselEncoding(Node):
             vsl_mesh['tau']   = tau
             vsl_mesh['theta'] = theta
             vsl_mesh['rho']   = rho
-            vsl_mesh['rho_n']   = rho / self.radius(tau, theta)
+            vsl_mesh['rho_n'] = rho_n
 
         return vsl_mesh
     #
