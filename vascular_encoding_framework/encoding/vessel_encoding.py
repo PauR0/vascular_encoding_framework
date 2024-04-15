@@ -487,10 +487,11 @@ class VesselEncoding(Node):
 
         """
 
+        block_names = vsl_mb.keys()
         for name in ['centerline', 'wall']:
-            if name not in vsl_mb:
-                error_message(info=f"Cannot build vessel encoding from multiblock. It lacks the {name}")
-            return None
+            if name not in block_names:
+                error_message(info=f"Cannot build vessel encoding from multiblock. {name} is not in {block_names}. ")
+                return None
 
 
         vsl_enc = VesselEncoding()
