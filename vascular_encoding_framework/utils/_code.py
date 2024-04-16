@@ -290,6 +290,32 @@ class Tree(dict):
         return out
     #
 
+    def change_node_id(self, old_id, new_id):
+        """
+        Change the id of a Node of the Tree and update all its relatives.
+
+        Arguments
+        ---------
+
+            old_id, new_id : str
+                The current id and the desired new one.
+        """
+
+        if new_id in self:
+            error_message(f"{new_id} is already present. Cant rename {old_id} to {new_id}.")
+            return
+
+        self[old_id].id = new_id
+        self[new_id] = self.pop(old_id)
+
+        if self[new_id].parent in self:
+            self[self[new_id].parent].remove_child(old_id)
+            self[self[new_id].parent].add_child(new_id)
+
+        for cid in self[new_id].children:
+            self[cid].parent = new_id
+    #
+
     @staticmethod
     def from_hierarchy_dict(hierarchy):
         """
