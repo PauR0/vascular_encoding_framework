@@ -8,8 +8,8 @@ from vascular_encoding_framework import messages as msg
 
 from case_io import load_vascular_mesh, save_vascular_mesh
 
-from config.readers import read_centerline_config
-from config.writers import write_centerline_config
+from config.readers import read_centerline_config, read_encoding_config
+from config.writers import write_centerline_config, write_encoding_config
 
 def handle_case_and_mesh_name(case, mesh, ow=False):
     """
@@ -48,7 +48,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
     return mesh, case
 #
 
-def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, overwrite=False, cl_params=None):
+def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, overwrite=False, cl_params=None, ec_params=None):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -56,8 +56,14 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, 
     attempts to compute the boundaries and save them at the Meshes directory.
     """
 
+    if cl_params is None:
+        cl_params = read_centerline_config(case_dir)
+    if ec_params is None:
+        ec_params = read_encoding_config(case_dir)
+
     os.makedirs(case_dir, exist_ok=True)
     write_centerline_config(case_dir, cl_params)
+    write_encoding_config(case_dir, ec_params)
 
     meshes_dir = os.path.join(case_dir, 'Meshes')
     if mesh_fname is not None or hierarchy is not None:
