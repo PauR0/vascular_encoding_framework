@@ -229,7 +229,7 @@ class VesselEncoding(Node):
                         else:
                             ids[i] = 1
 
-        vsl_mesh = vmesh.extract_points(ids.astype(bool), adjacent_cells=True, include_cells=True).extract_largest()
+        vsl_mesh = vmesh.extract_points(ids.astype(bool), adjacent_cells=True, include_cells=True).connectivity(extraction_mode='largest')
         if debug:
             p = pv.Plotter()
             p.add_mesh(vmesh, scalars=ids, n_colors=2, opacity=0.4)
@@ -439,7 +439,6 @@ class VesselEncoding(Node):
 
         wall = self.make_surface_mesh(tau_res=tau_res, theta_res=theta_res)
         if add_attributes:
-
             #Adding tau atts
             wall.add_field_data(np.array([self.radius.x0, self.radius.x1]), 'tau_interval',      deep=True)
             wall.add_field_data(np.array([self.radius.kx]),                 'tau_k',             deep=True)
