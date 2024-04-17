@@ -42,6 +42,22 @@ def update_ids(case_dir, new_ids):
     for oid, nid in new_ids.items():
         vmesh.boundaries.change_node_id(old_id=oid, new_id=nid)
     save_vascular_mesh(vmesh=vmesh, path=case_dir, suffix='_input', overwrite=True)
+#
+
+def show_boundaries(case_dir):
+    """
+    Load the input mesh and show a plot with the boundaries ids.
+
+    Arguments
+    ---------
+
+        case_dir : str
+            The case directory.
+    """
+
+    vmesh = load_vascular_mesh(path=case_dir, suffix='_input')
+    vmesh.plot_boundary_ids(print_data=True)
+#
 
 
 if __name__ == '__main__':
@@ -105,3 +121,6 @@ if __name__ == '__main__':
 
     if args.upids:
         update_ids(case_dir=args.case, new_ids=args.upids)
+
+    if args.show_boundaries:
+        show_boundaries(case_dir=args.case)
