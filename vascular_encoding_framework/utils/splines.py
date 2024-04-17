@@ -796,7 +796,7 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
     return Mcoeff
 #
 
-def fill_gaps(points, f, N=None, M=None, d=3, rbf_interp=False, debug=False):
+def fill_gaps(points, f, N=None, M=None, d=5, rbf_interp=False, debug=False):
     """
     Provided a 2D point cloud, with a field defined on it. This function
     detects the holes in the image and add new points on it interpolating the map
