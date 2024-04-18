@@ -169,3 +169,38 @@ def radians_to_degrees(r):
     deg = 180/np.pi * r
     return deg
 #
+
+def decompose_transformation_matrix(matrix):
+    """
+    Decompose a transformation matrix in its translation, scale and rotation components.
+
+    Arguments
+    ---------
+
+        matrix: numpy.array (4,4)
+            The transformation matrix to be decomposed.
+
+    Returns
+    -------
+
+        t: numpy.array (3,1)
+            The translation vector.
+
+        s: numpy.array (3,1)
+            The scale factor of each dimension.
+
+        r: numpy.array (3,3)
+            The rotation matrix.
+
+    """
+
+    #Translation
+    t = matrix[0:-1, 3]
+    #Scale
+    s = np.linalg.norm(matrix[[0,1,2]], axis=0)[:-1]
+    #Rotation
+    r = matrix[0:-1,0:-1]
+    for i in range(3):
+        r[:,i] = r[:,0]*(1/s[i])
+
+    return t, s, r
