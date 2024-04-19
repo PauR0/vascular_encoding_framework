@@ -10,7 +10,7 @@ from scipy.spatial.transform import Rotation
 
 from ..messages import *
 from ..utils.spatial import decompose_transformation_matrix
-from ..utils._code import attribute_checker
+from ..utils._code import attribute_checker, attribute_setter
 
 
 def rigid_alignment(A, B):
@@ -91,6 +91,15 @@ class Alignment(ABC):
         self.translation : np.ndarray = None
         self.scale       : np.ndarray = None
         self.rotation    : np.ndarray = None
+    #
+
+    def set_parameters(self, **kwargs):
+        """
+        Method to set parameters as attributes of the object.
+        """
+        clss = self.__class__()
+        params = {k:v for k,v in kwargs.items() if k in clss.__dict__}
+        attribute_setter(self, **params)
     #
 
     @abstractmethod
