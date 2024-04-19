@@ -256,7 +256,7 @@ class IterativeClosestPoint(Alignment):
     #
 #
 
-class RigidCorrespondenceAlignment:
+class RigidProcrustesAlignment(Alignment):
     """
     Class to compute the rigid alignment of two point arrays assuming index based correspondence.
     This means, the first element of the source array is expected to be in correspondence with the
