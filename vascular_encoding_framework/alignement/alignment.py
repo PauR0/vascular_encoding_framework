@@ -189,20 +189,28 @@ class IterativeClosestPoint(Alignment):
         self.rigid         : bool = True
     #
 
-    def run(self):
+    def run(self, apply=True):
         """
         Compute the transformation to align source to target.
 
         The decomposed transformation matrix is stored as atributes.
 
+        Arguments
+        ---------
+
+            apply : bool, optional
+                Default True. Whether to apply the computed transformation to source and return it.
+
         Returns
         -------
 
-            trans_matrix : np.ndarray (4,4)
+            trans_source : np.ndarray | pv.DataObject, optional
+                If apply is True (which is the default) this method
+                returns the source object transformed to be aligned with target.
 
         """
 
-        if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute ICP alignment...")
+        if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute ICP alignment..."):
             return
 
         icp = vtk.vtkIterativeClosestPointTransform()
@@ -243,7 +251,8 @@ class IterativeClosestPoint(Alignment):
 
         self.translation_vector, self.scale, self.rotation = decompose_transformation_matrix(matrix=trans_matrix)
 
-        return trans_matrix
+        if apply:
+            return self.transform_source()
     #
 #
 
