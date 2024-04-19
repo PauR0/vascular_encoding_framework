@@ -171,7 +171,7 @@ class Alignment(ABC):
     #
 #
 
-class ICP(Alignment):
+class IterativeClosestPoint(Alignment):
     """
     Class to perform iterative closest point algorithm between two PolyData meshes.
     """
