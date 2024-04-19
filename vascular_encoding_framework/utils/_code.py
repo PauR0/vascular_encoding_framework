@@ -497,7 +497,7 @@ def attribute_checker(obj, atts, info=None, opts=None):
         for att, opt in zip(atts, opts):
             if getattr(obj, att) not in opt:
                 if info is not None:
-                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}, and it must be in {opt}....")
+                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}, and it must be in [{opt}]....")
                 return False
 
     return True
