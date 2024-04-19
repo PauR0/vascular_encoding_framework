@@ -79,6 +79,9 @@ def rigid_alignment(A, B):
 
 
 class Alignment(ABC):
+    """
+    Abstract base class for alignment methods.
+    """
 
     def __init__(self):
 
