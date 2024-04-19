@@ -13,15 +13,13 @@ from ..utils.spatial import decompose_transformation_matrix
 from ..utils._code import attribute_checker, attribute_setter
 
 
-def rigid_alignment(A, B):
+def OrthogonalProcrustes(A, B):
     """
-    Compute the rigid alignment between a pair of point sets in correspondence.
+    Compute the Orthogonal Procrustes [1]_ alignment between to point sets.
 
-    Implementation of:
-    "Least-Squares Fitting of Two 3-D Point Sets", Arun, K. S. and Huang, T. S. and Blostein, S. D,
-    IEEE Transactions on Pattern Analysis and Machine Intelligence, Volume 9 Issue 5, May 1987
+    In other words rigid alignment between a pair of point sets in correspondence [2]_.
 
-    Credits to: https://github.com/nghiaho12/rigid_transform_3D
+    Credits to: https://github.com/nghiaho12/rigid_transform_3D for the implementation of [3]
 
     Arguments
     ---------
@@ -38,6 +36,19 @@ def rigid_alignment(A, B):
 
         t : np.ndarray (3,1)
             translation vector of the rigid alignment.
+
+    Notes
+    -----
+
+        [1] https://en.wikipedia.org/wiki/Orthogonal_Procrustes_problem
+
+        [2] "A generalized solution of the orthogonal procrustes problem." Schönemann, P.H.
+        Psychometrika 31, 1-10 (1966). https://doi.org/10.1007/BF02289451
+
+        [3] "Least-Squares Fitting of Two 3-D Point Sets", Arun, K. S. and Huang, T. S. and
+        Blostein, S. D, IEEE Transactions on Pattern Analysis and Machine Intelligence, Volume
+        9 Issue 5, May 1987
+
     """
 
     assert A.shape == B.shape
