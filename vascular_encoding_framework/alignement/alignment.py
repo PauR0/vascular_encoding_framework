@@ -103,8 +103,10 @@ class Alignment(ABC):
     #
 
     @abstractmethod
-    def run(self, **kwargs):
-        ...
+    def run(self, apply:bool=False):
+        """
+        If apply is True, this method should return self.transform_source()
+        """
     #
 
     def transform_source(self):
