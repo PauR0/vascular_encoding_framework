@@ -263,12 +263,26 @@ class RigidProcrustesAlignment(Alignment):
     first element of the target array.
     """
 
-    def run(self):
+    def run(self, apply=True):
         """
-        This method perform a rigid registration using the centerline in
-        the feature vector provided (source_fv), and the target aorta feature vector.
+        Method to run rigid procrustes alignment computation using source and target attributes.
+
+        Arguments
+        ---------
+
+            apply : bool, optional
+                Default True. Whether to apply the computed transformation to source and return it.
+
+        Returns
+        -------
+
+            apply : bool
+                Default True. Whether to apply the computed transformation to source and return it.
 
         """
+
+        if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute RigidProcrustes alignment..."):
+            return
 
         _source = self.source
         if isinstance(self.source, pv.DataObject):
@@ -278,8 +292,13 @@ class RigidProcrustesAlignment(Alignment):
         if isinstance(self.target, pv.DataObject):
             _target = self.target.points
 
-        r, t = rigid_alignment(A=_source.reshape(3, -1),
-                                  B=_target.reshape(3, -1))
+        r, t = OrthogonalProcrustes(A=_source.reshape(3, -1),
+                                    B=_target.reshape(3, -1))
 
-        self.set_translation_vector(t.flatten())
-        self.set_rotation(Rotation.from_matrix(r))
+        self.translation = t.flatten()
+        self.rotation    = r
+
+        if apply:
+            return self.transform_source()
+    #
+#
