@@ -167,12 +167,15 @@ class Alignment(ABC):
             _points = points.points
 
         if self.rotation is not None:
+            print(self.rotation)
             _points = Rotation.from_matrix(self.rotation).apply(_points)
 
         if self.scale is not None:
+            print(self.scale)
             _points = _points * self.scale.reshape(3,)
 
         if self.translation is not None:
+            print(self.scale)
             _points = _points + self.translation.reshape(3,)
 
         if isinstance(points, pv.DataObject):

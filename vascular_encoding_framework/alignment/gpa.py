@@ -115,13 +115,14 @@ class GeneralizedProcrustesAlignment:
             return None
 
         return np.mean([as_an_array(v) for _, v in self.data_set.items()], axis=0)
+    #
 
     def run(self):
         """
         Compute the GPA over the data set.
         """
 
-        if not attribute_checker(self, ['alignment', 'data_set'], info="Cant run Generalized Procrustes Alignment.")
+        if not attribute_checker(self, ['alignment', 'data_set'], info="Cant run Generalized Procrustes Alignment."):
             return
 
         if isinstance(self.reference_id, int):
@@ -144,85 +145,4 @@ class GeneralizedProcrustesAlignment:
             mean_shape = self.compute_mean_shape()
 
             n_iter += 1
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Generalized Procrustes analysis of an aorta family.")
-
-    parser.add_argument('pop_path',
-                        nargs='?',
-                        type=str,
-                        help = "Path to the aorta family directory.")
-
-    parser.add_argument('-s',
-                        '--save',
-                        nargs='?',
-                        type=str,
-                        default='',
-                        const='all',
-                        dest ='s',
-                        help = """If used with no args, it saves registered mean mesh case, meshes,
-                        registered feature vectors. A list of options can be used as follows:
-                            '-s mean' to save only mean case,
-                            '-s mesh' to save the meshes or,
-                            '-s fv' to save the feature vectors,
-                            '-s fv,mean' to save both the fv and the mean.""")
-
-    parser.add_argument('--reference-shape',
-                        type=check_nonnegative,
-                        default=0,
-                        dest='rs',
-                        help = "The id number of the chosen initial reference shape.")
-
-    parser.add_argument('-m',
-                        '--max-iter',
-                        type=check_positive,
-                        default=1,
-                        dest='max_iter',
-                        help = "The maximum number of iteration for the GPA.")
-
-    parser.add_argument('--ignore',
-                        type=str,
-                        nargs='?',
-                        default='',
-                        dest='ig',
-                        help = "Directories in pop_path to ignore. Functions default include Log and mean_case dir")
-
-    parser.add_argument('-r',
-                        '--params-reg',
-                        type=str,
-                        nargs='?',
-                        default='',
-                        dest='r',
-                        help = "Absolute path to a json registrate parameter file.")
-
-    parser.add_argument('-c',
-                        '--params-ch',
-                        type=str,
-                        nargs='?',
-                        default='',
-                        dest='c',
-                        help = "Absolute path to a json characterize parameter file.")
-
-    parser.add_argument('--params-rec',
-                        type=str,
-                        nargs='?',
-                        default='',
-                        dest='rec',
-                        help = "Absolute path to a json reconstruct parameter file.")
-
-
-
-    args = parser.parse_args()
-    pop_path = args.pop_path
-
-    if pop_path is None or not os.path.exists(pop_path):
-        print("Wrong path given")
-        exit(1)
-
-
-    generalized_procrustes_alignment(pop_path = pop_path,
-                                     save=args.s,
-                                     rs0=args.rs,
-                                     max_iter=args.max_iter,
-                                     ignore_dirs=args.ig)
+    #
