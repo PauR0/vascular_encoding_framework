@@ -611,9 +611,26 @@ class Boundaries(Tree):
             bd.translate(t)
     #
 
-    def rotate(self):
-        #TODO
-        pass
+    def scale(self, s, update=True):
+        """
+        Scale the Boundaries object, scaling all the Boundary objects, by a scalar factor s.
+
+        Arguments
+        ---------
+
+            s : float
+                The scale factor.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Boundary.scale`
+        """
+
+        for _, bd in self.items():
+            bd.scale(s, update=update)
     #
 
     def scale(self):
