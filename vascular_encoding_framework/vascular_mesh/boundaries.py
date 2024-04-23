@@ -633,8 +633,22 @@ class Boundaries(Tree):
             bd.scale(s, update=update)
     #
 
-    def scale(self):
-        #TODO
-        pass
+    def rotate(self, r):
+        """
+        Rotate the VascularEncoding, rotating all the VesselEncoding objects, with the provided rotation matrix r.
+
+        Arguments
+        ---------
+
+            r : np.ndarray (3, 3)
+                The rotation matrix.
+
+        See Also
+        --------
+        :py:meth:`Boundary.rotate`
+        """
+
+        for _, bd in self.items():
+            bd.rotate(r)
     #
 #
