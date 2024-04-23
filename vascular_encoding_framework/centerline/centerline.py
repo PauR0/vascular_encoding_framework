@@ -1115,6 +1115,29 @@ class Centerline(UniSpline, Node):
 
         return cl
     #
+
+    def translate(self, t, update=True):
+        """
+        Translate the Centerline object.
+
+        All the affine transformations are applied to the coefficients and then the rest of
+        attributes are a recomputed.
+
+        Arguments
+        ---------
+
+            t : np.ndarray (3,)
+                The translation vector.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+        """
+
+        if self.coeffs is not None:
+            self.coeffs += t.reshape(3,)
+            if update:
+                self.build()
+    #
 #
 
 
