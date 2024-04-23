@@ -322,6 +322,29 @@ class VascularEncoding(Tree):
         """
         ...
     #
+
+    def translate(self, t, update=True):
+        """
+        Translate the VascularEncoding object, translating all the VesselEncoding objects, with the translation vector t.
+
+        Arguments
+        ---------
+
+            t : np.ndarray (3,)
+                The translation vector.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`VesselEncoding.translate`
+        """
+
+        for _, ve in self.items():
+            ve.translate(t, update=update)
+    #
+
 #
 
 def encode_vascular_mesh(vmesh, cl_net, params, debug):
