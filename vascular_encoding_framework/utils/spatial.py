@@ -206,3 +206,42 @@ def decompose_transformation_matrix(matrix):
     return t, s, r
 #
 
+def compose_transformation_matrix(t=None, s=None, r=None):
+    """
+    Build a transformation matrix based on a translation vector, a scale vector and a rotation matrix
+
+
+    Arguments
+    ---------
+
+
+        t : np.ndarray (3,), opt
+            Default None. Translation vector.
+
+        s : np.ndarray (3,), opt
+            Default None. Scale vector.
+
+        r : np.ndarray (3, 3)
+            Default None. The rotation matrix.
+
+
+    Returns
+    -------
+        matrix: numpy.array (4,4)
+            The transformation matrix.
+
+    """
+
+    matrix = np.eye(4)
+
+    if r is not None:
+        matrix[0:-1,0:-1] = r
+
+    if s is not None:
+        matrix[:3, :3] *= s
+
+    if t is not None:
+        matrix[0:-1, 3] = t
+
+    return matrix
+#
