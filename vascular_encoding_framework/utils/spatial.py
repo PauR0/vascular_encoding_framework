@@ -197,10 +197,12 @@ def decompose_transformation_matrix(matrix):
     #Translation
     t = matrix[0:-1, 3]
     #Scale
-    s = np.linalg.norm(matrix[[0,1,2]], axis=0)[:-1]
+    s = np.linalg.norm(matrix[[0,1,2],:3], axis=0)
     #Rotation
     r = matrix[0:-1,0:-1]
     for i in range(3):
         r[:,i] = r[:,i]*(1/s[i])
 
     return t, s, r
+#
+
