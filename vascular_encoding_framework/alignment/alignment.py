@@ -6,10 +6,10 @@ from typing import Literal
 import vtk
 import numpy as np
 import pyvista as pv
-from scipy.spatial.transform import Rotation
 
 from ..messages import *
-from ..utils.spatial import decompose_transformation_matrix
+from ..encoding import VascularEncoding
+from ..utils.spatial import decompose_transformation_matrix, compose_transformation_matrix, transform_point_array
 from ..utils._code import attribute_checker, attribute_setter
 
 
@@ -138,7 +138,7 @@ class Alignment(ABC):
 
         elif isinstance(self.source, pv.DataObject):
             trans_source = self.source.copy(deep=True)
-            trans_source.points = self.apply_transformation(trans_source.points)
+            trans_source = self.apply_transformation(trans_source)
 
         return trans_source
     #
@@ -159,29 +159,24 @@ class Alignment(ABC):
 
         Returns
         -------
-            _points : np.ndarray | pv.DataObject
+            points : np.ndarray | pv.DataObject
         """
 
-        _points = points
-        if isinstance(points, pv.DataObject):
-            _points = points.points
+        if not isinstance(points, (np.ndarray, pv.DataObject, VascularEncoding)):
+            error_message(f"Wrong type for points argument. Available types are {np.ndarray, pv.DataObjects, VascularEncoding} and passed was: {type(points)}")
+            return None
 
-        if self.rotation is not None:
-            print(self.rotation)
-            _points = Rotation.from_matrix(self.rotation).apply(_points)
+        if isinstance(points, np.ndarray) and points.shape[1] != 3:
+            error_message("Wrong shape passed can't apply transformation. Point arrays muy be in shape (N, 3).")
+            return None
 
-        if self.scale is not None:
-            print(self.scale)
-            _points = _points * self.scale.reshape(3,)
-
-        if self.translation is not None:
-            print(self.scale)
-            _points = _points + self.translation.reshape(3,)
+        if isinstance(points, np.ndarray):
+            points = transform_point_array(points, t=self.translation, s=self.scale, r=self.rotation)
 
         if isinstance(points, pv.DataObject):
-            return points
+            points.points = transform_point_array(points.points, t=self.translation, s=self.scale, r=self.rotation)
 
-        return _points
+        return points
     #
 #
 
