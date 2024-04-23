@@ -391,8 +391,7 @@ def load_vascular_encoding(case_dir, suffix=""):
     vsc_enc = None
     if os.path.exists(fname):
         enc_mb = pv.read(fname)
-        vsc_enc = vef.VascularEncoding()
-        vsc_enc.from_multiblock(mb=enc_mb)
+        vsc_enc = vef.VascularEncoding.from_multiblock(vsc_mb=enc_mb)
 
     return vsc_enc
 #
