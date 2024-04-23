@@ -1162,6 +1162,33 @@ class Centerline(UniSpline, Node):
                 self.build()
     #
 
+    def rotate(self, r, update=True):
+        """
+        Rotate the Centerline object.
+
+        All the affine transformations are applied to the coefficients and then the rest of
+        attributes are a recomputed.
+
+        Arguments
+        ---------
+
+            r : np.ndarray (3, 3)
+                The rotation matrix.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+        """
+
+        #ensure normality of the rotation matrix columns
+        r /= np.linalg.norm(r, axis=0)
+
+        if self.coeffs is not None:
+            self.coeffs = (r @ self.coeffs.T).T
+            if update:
+                self.build()
+    #
+
+
 #
 
 
