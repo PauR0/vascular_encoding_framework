@@ -1,15 +1,13 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Literal
 
-import vtk
 import numpy as np
 import pyvista as pv
 
 from ..messages import *
 from ..encoding import VascularEncoding
-from ..utils.spatial import decompose_transformation_matrix, compose_transformation_matrix, transform_point_array
+from ..utils.spatial import decompose_transformation_matrix, transform_point_array
 from ..utils._code import attribute_checker, attribute_setter
 
 
@@ -192,10 +190,9 @@ class IterativeClosestPoint(Alignment):
 
         super().__init__()
 
-        self.max_iter      : int = 100
-        self.metric        : Literal['rms', 'abs'] = 'rms'
-        self.max_landmarks : int = 100
-        self.rigid         : bool = True
+        self.max_iterations : int = 100
+        self.max_landmarks  : int = 100
+        self.rigid          : bool = True
     #
 
     def run(self, apply=True):
@@ -222,46 +219,23 @@ class IterativeClosestPoint(Alignment):
         if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute ICP alignment..."):
             return
 
-        icp = vtk.vtkIterativeClosestPointTransform()
-
         _source = self.source
         if isinstance(_source, np.ndarray):
-            source_ = pv.PolyData(_source)
-        icp.SetSource(source=_source)
+            _source = pv.PolyData(_source)
 
         _target = self.target
         if isinstance(_target, np.ndarray):
             _target = pv.PolyData(_target)
-        icp.SetTarget(_target)
 
-        icp.GetLandmarkTransform().SetModeToRigidBody()
-        if not self.rigid:
-            icp.GetLandmarkTransform().SetModeToAffine()
+        trans_source, trans_matrix = _source.align(target=_target,
+                                                   max_landmarks=self.max_landmarks,
+                                                   max_iterations=self.max_iterations,
+                                                   return_matrix=True)
 
-        icp.SetMaximumNumberOfIterations(self.max_iter)
-        icp.SetMaximumNumberOfLandmarks(self.max_landmarks)
-
-        if self.metric == 'rms':
-            icp.SetMeanDistanceModeToRMS()
-        elif self.metric == 'abs':
-            icp.SetMeanDistanceModeToAbsoluteValue()
-        else:
-            error_message(info="Wrong value for metric attribute {self.metric}. Defaulting to rms")
-            icp.SetMeanDistanceModeToRMS()
-
-        icp.StartByMatchingCentroidsOn()
-        icp.CheckMeanDistanceOn()
-        icp.Modified()
-        icp.Update()
-
-        #From vtk matrix to numpy matrix
-        vtk_matrix = icp.GetMatrix()
-        trans_matrix = np.array([vtk_matrix.GetElement(i, j) for i in range(4) for j in range(4)]).reshape(4,4)
-
-        self.translation_vector, self.scale, self.rotation = decompose_transformation_matrix(matrix=trans_matrix)
+        self.translation, self.scale, self.rotation = decompose_transformation_matrix(matrix=trans_matrix)
 
         if apply:
-            return self.transform_source()
+            return trans_source
     #
 #
 
