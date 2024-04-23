@@ -634,4 +634,33 @@ class VesselEncoding(Node):
                 self.radius.build()
     #
 
+    def rotate(self, r, update=True):
+        """
+        Rotate the Vessel Encoding.
+
+        The rotation only requires translating the centerline coefficients, since the radius is
+        is expressed with respect to the centerline.
+
+        Arguments
+        ---------
+
+            r : np.ndarray (3, 3)
+                The rotation matrix.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.rotate`
+        """
+
+        #ensure normality of the rotation matrix columns
+        r /= np.linalg.norm(r, axis=0)
+
+        if self.centerline is not None:
+            self.centerline.coeffs = (r @ self.centerline.coeffs.T).T
+            if update:
+                self.centerline.build()
+    #
 #
