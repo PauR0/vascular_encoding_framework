@@ -345,6 +345,28 @@ class VascularEncoding(Tree):
             ve.translate(t, update=update)
     #
 
+    def scale(self, s, update=True):
+        """
+        Scale the VascularEncoding object, scaling all the VesselEncoding objects, by a scalar factor s.
+
+        Arguments
+        ---------
+
+            s : float
+                The scale factor.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`VesselEncoding.scale`
+        """
+
+        for _, ve in self.items():
+            ve.scale(s, update=update)
+    #
+
 #
 
 def encode_vascular_mesh(vmesh, cl_net, params, debug):
