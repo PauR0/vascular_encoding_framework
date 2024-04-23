@@ -1593,6 +1593,29 @@ class CenterlineNetwork(Tree):
 
         return cl_net
     #
+
+    def translate(self, t, update=True):
+        """
+        Translate the CenterlineNetwork object, translating all the Centerline objects, with the translation vector t.
+
+        Arguments
+        ---------
+
+            t : np.ndarray (3,)
+                The translation vector.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.translate`
+        """
+
+        for _, cl in self.items():
+            cl.translate(t, update=update)
+    #
+
 #
 
 
