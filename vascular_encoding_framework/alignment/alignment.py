@@ -275,8 +275,8 @@ class RigidProcrustesAlignment(Alignment):
         if isinstance(self.target, pv.DataObject):
             _target = self.target.points
 
-        r, t = OrthogonalProcrustes(A=_source.reshape(3, -1),
-                                    B=_target.reshape(3, -1))
+        r, t = OrthogonalProcrustes(A=_source.T,
+                                    B=_target.T)
 
         self.translation = t.flatten()
         self.rotation    = r
