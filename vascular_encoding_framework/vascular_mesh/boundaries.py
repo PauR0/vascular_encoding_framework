@@ -487,13 +487,36 @@ class Boundaries(Tree):
         write_json(f"{fname}.json", outdict, overwrite=True)
 
         mbfname = f"{fname}.vtm"
-        outmultiblock = pv.MultiBlock()
+        outmultiblock = self.to_multiblock()
+        if outmultiblock.n_blocks:
+            outmultiblock.save(filename=mbfname, binary=binary)
+    #
+
+    def to_multiblock(self):
+        """
+        Method to convert Boundaries object in a pyvsita MultiBlock object.
+
+        All the Boundary objects stored in it will be converted to polydata objects.
+
+        Returns
+        -------
+
+            mb : pv.MultiBlock
+                The multiblock object with the polydatas.
+
+        See Also
+        --------
+            :py:meth:`Boundary.to_polydata`
+        """
+
+        mb = pv.MultiBlock()
+
         for i, bd in self.items():
             polybd = bd.to_polydata()
             if polybd is not None:
-                outmultiblock[i] = polybd
-        if outmultiblock.n_blocks:
-            outmultiblock.save(filename=mbfname, binary=binary)
+                mb[i] = polybd
+
+        return mb
     #
 
     @staticmethod
