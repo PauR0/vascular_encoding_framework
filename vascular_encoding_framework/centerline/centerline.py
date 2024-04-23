@@ -1638,6 +1638,27 @@ class CenterlineNetwork(Tree):
             cl.scale(s, update=update)
     #
 
+    def rotate(self, r, update=True):
+        """
+        Rotate the CenterlineNetwork, rotating all the Centerline objects, with the provided rotation matrix r.
+
+        Arguments
+        ---------
+
+            r : np.ndarray (3, 3)
+                The rotation matrix.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.rotate`
+        """
+
+        for _, cl in self.items():
+            cl.rotate(r, update=update)
+    #
 #
 
 
