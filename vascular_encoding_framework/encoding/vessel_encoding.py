@@ -574,4 +574,32 @@ class VesselEncoding(Node):
         Convert a feature vector in a
         """
     #
+
+    def translate(self, t, update=True):
+        """
+        Translate the Vessel Encoding.
+
+        The translation only requires translating the centerline coefficients, since the radius is
+        is expressed with respect to the centerline.
+
+        Arguments
+        ---------
+
+            t : np.ndarray (3,)
+                The translation vector.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.translate`
+        """
+
+        if self.centerline is not None:
+            self.centerline.coeffs += t.reshape(3,)
+            if update:
+                self.centerline.build()
+    #
+
 #
