@@ -43,8 +43,6 @@ class Boundary(Node):
         self.n_knots_rho : int = None
         self.k           : int = 3
 
-        self.area : float = None
-
         #Inherit node data
         if nd is not None:
             self.set_data(**nd.__dict__)
@@ -273,8 +271,6 @@ class Boundary(Node):
             th_end = 2*np.pi
 
         area = self.rho_spl.integrate(th_ini, th_end, extrapolate='periodic')
-        if th_ini == 0 and th_end == 2*np.pi:
-            self.area = area
 
         return area
     #
