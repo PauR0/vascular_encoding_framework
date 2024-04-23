@@ -201,6 +201,6 @@ def decompose_transformation_matrix(matrix):
     #Rotation
     r = matrix[0:-1,0:-1]
     for i in range(3):
-        r[:,i] = r[:,0]*(1/s[i])
+        r[:,i] = r[:,i]*(1/s[i])
 
     return t, s, r
