@@ -592,9 +592,23 @@ class Boundaries(Tree):
         return boundaries
     #
 
-    def translate(self):
-        #TODO
-        pass
+    def translate(self, t):
+        """
+        Translate the Boundaries object, translating all the Boundary objects, with the translation vector t.
+
+        Arguments
+        ---------
+
+            t : np.ndarray (3,)
+                The translation vector.
+
+        See Also
+        --------
+        :py:meth:`Boundary.translate`
+        """
+
+        for _, bd in self.items():
+            bd.translate(t)
     #
 
     def rotate(self):
