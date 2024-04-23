@@ -349,6 +349,33 @@ class Boundary(Node):
             self.points += t.reshape(3,)
     #
 
+    def scale(self, s, update=True):
+        """
+        Scale the Boundary object.
+
+        Arguments
+        ---------
+
+            s : float
+                The scale factor.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+        """
+
+
+        if self.center is not None:
+            self.center *= s
+
+        if self.points is not None:
+            self.points *= s
+
+        if self.rho_coef is not None:
+            self.rho_coef *= s
+            if update:
+                self.build_rho_spline()
+    #
+
 #
 
 class Boundaries(Tree):
