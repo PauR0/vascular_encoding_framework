@@ -376,6 +376,43 @@ class Boundary(Node):
                 self.build_rho_spline()
     #
 
+    def rotate(self, r):
+        """
+        Rotate the Boundary object.
+
+        Arguments
+        ---------
+
+            r : np.ndarray (3, 3)
+                The rotation matrix.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.rotate`
+        """
+
+        #ensure normality of the rotation matrix columns
+        r /= np.linalg.norm(r, axis=0)
+
+        if self.center is not None:
+            self.center = (r @ self.center.reshape(3, 1)).reshape(3,)
+
+        if self.normal is not None:
+            self.normal = (r @ self.normal.reshape(3, 1)).reshape(3,)
+
+        if self.v1 is not None:
+            self.v1 = (r @ self.v1.reshape(3, 1)).reshape(3,)
+
+        if self.v2 is not None:
+            self.v2 = (r @ self.v2.reshape(3, 1)).reshape(3,)
+
+        if self.points is not None:
+            self.points = (r @ self.points.T).T
+    #
+
 #
 
 class Boundaries(Tree):
