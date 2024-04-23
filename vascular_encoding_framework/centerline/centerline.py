@@ -1616,6 +1616,28 @@ class CenterlineNetwork(Tree):
             cl.translate(t, update=update)
     #
 
+    def scale(self, s, update=True):
+        """
+        Scale the CenterlineNetwork object, scaling all the Centerline objects, by a scalar factor s.
+
+        Arguments
+        ---------
+
+            s : float
+                The scale factor.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.scale`
+        """
+
+        for _, cl in self.items():
+            cl.scale(s, update=update)
+    #
+
 #
 
 
