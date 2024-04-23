@@ -327,6 +327,28 @@ class Boundary(Node):
 
         return poly
     #
+
+    def translate(self, t):
+        """
+        Translate the Boundary object.
+
+        Arguments
+        ---------
+
+            t : np.ndarray (3,)
+                The translation vector.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+        """
+
+        if self.center is not None:
+            self.center += t.reshape(3,)
+
+        if self.points is not None:
+            self.points += t.reshape(3,)
+    #
+
 #
 
 class Boundaries(Tree):
