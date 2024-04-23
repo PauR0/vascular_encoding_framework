@@ -602,4 +602,36 @@ class VesselEncoding(Node):
                 self.centerline.build()
     #
 
+    def scale(self, s, update=True):
+        """
+        Scale the Vessel Encoding.
+
+        The scale is applied to both centerline and radius coefficients. No anisotropic scaling is
+        allowed, and a sigle scalar is required.
+
+        Arguments
+        ---------
+
+            s : float
+                The scale factor.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`Centerline.scale`
+        """
+
+        if self.centerline is not None:
+            self.centerline.coeffs *= s
+            if update:
+                self.centerline.build()
+
+        if self.radius is not None:
+            self.radius.coeffs *= s
+            if update:
+                self.radius.build()
+    #
+
 #
