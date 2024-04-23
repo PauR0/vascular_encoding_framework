@@ -367,6 +367,27 @@ class VascularEncoding(Tree):
             ve.scale(s, update=update)
     #
 
+    def rotate(self, r, update=True):
+        """
+        Rotate the VascularEncoding, rotating all the VesselEncoding objects, with the provided rotation matrix r.
+
+        Arguments
+        ---------
+
+            r : np.ndarray (3, 3)
+                The rotation matrix.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+
+        See Also
+        --------
+        :py:meth:`VesselEncoding.rotate`
+        """
+
+        for _, ve in self.items():
+            ve.rotate(r, update=update)
+    #
 #
 
 def encode_vascular_mesh(vmesh, cl_net, params, debug):
