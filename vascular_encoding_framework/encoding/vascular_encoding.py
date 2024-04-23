@@ -225,44 +225,6 @@ class VascularEncoding(Tree):
         return vsc_mb
     #
 
-    def to_feature_vector(self, add_metadata=True, add_centerline=True, add_radius=True):
-        """
-        Convert the VascularEncoding to a feature vector.
-
-        The feature vector version of a VascularEncoding consist in appending the feature vector
-        representations of all the VesselEncoding objects of the network. To read about the feature
-        vector format read VesselEncoding.to_feature_vector documentation.
-
-        Warning: To convert back the feature vector in a VascularEncoding object all the arguments
-        must be True.
-
-
-        Arguments
-        ---------
-
-            add_metadata : bool, optional
-                Default True. Whether to add metadata (knot information) at the beggining of the fv.
-
-            add_centerline : bool, optional
-                Default True. Whether to add the centerline coefficients of the VesselEncoding objects.
-
-            add_centerline : bool, optional
-                Default True. Whether to add the radius coefficients of the VesselEncoding objects.
-
-        Return
-        ------
-            fv : np.ndarray (N,)
-                The feature vector with the selected data.
-
-        See Also
-        --------
-        :py:meth:`from_feature_vector`
-        :py:meth:`VesselEncoding.to_feature_vector`
-        :py:meth:`VesselEncoding.from_feature_vector`
-        """
-        pass
-    #
-
     @staticmethod
     def from_multiblock(vsc_mb):
         """
@@ -309,6 +271,56 @@ class VascularEncoding(Tree):
             add_to_tree(rid)
 
         return vsc_enc
+    #
+
+    def to_feature_vector(self, add_metadata=True, add_centerline=True, add_radius=True):
+        """
+        Convert the VascularEncoding to a feature vector.
+
+        The feature vector version of a VascularEncoding consist in appending the feature vector
+        representations of all the VesselEncoding objects of the network. To read about the feature
+        vector format read VesselEncoding.to_feature_vector documentation.
+
+        Warning: To convert back the feature vector in a VascularEncoding object all the arguments
+        must be True.
+
+
+        Arguments
+        ---------
+
+            add_metadata : bool, optional
+                Default True. Whether to add metadata (knot information) at the beggining of the fv.
+
+            add_centerline : bool, optional
+                Default True. Whether to add the centerline coefficients of the VesselEncoding objects.
+
+            add_centerline : bool, optional
+                Default True. Whether to add the radius coefficients of the VesselEncoding objects.
+
+        Return
+        ------
+            fv : np.ndarray (N,)
+                The feature vector with the selected data.
+
+        See Also
+        --------
+        :py:meth:`from_feature_vector`
+        :py:meth:`VesselEncoding.to_feature_vector`
+        :py:meth:`VesselEncoding.from_feature_vector`
+        """
+
+        fvs = []
+
+        def append_fv(vid):
+            fvs.append()
+    #
+
+    @staticmethod
+    def from_feature_vector(fv, has_metadata=True, has_centerline=True, has_radius=True):
+        """
+
+        """
+        ...
     #
 #
 
