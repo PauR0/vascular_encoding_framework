@@ -7,7 +7,7 @@ from scipy.spatial import KDTree
 from ..messages import *
 from .boundaries import Boundaries, Boundary
 from ..utils.geometry import triangulate_cross_section, approximate_cross_section, extract_section
-from ..utils.spatial  import compute_ref_from_points, normalize
+from ..utils.spatial  import compute_ref_from_points, normalize, compose_transformation_matrix
 from ..utils._code    import attribute_setter
 
 class VascularMesh(pv.PolyData):
@@ -320,50 +320,59 @@ class VascularMesh(pv.PolyData):
         """
         Apply a translation to the mesh and boundaries.
 
-        Arguments:
-        ------------
+        Arguments
+        ---------
+
             t : vector-like, (3,)
                 The translation vector.
 
             update_kdt : bool, optional.
                 Default True. Whether to update the kdt for query distances on
                 mesh points.
+
+        See Also
+        --------
+        :py:meth:`Bondaries.translate`
+
         """
 
         computing_message('vascular mesh translation')
         super().translate(t, inplace=True)
-        self.closed.translate(t)
-        self.boundaries.translate(t)
+
+        if self.closed is not None:
+            self.closed.translate(t)
+
+        if self.boundaries is not None:
+            self.boundaries.translate(t)
         done_message('vascular mesh translation')
 
         if update_kdt:
             self.compute_kdt()
     #
 
-    def rotate(self, r, inverse=False, update_kdt=True):
+    def rotate(self, r, update_kdt=True, transform_all_input_vectors=False):
         """
         Apply a rotation to the mesh and boundaries.
 
         Input:
         --------
-            r: scipy.spatial.Rotation object
-                A scipy Rotation object, containing the desired rotation.
-
-            inverse : bool, optional
-                Whether to apply the inverse of the passed rotation.
+            r: np.ndarray (3,3)
+                A rotation matrix.
 
             update_kdt : bool, optional.
-                Default True. Whether to update the kdt for query distances on
-                mesh points
+                Default True. Whether to update the kdt for query distances on mesh points.
         """
 
         computing_message('vascular mesh rotation')
-        if inverse:
-            r = r.inv()
-        v, d = normalize(r.as_rotvec()), np.linalg.norm(r.as_rotvec(degrees=True))
-        self.rotate_vector(vector=v, angle=d, inplace=True)
-        self.closed.rotate_vector(vector=v, angle=d, inplace=True)
-        self.boundaries.rotate(r)
+
+        R = compose_transformation_matrix(r=r)
+        self.transform(trans=R, transform_all_input_vectors=transform_all_input_vectors, inplace=True)
+
+        if self.closed is not None:
+            self.closed.transform(trans=R, transform_all_input_vectors=transform_all_input_vectors, inplace=True)
+
+        if self.boundaries is not None:
+            self.boundaries.rotate(r)
 
         if update_kdt:
             self.compute_kdt()
@@ -387,8 +396,13 @@ class VascularMesh(pv.PolyData):
         """
         computing_message('vascular mesh scaling.')
         super().scale(s, inplace=True)
-        self.closed.scale(s, inplace=True)
-        self.boundaries.scale(s)
+
+        if self.closed is not None:
+            self.closed.scale(s, inplace=True)
+
+        if self.boundaries is not None:
+            self.boundaries.scale(s)
+
         if update_kdt:
             self.compute_kdt()
         done_message('vascular mesh scaling.')
