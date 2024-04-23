@@ -1138,6 +1138,30 @@ class Centerline(UniSpline, Node):
             if update:
                 self.build()
     #
+
+    def scale(self, s, update=True):
+        """
+        Scale the Centerline.
+
+        All the affine transformations are applied to the coefficients and then the rest of
+        attributes are a recomputed.
+
+        Arguments
+        ---------
+
+            s : float
+                The scale factor.
+
+            update : bool, optional
+                Default True. Whether to rebuild the splines after the transformation.
+        """
+
+        if self.coeffs is not None:
+            self.coeffs *= s
+            if update:
+                self.build()
+    #
+
 #
 
 
