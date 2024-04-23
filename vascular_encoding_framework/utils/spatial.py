@@ -245,3 +245,38 @@ def compose_transformation_matrix(t=None, s=None, r=None):
 
     return matrix
 #
+
+def transform_point_array(points, t=None, s=None, r=None):
+    """
+    Apply affine transformation to a numpy array of 3D points.
+
+
+    Arguments
+    ---------
+
+        points : np.ndarray (n, 3)
+            The array of 3D points.
+
+        t : np.ndarray (3,), opt
+            Default None. Translation vector.
+
+        s : np.ndarray (3,), opt
+            Default None. Scale vector.
+
+        r : np.ndarray (3, 3)
+            Default None. The rotation matrix.
+
+    Returns
+    -------
+
+        points_tr : np.ndarray (n, 3)
+            The transformed points
+    """
+
+    pts_ext = np.hstack([points, np.ones((points.shape[0],1))])
+    matrix = compose_transformation_matrix(t=t, s=s, r=r)
+    points_tr = (matrix @ pts_ext.T).T
+    points_tr = points_tr[:,:3]
+
+    return points_tr
+#
