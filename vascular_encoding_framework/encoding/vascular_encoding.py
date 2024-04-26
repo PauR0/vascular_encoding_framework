@@ -62,7 +62,7 @@ class VascularEncoding(Tree):
             encode_and_add_vessel(rid)
     #
 
-    def encode_vascular_mesh_decoupling(self, vmesh, cl_net, params, debug=False):
+    def encode_vascular_mesh_decoupling(self, vmesh, cl_net, params, insertion=1, debug=False):
         """
         Encode a vascular mesh decoupling each branch as an independent vessel.
 
@@ -100,7 +100,7 @@ class VascularEncoding(Tree):
             cl = cl_net[bid]
             pve = self[cl.parent]
             tau = pve.compute_centerline_intersection(cl, mode='parameter')
-            r, _ = vmesh.kdt.query(cl(tau))
+            r = vmesh.kdt.query(cl(tau))[0] * insertion
             tau_ = cl.travel_distance_parameter(-1*r, tau) #Traveling a radius distance towards inlet
             cl = cl.trim(t0_=tau_)
             return cl
