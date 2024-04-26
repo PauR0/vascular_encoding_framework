@@ -231,7 +231,7 @@ class BiSpline(Spline):
         self.ky       : int        = 3 #Defaulting to cubic splines.
         self.knots_y   : np.ndarray = None
         self.n_knots_y : int        = None
-        self.extra_y   : str        = 'periodic' #{'constant', 'periodic'}
+        self.extra_y   : str        = 'constant' #{'constant', 'periodic'}
 
         #Coefficient Matrix
         self.coeffs  : np.ndarray = None #Shape (3, n_knots+k+1)
