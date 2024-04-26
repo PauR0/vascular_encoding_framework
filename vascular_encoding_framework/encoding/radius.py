@@ -9,10 +9,14 @@ class Radius(BiSpline):
     def __init__(self):
 
         super().__init__()
+
         self.x0 = 0
         self.x1 = 1
+        self.extra_x = 'constant'
+
         self.y0 = 0
         self.y1 = 2*np.pi
+        self.extra_y = 'periodic'
     #
 
     def set_parameters_from_centerline(self, cl):
