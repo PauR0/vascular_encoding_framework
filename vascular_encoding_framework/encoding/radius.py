@@ -2,7 +2,9 @@
 
 import numpy as np
 
+from ..messages import error_message
 from ..utils.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
+from ..utils.misc import split_metadata_and_fv
 
 class Radius(BiSpline):
 
@@ -92,6 +94,59 @@ class Radius(BiSpline):
             fv = np.concatenate([self.get_metadata(), fv])
 
         return fv
+    #
+
+    @staticmethod
+    def from_feature_vector(fv):
+        """
+        Build a Centerline object from a feature vector.
+
+        Note that in order to build the Centerline, the feature vector must start with the metadata
+        array. Read more about the metadata array at `get_metadata` method docs.
+
+
+        Arguments
+        ---------
+
+            fv : np.ndarray (N,)
+                The feature vector with the metadata at the beggining.
+
+
+        Return
+        ------
+            rd : Radius
+                The Radius object built from the feature vector.
+
+        See Also
+        --------
+        :py:meth:`to_feature_vector`
+        :py:meth:`get_metadata`
+        """
+
+
+        md, fv = split_metadata_and_fv(fv)
+
+        rd = Radius()
+        rd.set_parameters(
+            build = False,
+            kx        = round(md[0]),
+            ky        = round(md[1]),
+            n_knots_x = round(md[2]),
+            n_knots_y = round(md[3]),
+        )
+
+        r , k = (rd.n_knots_x + rd.kx + 1), (rd.n_knots_y + rd.ky + 1)
+        rk = r * k
+        if len(fv) != rk:
+            error_message(f"Cannot build a Radius object from feature vector. Expected rk knots ((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided.")
+            return
+
+        rd.set_parameters(
+            build=True,
+            coeffs = fv,
+        )
+
+        return rd
     #
 
     @staticmethod
