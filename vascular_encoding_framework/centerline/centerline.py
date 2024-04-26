@@ -866,7 +866,7 @@ class Centerline(UniSpline, Node):
             #Adding Spline atts:
             poly.add_field_data(np.array([self.t0, self.t1]), 'interval',      deep=True)
             poly.add_field_data(np.array([self.k]),           'k',             deep=True)
-            poly.add_field_data(np.array(self.knots),         'knots',         deep=True)
+            poly.add_field_data(np.array([self.n_knots]),     'n_knots',       deep=True)
             poly.add_field_data(np.array(self.coeffs),        'coeffs',        deep=True)
             poly.add_field_data(np.array([self.extra]),       'extrapolation', deep=True)
 
@@ -913,7 +913,7 @@ class Centerline(UniSpline, Node):
                 The centerline object with the attributes already set.
         """
 
-        spl_atts = ['interval', 'k', 'knots', 'coeffs', 'extrapolation']
+        spl_atts = ['interval', 'k', 'n_knots', 'coeffs', 'extrapolation']
         for att in spl_atts:
             if not att in poly.field_data:
                 error_message(f"Could not find attribute: {att} in polydata. Wont build centerline object")
@@ -926,10 +926,10 @@ class Centerline(UniSpline, Node):
                 self.set_parameters(t0=value[0], t1=value[1])
 
             elif att == 'k':
-                self.set_parameters(k=int(value[0]))
+                self.set_parameters(k=round(value[0]))
 
-            elif att == 'knots':
-                self.set_parameters(knots=value, n_knots=len(value))
+            elif att == 'n_knots':
+                self.set_parameters(n_knots=round(value[0]))
 
             elif att == 'coeffs':
                 self.set_parameters(coeffs=np.array(value))
