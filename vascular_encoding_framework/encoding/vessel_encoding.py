@@ -442,13 +442,13 @@ class VesselEncoding(Node):
             #Adding tau atts
             wall.add_field_data(np.array([self.radius.x0, self.radius.x1]), 'tau_interval',      deep=True)
             wall.add_field_data(np.array([self.radius.kx]),                 'tau_k',             deep=True)
-            wall.add_field_data(np.array( self.radius.knots_x),             'tau_knots',         deep=True)
+            wall.add_field_data(np.array([self.radius.n_knots_x]),          'n_tau_knots',       deep=True)
             wall.add_field_data(np.array([self.radius.extra_x]),            'tau_extrapolation', deep=True)
 
             #Adding theta atts
             wall.add_field_data(np.array([self.radius.y0, self.radius.y1]), 'theta_interval',      deep=True)
             wall.add_field_data(np.array([self.radius.ky]),                 'theta_k',             deep=True)
-            wall.add_field_data(np.array( self.radius.knots_y),             'theta_knots',         deep=True)
+            wall.add_field_data(np.array([self.radius.n_knots_y]),          'n_theta_knots',       deep=True)
             wall.add_field_data(np.array([self.radius.extra_y]),            'theta_extrapolation', deep=True)
 
             wall.add_field_data(np.array( self.radius.coeffs), 'coeffs', deep=True)
@@ -501,18 +501,18 @@ class VesselEncoding(Node):
         radius = Radius()
         wall = vsl_mb['wall']
         #Setting tau params
-        radius.set_parameters(x0      = wall.get_array('tau_interval',        preference='field')[0],
-                              x1      = wall.get_array('tau_interval',        preference='field')[1],
-                              kx      = wall.get_array('tau_k',               preference='field'),
-                              knots_x = wall.get_array('tau_knots',           preference='field'),
-                              extra_x = wall.get_array('tau_extrapolation',   preference='field')[0])
+        radius.set_parameters(x0        = wall.get_array('tau_interval',        preference='field')[0],
+                              x1        = wall.get_array('tau_interval',        preference='field')[1],
+                              kx        = wall.get_array('tau_k',               preference='field')[0],
+                              n_knots_x = wall.get_array('n_tau_knots',         preference='field')[0],
+                              extra_x   = wall.get_array('tau_extrapolation',   preference='field')[0])
 
         #Setting theta params
-        radius.set_parameters(y0      = wall.get_array('theta_interval',      preference='field')[0],
-                              y1      = wall.get_array('theta_interval',      preference='field')[1],
-                              ky      = wall.get_array('theta_k',             preference='field'),
-                              knots_y = wall.get_array('theta_knots',         preference='field'),
-                              extra_y = wall.get_array('theta_extrapolation', preference='field')[0])
+        radius.set_parameters(y0        = wall.get_array('theta_interval',      preference='field')[0],
+                              y1        = wall.get_array('theta_interval',      preference='field')[1],
+                              ky        = wall.get_array('theta_k',             preference='field')[0],
+                              n_knots_y = wall.get_array('n_theta_knots',       preference='field')[0],
+                              extra_y   = wall.get_array('theta_extrapolation', preference='field')[0])
 
         radius.set_parameters(build=True, coeffs = wall.get_array('coeffs', preference='field'))
 
