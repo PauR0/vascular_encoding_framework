@@ -18,6 +18,7 @@ from ..utils._code import Tree, Node, attribute_checker
 from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
 from ..utils.splines import UniSpline, lsq_spline_smoothing
 from ..utils.geometry import polyline_from_points
+from ..utils.misc import split_metadata_and_fv
 
 
 class ParallelTransport(UniSpline):
@@ -1255,6 +1256,60 @@ class Centerline(UniSpline, Node):
         return fv
     #
 
+    @staticmethod
+    def from_feature_vector(fv):
+        """
+        Build a Centerline object from a feature vector.
+
+        Note that in order to build the Centerline, the feature vector must start with the metadata
+        array. Read more about the metadata array at `get_metadata` method docs.
+
+
+        Arguments
+        ---------
+
+            fv : np.ndarray (N,)
+                The feature vector with the metadata at the beggining.
+
+
+        Return
+        ------
+            cl : Centerline
+                The Centerline object built from the feature vector.
+
+        See Also
+        --------
+        :py:meth:`to_feature_vector`
+        :py:meth:`get_metadata`
+        """
+
+
+        md, fv = split_metadata_and_fv(fv)
+
+        cl = Centerline()
+        cl.set_parameters(
+            build = False,
+            k         = round(md[0]),
+            n_knots   = round(md[1]),
+            n_samples = round(md[2]),
+        )
+
+        l = 3*(cl.n_knots + cl.k+1) #n_knots is supposed to be the amount of internal knots, and the 3 due to x, y, z components.
+        if len(fv) != l:
+            error_message(f"Cannot build a Centerline object from feature vector. Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided.")
+            return
+
+        cl.set_parameters(
+            build=True,
+            coeffs = fv.reshape(-1, 3),
+            extra  = 'linear',
+        )
+
+        v1 = np.array([md[3], md[4], md[5]])
+        cl.compute_adapted_frame(mode='as_is', p=v1)
+
+        return cl
+    #
 
 #
 
