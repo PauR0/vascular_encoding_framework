@@ -1186,6 +1186,75 @@ class Centerline(UniSpline, Node):
                 self.build()
     #
 
+    def get_metadata(self):
+        """
+        This method returns a copy of the metadata array.
+
+        As of this code version the
+        metadata array is [5, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
+
+        Returns
+        -------
+            md : np.ndarray
+        """
+
+        v1 = self.v1(self.t0)
+        md = np.array([6,
+                      self.k,
+                      self.n_knots,
+                      self.n_samples,
+                      v1[0],
+                      v1[1],
+                      v1[2]
+                      ])
+
+        return md
+    #
+
+    def to_feature_vector(self, add_metadata=True):
+        """
+        Convert the Centerline object to its feature vector repressentation.
+
+        The feature vector version of a Centerline consist in appending the raveled centerline
+        coefficients. If add_metada is True (which is the default), a metadata vector is appended
+        at the beggining of the feature vector. The first entry of the metadata vector is the amount
+        of metadata in total, making it look like [n, md0, ..., mdn], read more about it in get.
+
+        Arguments
+        ---------
+
+            add_metadata: bool, optional
+                Default True. Wether to append metadata at the beggining of the feature vector.
+
+        Return
+        ------
+
+            fv : np.ndarray
+                The feature vector according to mode. The shape of each feature vector changes acoordingly.
+
+        Note
+        ----
+        Note that the feature vector representation does not bear any hierarchical data, not even
+        if add_metadata is True. Be sure that hierarchical data is properly stored if will be later
+        required. For storage purposes check `to_multiblock` method.
+
+
+        See Also
+        --------
+        :py:meth:`get_metadata`
+        :py:meth:`from_feature_vector`
+
+        """
+
+
+        fv = self.coeffs.ravel()
+
+        if add_metadata:
+            fv = np.concatenate([self.get_metadata(), fv])
+
+        return fv
+    #
+
 
 #
 
