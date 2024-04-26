@@ -1,6 +1,7 @@
 
 
 from abc import ABC, abstractmethod
+from typing import Literal
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -74,7 +75,7 @@ class UniSpline(Spline):
         self.knots   : np.ndarray = None
         self.coeffs  : np.ndarray = None #Shape (3, n_knots+k+1)
         self.n_knots : int        = None
-        self.extra   : str        = 'linear' #{'linear', 'constant'}
+        self.extra   : Literal['linear', 'constant'] = 'linear'
 
         self._spl : BSpline
     #
