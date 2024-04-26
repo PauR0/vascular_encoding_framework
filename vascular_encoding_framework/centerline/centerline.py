@@ -273,8 +273,6 @@ class Centerline(UniSpline, Node):
         """
         This method builds the splines and sets up other useful attributes.
         """
-        if not attribute_checker(self, ['knots', 'coeffs'], info="cant build splines."):
-            return False
 
         super().build()
         self.tangent = self._spl.derivative()
