@@ -35,6 +35,65 @@ class Radius(BiSpline):
         self.x1 = cl.t1
     #
 
+    def get_metadata(self):
+        """
+        This method returns a copy of the metadata array.
+
+        As of this code version the
+        metadata array is [2, n_knots_tau, n_knots_theta].
+
+        Returns
+        -------
+            md : np.ndarray
+        """
+
+        md = np.array([4,
+                      self.kx,
+                      self.ky,
+                      self.n_knots_x,
+                      self.n_knots_y,
+                      ])
+
+        return md
+    #
+
+    def to_feature_vector(self, add_metadata=True):
+        """
+        Convert the Radius object to its feature vector repressentation.
+
+        The feature vector version of a Radius object consist in the raveled radius coefficients.
+        If add_metada is True (which is the default), a metadata array is appended at the beggining
+        of the feature vector. The first entry of the metadata vector is the total number of
+        metadata, making it look like [n, md0, ..., mdn], read more about it in get.
+
+        Arguments
+        ---------
+
+            add_metadata: bool, optional
+                Default True. Wether to append metadata at the beggining of the feature vector.
+
+        Return
+        ------
+
+            fv : np.ndarray
+                The feature vector according to mode. The shape of each feature vector changes acoordingly.
+
+
+        See Also
+        --------
+        :py:meth:`get_metadata`
+        :py:meth:`from_feature_vector`
+        """
+
+
+        fv = self.coeffs.ravel()
+
+        if add_metadata:
+            fv = np.concatenate([self.get_metadata(), fv])
+
+        return fv
+    #
+
     @staticmethod
     def from_points(points, tau_knots, theta_knots, filling='mean', cl=None, debug=False):
         """
