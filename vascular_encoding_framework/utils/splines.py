@@ -273,8 +273,8 @@ class BiSpline(Spline):
         """
         Evaluate the Bivariate splines at x and y.
 
-        Arguments:
-        -------------
+        Arguments
+        ---------
 
             x : float or array-like
                 The first parameter values
@@ -286,8 +286,8 @@ class BiSpline(Spline):
                 Default False. Whether to evaluate the spline at the
                 grid built by the carthesian product of x and y.
 
-        Returns:
-        ---------
+        Returns
+        -------
 
             z : float or array-like
                 The values of spl(x, y)
