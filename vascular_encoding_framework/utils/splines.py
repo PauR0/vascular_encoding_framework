@@ -92,7 +92,7 @@ class UniSpline(Spline):
         return self.evaluate(t)
     #
 
-    def evaluate(self, t):
+    def evaluate(self, t, extra=None):
         """
         Evaluate the spline at values provided in t. Values are clipped to
         parameter domain, as in constant extrapolation.
@@ -112,12 +112,14 @@ class UniSpline(Spline):
         if not attribute_checker(self, ['_spl'], info="can't evaluate spline, it has not been built..."):
             return False
 
+        if extra is None:
+            extra = self.extra
 
-        if self.extra == 'constant':
+        if extra == 'constant':
             tt = np.clip(t, a_min=self.t0, a_max=self.t1)
             p  = np.array(self._spl(tt))
 
-        elif self.extra == 'linear':
+        elif extra == 'linear':
             #Sorry for the lambda mess...
             lower_extr = lambda x: self._spl(self.t0) - self._spl.derivative(self.t0) * x
             upper_extr = lambda x: self._spl(self.t1) + self._spl.derivative(self.t1) * (x-self.t1)
