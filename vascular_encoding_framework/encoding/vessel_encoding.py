@@ -521,39 +521,50 @@ class VesselEncoding(Node):
         return vsl_enc
     #
 
-    def to_feature_vector(self, add_metadata=True, add_centerline=True, add_radius=True):
+    def to_feature_vector(self, add_metadata=True, mode='full'):
         """
         Convert the VesselEncoding to a feature vector.
 
-        The feature vector version of a VascularEncoding consist in appending the flattened
-        centerline and radius coefficients. If add_metadata is true, the first element of the fv is
-        n_metada, and the following elements are the number of n_centerline_knots, n_tau_knots, and
-        n_theta_knots. These are the amount of internal knots, needed to build the uniform
-        B-Splines
-
-        To read about the feature
-        vector format read VesselEncoding.to_feature_vector documentation.
-
-        Warning: To convert back the feature vector in a VascularEncoding object all the arguments
-        must be True.
+        The feature vector version of a VesselEncoding consist in appending the flattened
+        centerline and radius coefficients.
 
 
         Arguments
         ---------
 
+            mode : {'full', 'centerline', 'radius', 'image'}, optional
+
+                Argument to control the way the VesselObject is converted in a feature vector.
+                Each of the modes works as follows:
+
+                - 'full' (n_knots_): This mode stores all the information required to convert the feature
+                    vector back to a VesselEncoding. The feature vector built by this mode starts
+                    with some metadata, followed by the raveled centerline spline coefficients and
+                    finishes with the raveled radius coefficients. It should look like:
+                    fv = (clx_0,...,clx_l, cly_0,...,cly_l, clz_0,...,clz_l, r_00,...,r_kr)
+                    Where: - l = n_knots_centerline + k       + 1
+                           - k = n_knots_tau        + k_tau   + 1
+                           - r = n_knots_theta      + k_theta + 1
+
+                - 'centerline' : This mode only returns the centerline coefficients.
+                    It should look like:
+                    fv = (clx_0,...,clx_L, cly_0,...,cly_L, clz_0,...,clz_L)
+
+                - 'radius' : This mode only returns the radius coefficients.
+                    fv = (r_00,...,r_0R,r_10,...,r_KR)
+
+                - 'image' : return the feature vector arranged as an image.
+                    NOT IMPLEMENTED YET
+
             add_metadata : bool, optional
-                Default True. Whether to add metadata (knot information) at the beggining of the fv.
-
-            add_centerline : bool, optional
-                Default True. Whether to add the centerline coefficients of the VesselEncoding objects.
-
-            add_centerline : bool, optional
-                Default True. Whether to add the radius coefficients of the VesselEncoding objects.
+                Default True. If True, a metadata array is append at the beggining of the feature vector.
+                The first element of it corresponds with the number of metadata elements.
+                    fv = (nmd, md_0,...,m_nmd-1, clx_0,...,clx_L, cly_0,...,cly_L, clz_0,...,clz_L, r_00, r_KR)
 
         Return
         ------
-            fv : np.ndarray (N,)
-                The feature vector with the selected data.
+            fv : np.ndarray
+                The feature vector according to mode. The shape of each feature vector changes acoordingly.
 
         See Also
         --------
@@ -562,10 +573,21 @@ class VesselEncoding(Node):
         :py:meth:`VesselEncoding.from_feature_vector`
         """
 
-        fvs = []
-
-        def append_fv(vid):
-            fvs.append()
+        # md = []
+        # if mode in ['full', 'centerline']:
+            # cl_fv = self.centerline.to_feature_vector(add_metadata=False)
+            # if add_metadata:
+                # md.append(self.centerline.get_metadata())
+            # if mode == 'centerline':
+                # return np.concatenate([md, cl_fv])
+        # if mode in ['full', 'radius']:
+            # rd_fv = self.centerline.to_feature_vector(add_metadata=False)
+            # if add_metadata:
+                # md.append(self.centerline.get_metadata())
+            # if mode == 'radius':
+                # return np.concatenate([md, rd_fv])
+        # md = np.concatenate([md])
+        raise NotImplemented
     #
 
     @staticmethod
