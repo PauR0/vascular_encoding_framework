@@ -1229,11 +1229,17 @@ class Centerline(UniSpline, Node):
         This method returns a copy of the metadata array.
 
         As of this code version the
-        metadata array is [5, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
+        metadata array is [6, k, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
 
         Returns
         -------
             md : np.ndarray
+
+        See Also
+        --------
+            :py:meth:`set_metadata`
+            :py:meth:`to_feature_vector`
+            :py:meth:`from_feature_vector`
         """
 
         v1 = self.v1(self.t0)
