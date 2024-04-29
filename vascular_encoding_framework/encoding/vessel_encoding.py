@@ -610,7 +610,8 @@ class VesselEncoding(Node):
                 - 'full' (n_knots_): This mode stores all the information required to convert the feature
                     vector back to a VesselEncoding. The feature vector built by this mode starts
                     with some metadata, followed by the raveled centerline spline coefficients and
-                    finishes with the raveled radius coefficients. It should look like:
+                    finishes with the raveled radius coefficients.
+                    It should look like:
                     fv = (clx_0,...,clx_l, cly_0,...,cly_l, clz_0,...,clz_l, r_00,...,r_kr)
                     Where: - l = n_knots_centerline + k       + 1
                            - k = n_knots_tau        + k_tau   + 1
@@ -621,6 +622,7 @@ class VesselEncoding(Node):
                     fv = (clx_0,...,clx_L, cly_0,...,cly_L, clz_0,...,clz_L)
 
                 - 'radius' : This mode only returns the radius coefficients.
+                    It should look like:
                     fv = (r_00,...,r_0R,r_10,...,r_KR)
 
                 - 'image' : return the feature vector arranged as an image.
@@ -635,6 +637,13 @@ class VesselEncoding(Node):
         ------
             fv : np.ndarray
                 The feature vector according to mode. The shape of each feature vector changes acoordingly.
+
+        Note
+        ----
+        Note that the feature vector representation does not bear any hierarchical data, not even
+        if add_metadata is True. Be sure that hierarchical data is properly stored if will be later
+        required. For storage purposes check `to_multiblock` method.
+
 
         See Also
         --------
