@@ -24,5 +24,5 @@ def split_metadata_and_fv(fv):
     """
 
     n_md = round(fv[0])
-    return fv[1:n_md+1], fv[n_md+1:]
+    return fv[:n_md+1], fv[n_md+1:]
 #
