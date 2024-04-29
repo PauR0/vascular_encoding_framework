@@ -42,11 +42,16 @@ class Radius(BiSpline):
         This method returns a copy of the metadata array.
 
         As of this code version the
-        metadata array is [2, n_knots_tau, n_knots_theta].
+        metadata array is [4, k_tau, k_theta, n_knots_tau, n_knots_theta].
 
         Returns
         -------
             md : np.ndarray
+
+        See Also
+        --------
+        :py:meth:`get_metadata`
+
         """
 
         md = np.array([4,
