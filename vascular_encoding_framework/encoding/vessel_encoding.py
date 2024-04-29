@@ -721,10 +721,52 @@ class VesselEncoding(Node):
     #
 
     @staticmethod
-    def from_feature_vector(fv, has_metadata=True, has_centerline=True, has_radius=True):
+    def from_feature_vector(fv, md=None):
         """
-        Convert a feature vector in a
+        Build a VesselEncoding object from a full feature vector.
+
+        Warning: this method only works if the feature vector passed contains the information as
+        though it was created with to_feature_vector(add_metadata=True, mode='full'). In other
+        words, the fv passed, is expected to contain the metadata array, the centerline fv and the
+        radius fv.
+
+        Warning: The returned VesselEncoding wont have any hierarchycal properties nor id since that
+        information is not stored on the feature vector.
+
+
+        Arguments
+        ---------
+
+            fv : np.ndarray or array-like (N,)
+                The feature vector with the metadata array at the begining.
+
+            md : np.ndarray, optional
+                Default None. If fv does not contain the metadata array at the beggining it can be
+                passed through this argument.
+
+        Returns
+        -------
+            vsl_enc : VesselEncoding
+                The vessel encoding build from the fv.
+
+        See Also
+        --------
+        :py:meth:`get_metadata`
+        :py:meth:`set_metadata`
+        :py:meth:`to_feature_vector`
+
         """
+
+        if md is None:
+            md, fv = split_metadata_and_fv(fv)
+
+        vsl_enc = VesselEncoding()
+        vsl_enc.set_metadata(md=md)
+        cfv, rfv = vsl_enc.split_feature_vector(fv)
+        vsl_enc.centerline.set_parameters(build=True, coeffs=cfv.reshape(-1, 3))
+        vsl_enc.radius.set_parameters(build=True, coeffs=rfv)
+
+        return vsl_enc
     #
 
     def translate(self, t, update=True):
