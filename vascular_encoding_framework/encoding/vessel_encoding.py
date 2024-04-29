@@ -549,6 +549,48 @@ class VesselEncoding(Node):
         md = np.concatenate([[cmd[0]+rmd[0]+2], cmd, rmd])
         return md
     #
+
+    def set_metadata(self, md):
+        """
+        This method extracts and sets the attributes from a the metadata array.
+
+        See get_metadata method's documentation for further information on the expected format.
+
+        Arguments
+        ---------
+            md : np.ndarray
+                The metadata array.
+
+        See Also
+        --------
+            :py:meth:`get_metadata`
+            :py:meth:`Centerline.set_metadata`
+            :py:meth:`Radius.set_metadata`
+            :py:meth:`to_feature_vector`
+            :py:meth:`from_feature_vector`
+
+        """
+
+        #Centerline
+        nc  = round(md[1])
+        ini = 1
+        end = ini+nc+1
+        cmd = md[ini:end]
+        if self.centerline is None:
+            self.centerline = Centerline()
+        self.centerline.set_metadata(md=cmd)
+
+        #Radius
+        nr  = round(md[nc+2])
+        ini = end
+        end = ini+ nr+1
+        rmd = md[ini:end]
+        if self.radius is None:
+            self.radius = Radius()
+        self.radius.set_parameters_from_centerline(self.centerline)
+        self.radius.set_metadata(md=rmd)
+    #
+
     def to_feature_vector(self, mode='full', add_metadata=True):
         """
         Convert the VesselEncoding to a feature vector.
