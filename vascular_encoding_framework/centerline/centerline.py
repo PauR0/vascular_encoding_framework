@@ -254,25 +254,54 @@ class Centerline(UniSpline, Node):
         reasons. This method uses compute_parallel_transport method, you may be
         interested in checking documentation.
 
-        Arguments:
-        -----------
+        Arguments
+        ---------
 
-            p : np.ndarray (3,)
-                A reference point used to define the initial v1.
+            p : np.ndarray (3,), optional
+                Default None. A reference vector/point used to define the initial v1. This argument
+                can be used in the following ways:
 
-            mode : Literal['project', 'as_is']
-                The mode used to built the adapted frame. Check compute_parallel_transport.
+                If no initial vector is passed (p=None), the argument mode is ignored and two options are available:
+
+                    - If the attibute self.v1 is None:
+                        Then an initial v1 is computed as the cross product of the tangent of the
+                        centerline and the axis of least variability on the centerline,
+                        i.e. v1_0 = normalize(t(0), e3)
+
+                    - Otherwise, the attribute self.v1 must be a ParallelTransport object with the initial
+                    condition set in its attribute v0, i.e. self.v1.__class__ == ParallelTransport and
+                    self.v1.v0 is not None. And this vector is used to build the parallel transport.
+
+                If an initial vector is passed p = (p0, p1, p2) the two options available are described
+                in compute_parallel_transport method and are controled by the mode argument.
+
+            mode : {'project', 'as_is'}, optional
+                The mode used to built the adapted frame if p is passed. Check compute_parallel_transport.
+
+
+        See Also
+        --------
+        :py:meth:`compute_parallel_transport`
+        :py:meth:`ParallelTransport.compute_parallel_transport_on_centerline`
         """
 
         if p is None:
-            if self.e3 is None:
-                self.compute_local_ref()
-            p = normalize(np.cross(self.get_tangent(self.t0), self.e3))
-            aux = normalize(self.center - self(self.t0))
-            if p.dot(aux) < 0:
-                p *= -1
+            if self.v1 is None:
+                if self.e3 is None:
+                    self.compute_local_ref()
+                p = normalize(np.cross(self.get_tangent(self.t0), self.e3))
+                aux = normalize(self.center - self(self.t0))
+                if p.dot(aux) < 0:
+                    p *= -1
+                self.v1 = self.compute_parallel_transport(mode=mode, p=p)
+            elif isinstance(self.v1, ParallelTransport):
+                if self.v1.v0 is not None:
+                    self.v1 = self.compute_parallel_transport(p=self.v1.v0, mode='as_is')
+                else:
+                    error_message(f"Wrong ussage of compute_adapted_metod. No p {(p)} has been passed but self.v1 is a ParallelTransport object with v0 == None.")
+        else:
+            self.v1 = self.compute_parallel_transport(mode=mode, p=p)
 
-        self.v1 = self.compute_parallel_transport(mode=mode, p=p)
         v2_0 = normalize(np.cross(self.get_tangent(self.t0), self.v1.v0))
         self.v2 = self.compute_parallel_transport(mode='as_is', p=v2_0)
         #
