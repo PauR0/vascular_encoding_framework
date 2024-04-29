@@ -64,6 +64,34 @@ class Radius(BiSpline):
         return md
     #
 
+    def set_metadata(self, md):
+        """
+        This method extracts and sets the attributes from a metadata array.
+
+        As of this code version the
+        metadata array is [4, k_tau, k_theta, n_knots_tau, n_knots_theta].
+
+        Returns
+        -------
+
+            md : np.ndarray
+
+
+        See Also
+        --------
+        :py:meth:`get_metadata`
+
+        """
+
+        self.set_parameters(
+            build = False,
+            kx        = round(md[1]),
+            ky        = round(md[2]),
+            n_knots_x = round(md[3]),
+            n_knots_y = round(md[4]),
+        )
+    #
+
     def to_feature_vector(self, add_metadata=True):
         """
         Convert the Radius object to its feature vector repressentation.
@@ -132,13 +160,7 @@ class Radius(BiSpline):
         md, fv = split_metadata_and_fv(fv)
 
         rd = Radius()
-        rd.set_parameters(
-            build = False,
-            kx        = round(md[0]),
-            ky        = round(md[1]),
-            n_knots_x = round(md[2]),
-            n_knots_y = round(md[3]),
-        )
+        rd.set_metadata(md)
 
         r , k = (rd.n_knots_x + rd.kx + 1), (rd.n_knots_y + rd.ky + 1)
         rk = r * k
