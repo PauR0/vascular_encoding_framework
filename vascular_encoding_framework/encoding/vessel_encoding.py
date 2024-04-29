@@ -521,7 +521,7 @@ class VesselEncoding(Node):
         return vsl_enc
     #
 
-    def to_feature_vector(self, add_metadata=True, mode='full'):
+    def to_feature_vector(self, mode='full', add_metadata=True):
         """
         Convert the VesselEncoding to a feature vector.
 
