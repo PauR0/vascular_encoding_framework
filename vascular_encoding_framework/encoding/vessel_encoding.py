@@ -521,6 +521,34 @@ class VesselEncoding(Node):
         return vsl_enc
     #
 
+    def get_metadata(self):
+        """
+        This method returns a copy of the metadata array.
+
+        The metadata array of a VesselEncoding object is composed by the centerline and radius
+        metadata arrays as follows:
+                [nc+nr+2, nc, cmd_0,...cmd_nc-1, nr, rmd_0,...,rmd_nr-1]
+
+        Returns
+        -------
+            md : np.ndarray
+                The metadata array.
+
+        See Also
+        --------
+            :py:meth:`set_metadata`
+            :py:meth:`Centerline.get_metadata`
+            :py:meth:`Radius.get_metadata`
+            :py:meth:`to_feature_vector`
+            :py:meth:`from_feature_vector`
+
+        """
+
+        cmd = self.centerline.get_metadata()
+        rmd = self.radius.get_metadata()
+        md = np.concatenate([[cmd[0]+rmd[0]+2], cmd, rmd])
+        return md
+    #
     def to_feature_vector(self, mode='full', add_metadata=True):
         """
         Convert the VesselEncoding to a feature vector.
