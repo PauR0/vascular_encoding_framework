@@ -4,6 +4,7 @@ import numpy as np
 
 from ..messages import error_message
 from ..utils.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
+from ..utils._code import attribute_checker
 from ..utils.misc import split_metadata_and_fv
 
 class Radius(BiSpline):
@@ -90,6 +91,29 @@ class Radius(BiSpline):
             n_knots_x = round(md[3]),
             n_knots_y = round(md[4]),
         )
+    #
+
+    def get_feature_vector_length(self):
+        """
+        This method returns the length of the feature vector considering the spline parameters.
+
+        If nx, ny are the amount of internal knots in each component and kx, ky are the degrees of
+        the polynomial BSplines of each component, the length of the radius feature vector is
+        (nx+kx+1)*(ny*ky+1).
+
+
+        Returns
+        -------
+
+            rk : int
+                The length of the radius feature vector.
+
+        """
+
+        if not attribute_checker(self, ['n_knots_x', 'n_knots_y', 'kx', 'ky'], info="Cannot compute the Radius feature vector length."):
+            return None
+        rk = (self.n_knots_x+self.kx+1)*(self.n_knots_y+self.ky+1)
+        return rk
     #
 
     def to_feature_vector(self, add_metadata=True):
