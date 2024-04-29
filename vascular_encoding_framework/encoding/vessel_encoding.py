@@ -679,6 +679,45 @@ class VesselEncoding(Node):
         return fv
     #
 
+    def split_feature_vector(self, fv, has_metadata=False):
+        """
+        Split the centerline component from the radius component of a feature vector.
+
+        This function requires the metadata of the centerline and radius objects exist.
+
+        Arguments
+        ---------
+
+            fv : np.ndarray or array-like (N,)
+
+            has_metadata : bool, optional
+                Default False. If true, the first element is assumed to be the amount of metadata,
+                then the first elements are removed according to this number.
+
+        Returns
+        -------
+            cfv, rfv : np.ndarray
+                The centerline and radius feature vectors respectively, both with no metadata.
+
+        See Also
+        --------
+        :py:meth:`to_feature_vector`
+        :py:meth:`Centerline.to_feature_vector`
+        :py:meth:`Radius.to_feature_vector`
+        """
+
+        if has_metadata:
+            nmd = fv[0]
+            fv = fv[nmd:]
+
+        l = self.centerline.get_feature_vector_length()
+        rk = self.radius.get_feature_vector_length()
+        if len(fv) != l+rk:
+            error_message(f"Cant split feature vector with length {len(fv)} in a centerline fv of length {l} and a radius fv of length {rk}")
+            return None, None
+
+        cfv, rfv = fv[:l], fv[l:]
+        return cfv, rfv
     #
 
     @staticmethod
