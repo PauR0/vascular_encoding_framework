@@ -67,6 +67,7 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
 
     else:
         error_message("The argument cntrln must be an instance of Centerline or CenterlineNetwork.")
+        return
 
     if vmesh is not None:
         plotter.add_mesh(vmesh, opacity=0.5, color='w')
