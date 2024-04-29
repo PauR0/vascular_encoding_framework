@@ -200,18 +200,26 @@ class Centerline(UniSpline, Node):
         if mode == 'as_is':
             - The argument p must be the vector to be parallely transported.
 
-        Arguments:
-        ------------
+        Arguments
+        ---------
 
             p : np.ndarray (3,)
-                The point/vector to use.    i2p = normalize(c0 - self.evaluate(self.t0))
+                The point/vector to use.
 
-            mode : Literal['project', 'as_is']
+            mode : {'project', 'as_is'}
                 The chosen mode to use.
 
-        Returns:
-        -----------
-            ParallelTransport
+        Returns
+        -------
+
+            v : ParallelTransport
+                The ParllelTransport object representing the transport of the vector along the
+                centerline.
+
+        See Also
+        --------
+        :py:meth:`compute_adapted_frame`
+        :py:meth:`ParallelTransport.compute_parallel_transport_on_centerline`
         """
 
         if mode == 'project':
