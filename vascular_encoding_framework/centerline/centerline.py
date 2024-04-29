@@ -1290,6 +1290,28 @@ class Centerline(UniSpline, Node):
         self.v1.v0 = md[4:]
     #
 
+    def get_feature_vector_length(self):
+        """
+        This method returns the length of the feature vector considering the spline parameters.
+
+        If n is the amount of internal knots, and k is the degree of the BSpline polynomials,
+        the length of the centerline feature vector is computed as: 3(n+k+1). The multiplication
+        by 3 is due to the three components of the coefficients (a.k.a. control points.).
+
+
+        Returns
+        -------
+
+            l : int
+                The length of the centerline feature vector.
+
+        """
+        if not attribute_checker(self, ['n_knots', 'k'], info="Cannot compute the Centerline feature vector length."):
+            return None
+        l = 3*(self.n_knots + self.k+1)
+        return l
+    #
+
     def to_feature_vector(self, add_metadata=True):
         """
         Convert the Centerline object to its feature vector repressentation.
@@ -1367,7 +1389,7 @@ class Centerline(UniSpline, Node):
         cl = Centerline()
         cl.set_metadata(md)
 
-        l = 3*(cl.n_knots + cl.k+1) #n_knots is supposed to be the amount of internal knots, and the 3 due to x, y, z components.
+        l = cl.get_feature_vector_length()
         if len(fv) != l:
             error_message(f"Cannot build a Centerline object from feature vector. Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided.")
             return
