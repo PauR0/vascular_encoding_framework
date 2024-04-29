@@ -1255,6 +1255,41 @@ class Centerline(UniSpline, Node):
         return md
     #
 
+    def set_metadata(self, md):
+        """
+        This method extracts and sets the attributes from a the metadata array.
+
+        As of this code version the metadata array is expected to be
+                [6, k, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
+
+
+        Arguments
+        ---------
+
+            md : np.ndarray or array-like
+                The metadata array.
+
+            build : bool, optional
+                Default False. Whether to build the splines after setting the metadata.
+                This should be set to true if parameters such as coefficients have been
+                previously set.
+
+        See Also
+        --------
+            :py:meth:`to_feature_vector`
+            :py:meth:`from_feature_vector`
+        """
+
+        self.set_parameters(build=False,
+                            k         = round(md[1]),
+                            n_knots   = round(md[2]),
+                            n_samples = round(md[3]),
+                            )
+
+        self.v1 = ParallelTransport()
+        self.v1.v0 = md[4:]
+    #
+
     def to_feature_vector(self, add_metadata=True):
         """
         Convert the Centerline object to its feature vector repressentation.
@@ -1330,12 +1365,7 @@ class Centerline(UniSpline, Node):
         md, fv = split_metadata_and_fv(fv)
 
         cl = Centerline()
-        cl.set_parameters(
-            build = False,
-            k         = round(md[0]),
-            n_knots   = round(md[1]),
-            n_samples = round(md[2]),
-        )
+        cl.set_metadata(md)
 
         l = 3*(cl.n_knots + cl.k+1) #n_knots is supposed to be the amount of internal knots, and the 3 due to x, y, z components.
         if len(fv) != l:
