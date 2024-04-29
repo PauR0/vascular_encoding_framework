@@ -9,6 +9,7 @@ from ..messages import *
 from ..centerline import Centerline
 from ..utils._code import Node, attribute_checker
 from ..utils.spatial import normalize, radians_to_degrees
+from ..utils.misc import split_metadata_and_fv
 
 from .radius import Radius
 
