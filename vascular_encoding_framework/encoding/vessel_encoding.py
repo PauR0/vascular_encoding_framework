@@ -652,21 +652,33 @@ class VesselEncoding(Node):
         :py:meth:`VesselEncoding.from_feature_vector`
         """
 
-        # md = []
-        # if mode in ['full', 'centerline']:
-            # cl_fv = self.centerline.to_feature_vector(add_metadata=False)
-            # if add_metadata:
-                # md.append(self.centerline.get_metadata())
-            # if mode == 'centerline':
-                # return np.concatenate([md, cl_fv])
-        # if mode in ['full', 'radius']:
-            # rd_fv = self.centerline.to_feature_vector(add_metadata=False)
-            # if add_metadata:
-                # md.append(self.centerline.get_metadata())
-            # if mode == 'radius':
-                # return np.concatenate([md, rd_fv])
-        # md = np.concatenate([md])
-        raise NotImplemented
+        md = []
+
+        if mode not in {'full', 'centerline', 'radius', 'image'}:
+            error_message("Wrong value for mode argument, cannot make a feature vector." \
+                          +f"Provided is: {mode}, must be in ['full', 'centerline','radius', 'image'].")
+            return None
+
+        if mode == 'centerline':
+            fv = self.centerline.to_feature_vector(add_metadata=add_metadata)
+
+        if mode == 'radius':
+            fv = self.radius.to_feature_vector(add_metadata=add_metadata)
+
+        if mode == 'full':
+            cfv = self.centerline.to_feature_vector(add_metadata=False)
+            rfv = self.radius.to_feature_vector(add_metadata=False)
+            if add_metadata:
+                md = self.get_metadata()
+            fv = np.concatenate([md, cfv, rfv])
+
+        if mode == 'image':
+            #TODO
+            raise NotImplementedError('The implementation is not yet developed, this mode will be available in future versions.')
+
+        return fv
+    #
+
     #
 
     @staticmethod
