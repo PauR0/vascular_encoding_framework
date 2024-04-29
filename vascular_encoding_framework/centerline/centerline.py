@@ -1357,7 +1357,7 @@ class Centerline(UniSpline, Node):
     #
 
     @staticmethod
-    def from_feature_vector(fv):
+    def from_feature_vector(fv, has_metadata=True):
         """
         Build a Centerline object from a feature vector.
 
@@ -1383,11 +1383,11 @@ class Centerline(UniSpline, Node):
         :py:meth:`get_metadata`
         """
 
-
-        md, fv = split_metadata_and_fv(fv)
-
         cl = Centerline()
-        cl.set_metadata(md)
+
+        if not has_metadata:
+            md, fv = split_metadata_and_fv(fv)
+            cl.set_metadata(md)
 
         l = cl.get_feature_vector_length()
         if len(fv) != l:
