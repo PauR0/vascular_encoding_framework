@@ -1400,9 +1400,6 @@ class Centerline(UniSpline, Node):
             extra  = 'linear',
         )
 
-        v1 = np.array([md[3], md[4], md[5]])
-        cl.compute_adapted_frame(mode='as_is', p=v1)
-
         return cl
     #
 
