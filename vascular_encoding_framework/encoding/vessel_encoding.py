@@ -528,7 +528,7 @@ class VesselEncoding(Node):
 
         The metadata array of a VesselEncoding object is composed by the centerline and radius
         metadata arrays as follows:
-                [nc+nr+2, nc, cmd_0,...cmd_nc-1, nr, rmd_0,...,rmd_nr-1]
+                [nc+nr+1, nc, cmd_0,...cmd_nc-1, nr, rmd_0,...,rmd_nr-1]
 
         Returns
         -------
@@ -547,7 +547,7 @@ class VesselEncoding(Node):
 
         cmd = self.centerline.get_metadata()
         rmd = self.radius.get_metadata()
-        md = np.concatenate([[cmd[0]+rmd[0]+2], cmd, rmd])
+        md = np.concatenate([[cmd[0]+rmd[0]+1], cmd, rmd])
         return md
     #
 
@@ -575,16 +575,16 @@ class VesselEncoding(Node):
         #Centerline
         nc  = round(md[1])
         ini = 1
-        end = ini+nc+1
+        end = ini+nc
         cmd = md[ini:end]
         if self.centerline is None:
             self.centerline = Centerline()
         self.centerline.set_metadata(md=cmd)
 
         #Radius
-        nr  = round(md[nc+2])
+        nr  = round(md[end])
         ini = end
-        end = ini+ nr+1
+        end = ini+nr
         rmd = md[ini:end]
         if self.radius is None:
             self.radius = Radius()

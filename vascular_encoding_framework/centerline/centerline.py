@@ -1229,7 +1229,7 @@ class Centerline(UniSpline, Node):
         This method returns a copy of the metadata array.
 
         As of this code version the
-        metadata array is [6, k, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
+        metadata array is [7, k, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
 
         Returns
         -------
@@ -1243,7 +1243,7 @@ class Centerline(UniSpline, Node):
         """
 
         v1 = self.v1(self.t0)
-        md = np.array([6,
+        md = np.array([7,
                       self.k,
                       self.n_knots,
                       self.n_samples,

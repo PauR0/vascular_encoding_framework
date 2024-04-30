@@ -55,7 +55,7 @@ class Radius(BiSpline):
 
         """
 
-        md = np.array([4,
+        md = np.array([5,
                       self.kx,
                       self.ky,
                       self.n_knots_x,
@@ -70,13 +70,13 @@ class Radius(BiSpline):
         This method extracts and sets the attributes from a metadata array.
 
         As of this code version the
-        metadata array is [4, k_tau, k_theta, n_knots_tau, n_knots_theta].
+        metadata array is [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
 
         Returns
         -------
 
             md : np.ndarray
-
+                The metadata array.
 
         See Also
         --------
