@@ -43,7 +43,7 @@ class Radius(BiSpline):
         This method returns a copy of the metadata array.
 
         As of this code version the
-        metadata array is [4, k_tau, k_theta, n_knots_tau, n_knots_theta].
+        metadata array is [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
 
         Returns
         -------
