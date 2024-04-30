@@ -604,11 +604,10 @@ class VesselEncoding(Node):
         ---------
 
             mode : {'full', 'centerline', 'radius', 'image'}, optional
+                Default 'full'. Argument to control the way the VesselObject is converted in a
+                feature vector. Each of the modes works as follows:
 
-                Argument to control the way the VesselObject is converted in a feature vector.
-                Each of the modes works as follows:
-
-                - 'full' (n_knots_): This mode stores all the information required to convert the feature
+                - 'full': This mode stores all the information required to convert the feature
                     vector back to a VesselEncoding. The feature vector built by this mode starts
                     with some metadata, followed by the raveled centerline spline coefficients and
                     finishes with the raveled radius coefficients.
@@ -632,7 +631,7 @@ class VesselEncoding(Node):
             add_metadata : bool, optional
                 Default True. If True, a metadata array is append at the beggining of the feature vector.
                 The first element of it corresponds with the number of metadata elements.
-                    fv = (nmd, md_0,...,m_nmd-1, clx_0,...,clx_L, cly_0,...,cly_L, clz_0,...,clz_L, r_00, r_KR)
+                    md = (nmd, md_0,...,m_nmd-1)
 
         Return
         ------
@@ -786,10 +785,8 @@ class VesselEncoding(Node):
         """
         Build a VesselEncoding object from a full feature vector.
 
-        Warning: this method only works if the feature vector passed contains the information as
-        though it was created with to_feature_vector(add_metadata=True, mode='full'). In other
-        words, the fv passed, is expected to contain the metadata array, the centerline fv and the
-        radius fv.
+        Warning: This method only works if the feature vector has the metadata at the beggining or it
+        is passed using the md argument.
 
         Warning: The returned VesselEncoding wont have any hierarchycal properties nor id since that
         information is not stored on the feature vector.
@@ -808,7 +805,7 @@ class VesselEncoding(Node):
         Returns
         -------
             vsl_enc : VesselEncoding
-                The vessel encoding build from the fv.
+                The vessel encoding built from the fv.
 
         See Also
         --------
