@@ -109,6 +109,15 @@ class GeneralizedProcrustesAlignment:
 
     def compute_mean_shape(self):
         """
+        Compute the mean shape of the data set.
+
+        This is called at the beginning of every iteration after the first, to compute the
+        reference shape to which align the whole data set.
+
+        Returns
+        -------
+            : np.ndarray
+                The mean point set.
         """
 
         if not attribute_checker(self, atts=['data_set'], info="Can't compute mean shape."):
@@ -134,15 +143,14 @@ class GeneralizedProcrustesAlignment:
 
             self.reference_id = list(self.data_set.keys())[self.reference_id]
 
-        mean_shape = self.data_set[self.reference_id]
-        self.alignment.target = mean_shape
+        self.alignment.target = self.data_set[self.reference_id]
         n_iter = 0
         while n_iter < self.n_iters:
 
             for sid, shape in self.data_set:
+                self.alignment.source = self.data_set[sid]
                 self.data_set[sid] = self.alignment.run(apply=True)
 
-            mean_shape = self.compute_mean_shape()
-
+            self.alignment.target = self.compute_mean_shape()
             n_iter += 1
     #
