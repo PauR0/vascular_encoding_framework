@@ -1357,12 +1357,13 @@ class Centerline(UniSpline, Node):
     #
 
     @staticmethod
-    def from_feature_vector(fv, has_metadata=True):
+    def from_feature_vector(fv, md=None):
         """
         Build a Centerline object from a feature vector.
 
         Note that in order to build the Centerline, the feature vector must start with the metadata
-        array. Read more about the metadata array at `get_metadata` method docs.
+        array or it must be passed using the md argument. Read more about the metadata array at
+        `get_metadata` method docs.
 
 
         Arguments
@@ -1371,6 +1372,9 @@ class Centerline(UniSpline, Node):
             fv : np.ndarray (N,)
                 The feature vector with the metadata at the beggining.
 
+            md : np.ndarray (M,)
+                The metadata array to use. If passed, it will be assumed that fv does not
+                cointain it at the beginning.
 
         Return
         ------
@@ -1385,14 +1389,15 @@ class Centerline(UniSpline, Node):
 
         cl = Centerline()
 
-        if not has_metadata:
+        if md is None:
             md, fv = split_metadata_and_fv(fv)
-            cl.set_metadata(md)
+
+        cl.set_metadata(md)
 
         l = cl.get_feature_vector_length()
         if len(fv) != l:
             error_message(f"Cannot build a Centerline object from feature vector. Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided.")
-            return
+            return None
 
         cl.set_parameters(
             build=True,
