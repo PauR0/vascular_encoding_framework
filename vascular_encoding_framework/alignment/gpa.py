@@ -78,8 +78,8 @@ class GeneralizedProcrustesAlignment:
         """
         Method to set parameters as attributes of the object.
         """
-        cl = self.__class__()
-        params = {k:v for k,v in kwargs.items() if k in cl.__dict__}
+        gpa = self.__class__()
+        params = {k:v for k,v in kwargs.items() if k in gpa.__dict__}
         attribute_setter(self, **params)
 
         if build:
