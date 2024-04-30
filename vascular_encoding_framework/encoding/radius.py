@@ -154,12 +154,13 @@ class Radius(BiSpline):
     #
 
     @staticmethod
-    def from_feature_vector(fv):
+    def from_feature_vector(fv, md=None):
         """
-        Build a Centerline object from a feature vector.
+        Build a Radius object from a feature vector.
 
-        Note that in order to build the Centerline, the feature vector must start with the metadata
-        array. Read more about the metadata array at `get_metadata` method docs.
+        Note that in order to build the Radius, the feature vector must start with the metadata
+        array or it must be passed with the md argument. Read more about the metadata array at
+        `get_metadata` method docs.
 
 
         Arguments
@@ -168,6 +169,9 @@ class Radius(BiSpline):
             fv : np.ndarray (N,)
                 The feature vector with the metadata at the beggining.
 
+            md : np.ndarray (M,)
+                The metadata array to use. If passed, it will be assumed that fv does not
+                cointain it at the beginning.
 
         Return
         ------
@@ -180,8 +184,8 @@ class Radius(BiSpline):
         :py:meth:`get_metadata`
         """
 
-
-        md, fv = split_metadata_and_fv(fv)
+        if md is None:
+            md, fv = split_metadata_and_fv(fv)
 
         rd = Radius()
         rd.set_metadata(md)
