@@ -819,11 +819,7 @@ class VesselEncoding(Node):
             md, fv = split_metadata_and_fv(fv)
 
         vsl_enc = VesselEncoding()
-        vsl_enc.set_metadata(md=md)
-        cfv, rfv = vsl_enc.split_feature_vector(fv)
-        vsl_enc.centerline.set_parameters(build=True, coeffs=cfv.reshape(-1, 3))
-        vsl_enc.radius.set_parameters(build=True, coeffs=rfv)
-
+        vsl_enc.extract_from_feature_vector(fv=fv, md=md)
         return vsl_enc
     #
 
