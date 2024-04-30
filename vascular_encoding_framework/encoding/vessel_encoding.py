@@ -721,6 +721,66 @@ class VesselEncoding(Node):
         return cfv, rfv
     #
 
+    def get_feature_vector_length(self):
+        """
+        This method returns the length of the feature vector considering only the spline parameters.
+
+        The length of a VesselEncoding feature vector is the sum of the length of the centerline and radius feature vectors.
+
+        Returns
+        -------
+
+            n : int
+                The length of the centerline feature vector.
+
+        """
+
+        if not attribute_checker(self, ['centerline', 'radius'], info="Cannot compute the VesselEncoding feature vector length."):
+            return None
+
+        n = self.centerline.get_feature_vector_length() + self.radius.get_feature_vector_length()
+        return n
+    #
+
+    def extract_from_feature_vector(self, fv, md=None):
+        """
+        This method updates the attributes of the VesselEncoding object with those provided in a feature vector.
+
+        To create a new VesselEncoding object see `from_feature_vector` static method.
+
+
+        Arguments
+        ---------
+
+            fv : np.ndarray or array-like (N,)
+                The feature vector with the metadata array at the begining.
+
+            md : np.ndarray, optional
+                Default None. If fv does not contain the metadata array at the beggining it can be
+                passed through this argument.
+
+
+        See Also
+        --------
+        :py:meth:`from_feature_vector`
+        :py:meth:`to_feature_vector`
+        """
+
+        print(fv)
+
+        if md is not None:
+            self.set_metadata(md=md)
+
+        n = self.get_feature_vector_length()
+        if len(fv) != n:
+            error_message(f"Cannot extract attributes from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.")
+            return None
+
+        cfv, rfv = self.split_feature_vector(fv)
+        self.centerline.set_parameters(build=True, coeffs=cfv.reshape(-1, 3))
+        self.radius.set_parameters(build=True, coeffs=rfv)
+    #
+
     @staticmethod
     def from_feature_vector(fv, md=None):
         """
