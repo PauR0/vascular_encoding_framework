@@ -40,6 +40,7 @@ class GeneralizedProcrustesAlignment:
         self.n_iters        : int = 3
         self.reference_id   : int | str = 0 #The key (or its index) of the shape to use in the
                                             #first iteration as the mean shape.
+        self.build_alignment()
     #
 
     def set_parameters(self, build=True, **kwargs):
