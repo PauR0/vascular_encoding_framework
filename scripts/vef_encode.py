@@ -53,7 +53,13 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False, for
     """
 
     vmesh = load_vascular_mesh(case_dir, suffix='_input')
+    if vmesh is None:
+        return None
+
     cl_net = load_centerline(case_dir=case_dir)
+    if cl_net is None:
+        return None
+
 
     if params is None:
         params = read_encoding_config(case_dir)
