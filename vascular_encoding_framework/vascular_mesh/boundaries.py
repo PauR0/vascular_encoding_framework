@@ -8,7 +8,7 @@ from scipy.interpolate import BSpline
 
 from ..messages import *
 from ..utils.spatial import planar_coordinates, cart_to_polar, normalize
-from ..splines.splines import knots_list, compute_rho_spline
+from ..splines.splines import get_uniform_knot_vector, compute_rho_spline
 from ..utils._code   import Tree, Node, attribute_checker
 from ..utils._io import write_json, read_json
 
@@ -233,7 +233,7 @@ class Boundary(Node):
             else:
                 print("ERROR: Unable to build rho spline. Both points2D_polar and rho_coeff are None....")
 
-        t = knots_list(0, 2*np.pi, self.n_knots_rho, mode='periodic')
+        t = get_uniform_knot_vector(0, 2*np.pi, self.n_knots_rho, mode='periodic')
 
         self.rho_spl = BSpline(t=t, c=self.rho_coef, k=self.k, extrapolate='periodic')
     #

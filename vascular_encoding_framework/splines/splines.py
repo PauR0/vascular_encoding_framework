@@ -168,7 +168,7 @@ class UniSpline(Spline):
             return False
 
         if self.knots is None:
-            self.knots = knots_list(self.t0, self.t1, self.n_knots, mode='complete')
+            self.knots = get_uniform_knot_vector(self.t0, self.t1, self.n_knots, mode='complete')
 
         self._spl = BSpline(t=self.knots,
                                c=self.coeffs,
@@ -257,7 +257,7 @@ class BiSpline(Spline):
             mode='complete'
             if self.extra_x == 'periodic':
                 mode='periodic'
-            self.knots_x = knots_list(self.x0, self.x1, self.n_knots_x, mode=mode)
+            self.knots_x = get_uniform_knot_vector(self.x0, self.x1, self.n_knots_x, mode=mode)
 
         if self.knots_y is None and self.n_knots_y is None:
             error_message("cant build bivariate splines. The knots and amount of knots for the second parameter (y) is None")
@@ -265,7 +265,7 @@ class BiSpline(Spline):
             mode='complete'
             if self.extra_y == 'periodic':
                 mode='periodic'
-            self.knots_y = knots_list(self.y0, self.y1, self.n_knots_y, mode=mode)
+            self.knots_y = get_uniform_knot_vector(self.y0, self.y1, self.n_knots_y, mode=mode)
 
         self._bispl         = BivariateSpline()
         self._bispl.tck     = self.knots_x, self.knots_y, self.coeffs.ravel()
@@ -323,67 +323,82 @@ class BiSpline(Spline):
     #
 #
 
-def knots_list(s0, s1, n, mode='complete', ext=None, k=3):
-    """ Generates a B-Spline uniform list of knots
-
-        Given s0 and s1 it returns a numpy array of nodes for a B-Spline
-
-        Parameters
-        ----------
-
-        s0 : float
-            Starting parameter value
-
-        s1 : float
-            Ending parameter value
-
-        n : int
-            Number of B-Spline knots from s0 to s1.
-
-        ext : int
-            Defaulting to k+1. The times to extend the knot vector from
-            both ends preserving the separation between nodes.
-
-        k : int
-            The degree of the spline.
-
-        mode : {'simple','complete', 'extended', 'periodic'} , optional
-            If mode='simple' then l is a numpy linspace from s0 to s1.
-
-            If mode='complete' l contains [s0,s0,s0] at the beginning and
-            [s1,s1,s1] at the end. Needed for scipy.interpolation.BSpline.
-
-            If mode = 'extended' and ext is not none, it extends ext times the
-            knot vector from both ends preserving the spacing.
-
-            If mode = 'periodic' then the list of knots is ready for periodic
-            B-Splines fitted with splrep. It is the same as setting mode='extended'
-            and ext=k+1.
-
-        Output
-        ------
-            l: the list of knots
+def get_uniform_knot_vector(xb, xe, n, mode='complete', k=3, ext=None):
     """
-    l = np.linspace(s0,s1,n+2)
-    d = (s1-s0)/(n+1)
+    Generates a B-Spline uniform knot vector.
+
+    Given the interval [xb, xe], this function returns the even partition in n internal k-nots.
+    The mode argument allows the knot vector to account for the different boundary conditions.
+    In 'internal' mode only internal knots are returned, leaving the boundarys undefined.
+    In 'complete', the extreme of the interval are repeated k+1 times to make the spline interpolate
+    the last control point/coefficient. In 'periodic', the extrema of the interval is extended k+1
+    times, preserving the spacing between knots. Additionally, an extra 'extended' metod allows to
+    perform a similar extension, but the amount extensions is controlled by the ext argument, that
+    is ignored in any other mode.
+
+
+    Arguments
+    ---------
+
+    xb, xe : float
+        The begin and end of the definition interval.
+
+    n : int
+        Number of internal knots.
+
+    k : int, optional
+        Default is 3. The degree of the spline.
+
+    mode : {'internal', 'complete', 'extended', 'periodic'} , optional
+        Default is 'internal'.
+
+        If mode == 'internal' then t is the even spaced partition of [xb, xe]
+        without the extrema of the interval.
+
+        If mode == 'complete' t contains [xb]*(k+1) at the beginning and
+        [xe]*(k+1) at the end.
+
+        If mode = 'extended' (ext must be passed), it extends ext times the
+        knot vector from both ends preserving the spacing.
+
+        mode 'periodic', is the equivalent to setting mode='extended' and ext=k.
+        It is useful when combined with scipy B-Splines functions.
+
+    ext : int
+        Default is None. Ignored if mode != 'extended'. The times to extend the knot vector from
+        both ends preserving the separation between nodes.
+
+
+    Returns
+    -------
+        t : np.ndarray
+            The knot vector.
+
+    """
+
+    t = np.linspace(xb, xe, n+2)
+    d = (xe-xb)/(n+1)
 
     if mode == 'periodic':
         mode = 'extended'
-        ext = k+1
+        ext = k
 
-    if mode == 'simple':
-        l = l[1:-1]
+    if mode == 'internal':
+        t = t[1:-1]
+
+    elif mode == 'complete':
+        t = np.concatenate([[t[0]]*k, t, [t[-1]]*k])
+
     elif mode == 'extended':
         if ext is None:
-            ext = k+1
-        l = np.concatenate([l[0] + np.arange(-ext, 0)*d, l, l[-1] + np.arange(ext+1)[1:]*d])[1:-1]
+            raise ValueError(f"Wrong value ({ext}) for ext argument using extended mode.")
+
+        t = np.concatenate([t[0]+np.arange(-ext, 0)*d, t, t[-1]+np.arange(ext+1)[1:]*d])
 
     else:
-        initial  = np.array( [s0]*3 )
-        terminal = np.array( [s1]*3 )
-        l = np.concatenate((initial,l,terminal))
+        raise ValueError(f"Wrong value ({mode}) for mode argument. The options are {{'internal', 'complete', 'extended', 'periodic'}}. ")
 
-    return l
+    return t
 #
 
 def lsq_spline_smoothing(points,
@@ -450,7 +465,7 @@ def lsq_spline_smoothing(points,
 
     if isinstance(knots, int):
         #Computing knots
-        knots = knots_list(param_values[0], param_values[-1], knots, mode='complete')
+        knots = get_uniform_knot_vector(param_values[0], param_values[-1], knots, mode='complete')
 
     #Computing weights taking into account fixed nodes
     w = compute_n_weights(n=N, n_weighted_ini=n_weighted_ini, n_weighted_end=n_weighted_end, weight_ratio=weight_ratio)
@@ -552,7 +567,7 @@ def compute_rho_spline(polar_points, n_knots, k=3, logger=None):
     # Adding a value at 0 and 2pi
     cont_polar_points = fix_discontinuity(polar_points)
 
-    knots = knots_list(0,2*np.pi, n_knots, mode='simple')
+    knots = get_uniform_knot_vector(0,2*np.pi, n_knots, mode='internal')
 
     coeff_r, rmse = None, None
     if polar_points.shape[1] < n_knots + k +1:
@@ -725,8 +740,8 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
     else:
         xb, xe, yb, ye = bounds
 
-    tx = knots_list(s0=xb, s1=xe, n=nx, mode='simple')
-    ty = knots_list(s0=yb, s1=ye, n=ny, mode='extended', ext=ext-1)
+    tx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='internal')
+    ty = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='extended', ext=ext-1)
     d = ty[1] - ty[0]
 
     pts = np.concatenate((x.reshape(-1,1), y.reshape(-1,1), z.reshape(-1,1)), axis=1)
@@ -760,7 +775,7 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
         plt.show()
 
 
-    ty_ext = knots_list(s0=yb, s1=ye, n=ny, mode='extended', ext=ext-1)
+    ty_ext = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='extended', ext=ext-2)
 
     bspl_ext = LSQBivariateSpline(x_ext, y_ext, z_ext, tx=tx, ty=ty_ext, w=weights, bbox=[xb, xe, yb_ext, ye_ext], kx=kx, ky=ky)
 
@@ -773,8 +788,8 @@ def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ex
     if debug:
         #Build the spline
         bspl_rest = BivariateSpline()
-        tyy_rest = knots_list(s0=yb, s1=ye, n=ny, mode='periodic')
-        txx = knots_list(s0=xb, s1=xe, n=nx, mode='complete')
+        tyy_rest = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='periodic')
+        txx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='complete')
         bspl_rest.tck = txx, tyy_rest, Mcoeff.ravel()
         bspl_rest.degrees = kx, ky
 
