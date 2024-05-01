@@ -13,7 +13,7 @@ from ..encoding import VascularEncoding
 from ..utils._code import attribute_checker, attribute_setter
 
 
-from .alignment import Alignment, IterativeClosestPoint, RigidProcrustesAlignment
+from .alignment import Alignment, IterativeClosestPoint, RigidProcrustesAlignment, as_an_array
 
 
 class GeneralizedProcrustesAlignment:
