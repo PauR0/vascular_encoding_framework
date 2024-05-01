@@ -125,6 +125,40 @@ def as_an_array(obj):
         return obj.to_feature_vector(mode='centerline', add_metadata=False).reshape(-1, 3)
 #
 
+def as_a_polydata(obj):
+    """
+    Function to extract the array expression of different objects.
+    Supported objects are: [np.ndarray, pv.DataObject, VascularEncoding]
+
+    This function has no effect on numpy arrays.
+
+    Arguments
+    ---------
+
+        obj : np.ndarray, pv.DataObject, VascularEncoding
+            The object of which the array will be extracted.
+
+    Returns
+    -------
+
+        arr : np.ndarray
+            The extracted array
+    """
+
+    if not isinstance(obj, (np.ndarray, pv.DataObject, Encoding)):
+        error_message("Wrong type passed. Available types are {np.ndarray, pv.DataObject, Encoding}.")
+        return None
+
+    if isinstance(obj, np.ndarray):
+        return pv.PolyData(obj)
+
+    if isinstance(obj, pv.DataObject):
+        return obj
+
+    if isinstance(obj, Encoding):
+        return pv.PolyData(obj.to_feature_vector(mode='centerline', add_metadata=False).reshape(-1, 3))
+#
+
 class Alignment(ABC):
     """
     Abstract base class for alignment methods.
