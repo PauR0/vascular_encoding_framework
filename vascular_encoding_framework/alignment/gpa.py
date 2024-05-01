@@ -115,7 +115,7 @@ class GeneralizedProcrustesAlignment:
         n_iter = 0
         while n_iter < self.n_iters:
 
-            for sid, shape in self.data_set:
+            for sid in self.data_set:
                 self.alignment.source = self.data_set[sid]
                 self.data_set[sid] = self.alignment.run(apply=True)
 
