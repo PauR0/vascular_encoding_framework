@@ -296,6 +296,31 @@ class Tree(dict):
         return out
     #
 
+    def has_non_roots(self):
+        """
+        Check if has non-root elements. This implies that there is an actual hierarchy, otherwise this is pretty much a dict.
+
+        Empty Tree objects will return False.
+
+
+        Returns
+        -------
+
+            out : bool
+                True if has non-root nodes, False otherwise.
+
+        See Also
+        --------
+        :py:meth:`is_consistent`
+        """
+
+        out = False
+        nonroots = set(self.enumerate()) - self.roots
+        if nonroots:
+            out = True
+        return out
+    #
+
     def change_node_id(self, old_id, new_id):
         """
         Change the id of a Node of the Tree and update all its relatives.
