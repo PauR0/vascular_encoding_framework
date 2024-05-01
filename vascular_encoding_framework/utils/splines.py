@@ -300,8 +300,11 @@ class BiSpline(Spline):
         def clip_periodic(a, T=2*np.pi):
             a = a.copy()
             p = a//T
-            ids = (p < 0) | (1 < p)
-            a[ids] -= T*p[ids]
+            if isinstance(a, (int, float)):
+                a -= T*p
+            else:
+                ids = (p < 0) | (1 < p)
+                a[ids] -= T*p[ids]
             return a
 
         if self.extra_x == 'constant':
