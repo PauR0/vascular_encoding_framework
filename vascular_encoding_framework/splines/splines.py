@@ -13,7 +13,7 @@ from scipy.interpolate import (splrep, splev, make_lsq_spline,
 from skimage.morphology import dilation
 from skimage.measure import label, regionprops
 
-from ._code import attribute_checker, attribute_setter
+from ..utils._code import attribute_checker, attribute_setter
 from ..messages import *
 
 

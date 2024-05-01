@@ -16,7 +16,7 @@ from .path_extractor import extract_centerline_path
 from ..messages import error_message
 from ..utils._code import Tree, Node, attribute_checker
 from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
-from ..utils.splines import UniSpline, lsq_spline_smoothing
+from ..splines.splines import UniSpline, lsq_spline_smoothing
 from ..utils.geometry import polyline_from_points
 from ..utils.misc import split_metadata_and_fv
 

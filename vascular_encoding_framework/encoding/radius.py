@@ -3,7 +3,7 @@
 import numpy as np
 
 from ..messages import error_message
-from ..utils.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
+from ..splines.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
 from ..utils._code import attribute_checker
 from ..utils.misc import split_metadata_and_fv
 
