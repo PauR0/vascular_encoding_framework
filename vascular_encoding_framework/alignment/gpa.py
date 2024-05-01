@@ -16,38 +16,6 @@ from ..utils._code import attribute_checker, attribute_setter
 from .alignment import Alignment, IterativeClosestPoint, RigidProcrustesAlignment
 
 
-def as_an_array(obj):
-    """
-    Function to extract the array expression of different objects.
-    Supported objects are: [np.ndarray, pv.DataObject, VascularEncoding]
-
-    This function has no effect on numpy arrays.
-
-    Arguments
-    ---------
-
-        obj : np.ndarray, pv.DataObject, VascularEncoding
-            The object of which the array will be extracted.
-
-    Returns
-    -------
-
-        arr : np.ndarray
-            The extracted array
-    """
-
-    if not isinstance(obj, [np.ndarray, pv.DataObject, VascularEncoding]):
-        return None
-
-    if isinstance(obj, np.ndarray):
-        return obj
-
-    if isinstance(obj, pv.DataObject):
-        return obj.points
-
-    if isinstance(obj, VascularEncoding):
-        return obj.to_feature_vector(centerline=True, radius=False)
-
 class GeneralizedProcrustesAlignment:
     """
     Class with the GPA algorithm.

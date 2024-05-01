@@ -87,6 +87,44 @@ def OrthogonalProcrustes(A, B):
 #
 
 
+def as_an_array(obj):
+    """
+    Function to extract the array expression of different objects.
+    Supported objects are: [np.ndarray, pv.DataObject, VascularEncoding]
+
+    This function has no effect on numpy arrays.
+
+    Arguments
+    ---------
+
+        obj : np.ndarray, pv.DataObject, VascularEncoding
+            The object of which the array will be extracted.
+
+    Returns
+    -------
+
+        arr : np.ndarray
+            The extracted array
+    """
+
+    if not isinstance(obj, (np.ndarray, pv.DataObject, Encoding)):
+        error_message("Wrong type passed. Available typer are {np.ndarray, pv.DataObject, Encoding}.")
+        return None
+
+    if isinstance(obj, np.ndarray):
+        if len(obj.shape) != 2:
+            error_message(f"Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})")
+        elif obj.shape[1] != 3:
+            error_message(f"Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})")
+        return obj
+
+    if isinstance(obj, pv.DataObject):
+        return obj.points
+
+    if isinstance(obj, Encoding):
+        return obj.to_feature_vector(mode='centerline', add_metadata=False).reshape(-1, 3)
+#
+
 class Alignment(ABC):
     """
     Abstract base class for alignment methods.
