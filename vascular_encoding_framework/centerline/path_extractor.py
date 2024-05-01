@@ -483,6 +483,22 @@ class CenterlinePathExtractor:
         self.compute_kdt()
     #
 
+    def _check_boundary_hierarchy(self)->bool:
+        """
+        Check that the boundaries tree is consistent and has at least one non-roote node.
+
+        Returns
+        -------
+            : bool
+            True if at boundary Tree is consistent and has a non-root element. False otherwise.
+        """
+
+        if self.boundaries.is_consistent() and self.boundaries.has_non_roots():
+            return True
+
+        return False
+    #
+
     def _compose_id_paths(self):
         """
         Arrange the id_path attribute according to the policy established in the
@@ -533,6 +549,10 @@ class CenterlinePathExtractor:
                                labels=self.boundaries.enumerate(), font_size=20, point_color='red',
                                point_size=20, render_points_as_spheres=True, always_visible=True)
             p.show()
+
+        if not self._check_boundary_hierarchy():
+            error_message("Can't compute paths between boundaries. All the boundaries are roots and none have children. At least there must be a parent-children boundary.")
+            return
 
         def path_to_parent(bid):
             if self.boundaries[bid].parent is None:
