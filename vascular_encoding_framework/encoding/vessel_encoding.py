@@ -11,16 +11,18 @@ from ..utils._code import Node, attribute_checker
 from ..utils.spatial import normalize, radians_to_degrees
 from ..utils.misc import split_metadata_and_fv
 
+from .encoding import Encoding
 from .radius import Radius
 
-class VesselEncoding(Node):
+class VesselEncoding(Node, Encoding):
     """
     The class for encoding a single branch vessel.
     """
 
     def __init__(self):
 
-        super().__init__()
+        Node.__init__(self=self)
+        Encoding.__init__(self=self)
 
         self.centerline : Centerline = None
         self.radius     : Radius   = None

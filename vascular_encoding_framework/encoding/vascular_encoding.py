@@ -9,13 +9,15 @@ from ..centerline import CenterlineNetwork
 from ..utils._code import Tree
 from ..utils.misc import split_metadata_and_fv
 
+from .encoding import Encoding
 from .vessel_encoding import VesselEncoding
 
-class VascularEncoding(Tree):
+class VascularEncoding(Tree, Encoding):
 
     def __init__(self):
-        super().__init__()
-        self.cl_net : CenterlineNetwork = None
+
+        Tree.__init__(self=self)
+        Encoding.__init__(self=self)
     #
 
     def encode_vascular_mesh(self, vmesh, cl_net, params):
