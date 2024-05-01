@@ -871,6 +871,9 @@ class VesselEncoding(Node, Encoding):
         :py:meth:`Centerline.scale`
         """
 
+        if not isinstance(s, (int, float)):
+            error_message(f"Wrong value for radius object scaling. Expected a float|int, provided is {s}.")
+
         if self.centerline is not None:
             self.centerline.coeffs *= s
             if update:
