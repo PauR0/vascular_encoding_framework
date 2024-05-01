@@ -280,6 +280,12 @@ class Tree(dict):
         """
         Check if the parent - children attributes of the nodes are consisten among them.
         If not, report unconsistencies.
+
+        Returns
+        -------
+
+            out : bool
+                True if parent-child attributes are not in contradiction among nodes, False otherwise.
         """
         out=True
         for nid, node in self.items():
