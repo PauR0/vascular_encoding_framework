@@ -1,12 +1,13 @@
 
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 
 import numpy as np
 import pyvista as pv
 
 from ..messages import *
-from ..encoding import VascularEncoding
+from ..encoding.encoding import Encoding
 from ..utils.spatial import decompose_transformation_matrix, transform_point_array
 from ..utils._code import attribute_checker, attribute_setter
 
@@ -166,8 +167,8 @@ class Alignment(ABC):
 
     def __init__(self):
 
-        self.target : np.ndarray | pv.DataObject = None
-        self.source : np.ndarray | pv.DataObject = None
+        self.source : np.ndarray | pv.DataObject | Encoding = None
+        self.target : np.ndarray | pv.DataObject | Encoding = None
 
         self.translation : np.ndarray = None
         self.scale       : np.ndarray = None
@@ -204,16 +205,20 @@ class Alignment(ABC):
         trans_source = None
 
         if isinstance(self.source, np.ndarray):
-            trans_source = self.apply_transformation(self.source)
+            trans_source = self.source
 
         elif isinstance(self.source, pv.DataObject):
             trans_source = self.source.copy(deep=True)
-            trans_source = self.apply_transformation(trans_source)
+
+        elif isinstance(self.source, Encoding):
+            trans_source = deepcopy(self.source)
+
+        trans_source = self.apply_transformation(trans_source)
 
         return trans_source
     #
 
-    def apply_transformation(self, points : np.ndarray | pv.DataObject):
+    def apply_transformation(self, points : np.ndarray | pv.DataObject | Encoding):
         """
         Apply the alignment transformation to a given set of points.
 
@@ -232,8 +237,8 @@ class Alignment(ABC):
             points : np.ndarray | pv.DataObject
         """
 
-        if not isinstance(points, (np.ndarray, pv.DataObject, VascularEncoding)):
-            error_message(f"Wrong type for points argument. Available types are {np.ndarray, pv.DataObjects, VascularEncoding} and passed was: {type(points)}")
+        if not isinstance(points, (np.ndarray, pv.DataObject, Encoding)):
+            error_message(f"Wrong type for points argument. Available types are {np.ndarray, pv.DataObjects, Encoding} and passed was: {type(points)}")
             return None
 
         if isinstance(points, np.ndarray) and points.shape[1] != 3:
@@ -245,6 +250,14 @@ class Alignment(ABC):
 
         if isinstance(points, pv.DataObject):
             points.points = transform_point_array(points.points, t=self.translation, s=self.scale, r=self.rotation)
+
+        if isinstance(points, Encoding):
+            if self.scale is not None:
+                points.scale(self.scale)
+            if self.rotation is not None:
+                points.rotate(self.rotation)
+            if self.translation is not None:
+                points.translate(self.translation)
 
         return points
     #
@@ -291,23 +304,18 @@ class IterativeClosestPoint(Alignment):
         if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute ICP alignment..."):
             return
 
-        _source = self.source
-        if isinstance(_source, np.ndarray):
-            _source = pv.PolyData(_source)
+        _source = as_a_polydata(self.source)
+        _target = as_a_polydata(self.target)
 
-        _target = self.target
-        if isinstance(_target, np.ndarray):
-            _target = pv.PolyData(_target)
-
-        trans_source, trans_matrix = _source.align(target=_target,
+        _, trans_matrix = _source.align(target=_target,
                                                    max_landmarks=self.max_landmarks,
                                                    max_iterations=self.max_iterations,
                                                    return_matrix=True)
 
-        self.translation, self.scale, self.rotation = decompose_transformation_matrix(matrix=trans_matrix)
+        self.translation, _, self.rotation = decompose_transformation_matrix(matrix=trans_matrix)
 
         if apply:
-            return trans_source
+            return self.apply_transformation(self.source)
     #
 #
 
@@ -339,13 +347,8 @@ class RigidProcrustesAlignment(Alignment):
         if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute RigidProcrustes alignment..."):
             return
 
-        _source = self.source
-        if isinstance(self.source, pv.DataObject):
-            _source = self.source.points
-
-        _target = self.target
-        if isinstance(self.target, pv.DataObject):
-            _target = self.target.points
+        _source = as_an_array(self.source)
+        _target = as_an_array(self.target)
 
         r, t = OrthogonalProcrustes(A=_source.T,
                                     B=_target.T)
