@@ -63,7 +63,7 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False, for
     write_encoding_config(path=case_dir, data=params)
     save_vascular_encoding(case_dir=case_dir, vsc_enc=vsc_enc, binary=binary, overwrite=overwrite)
 
-    return cl_net
+    return vsc_enc
 #
 
 
