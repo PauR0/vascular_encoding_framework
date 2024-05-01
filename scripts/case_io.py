@@ -315,6 +315,8 @@ def load_centerline(case_dir, suffix=""):
     if os.path.exists(fname):
         cl_mb = pv.read(fname)
         cl_net = vef.CenterlineNetwork().from_multiblock(mb=cl_mb)
+    else:
+        msg.warning_message(f"No centerline was found in the case at '{case_dir}' .")
 
     return cl_net
 #
