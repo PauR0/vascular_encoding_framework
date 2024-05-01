@@ -9,7 +9,7 @@ import pyvista as pv
 
 
 from ..messages import *
-from ..encoding import VascularEncoding
+from ..encoding.encoding import Encoding
 from ..utils._code import attribute_checker, attribute_setter
 
 
@@ -36,8 +36,8 @@ class GeneralizedProcrustesAlignment:
         self.alignment_params : Dict[str:Any]                = None
         self.alignment        : Alignment                    = None
 
-        self.data_set       : Dict[str : np.ndarray | pv.DataObject | VascularEncoding] = None
         self.n_iters        : int = None
+        self.data_set       : Dict[str : np.ndarray | pv.DataObject | Encoding] = None
         self.reference_id   : int | str = 0 #The key (or its index) of the shape to use in the
                                             #first iteration as the mean shape.
     #
