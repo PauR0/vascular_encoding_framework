@@ -279,10 +279,10 @@ class BiSpline(Spline):
         Arguments
         ---------
 
-            x : float or array-like
+            x : float or np.ndarray
                 The first parameter values
 
-            y : float or array-like
+            y : float or np.ndarray
                 The second parameter values
 
             grid : bool, opt
@@ -292,7 +292,7 @@ class BiSpline(Spline):
         Returns
         -------
 
-            z : float or array-like
+            z : float or np.ndarray
                 The values of spl(x, y)
 
         """
