@@ -767,8 +767,6 @@ class VesselEncoding(Node, Encoding):
         :py:meth:`to_feature_vector`
         """
 
-        print(fv)
-
         if md is not None:
             self.set_metadata(md=md)
 
