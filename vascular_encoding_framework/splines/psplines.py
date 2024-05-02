@@ -88,9 +88,8 @@ def bivariate_optimization_loss(c, x, y, z, tx, ty, kx, ky, l):
 
 def get_unispline_constraint(t, k, a, v, nu=0):
     """
-    Function to get a constrain dictionary as SLSQP optimization algorithm expects. The to force a
-    constrain forces the approximating spline fulfill s^nu(a)=v, where nu is the derivative order
-    `a` is a parameter in the domain and v the value to force.
+    Function to get a constrain for univariate spline approximation. The constrained is expressed
+    by means of a dictionary as SLSQP optimization algorithm expects.
 
     The function can be used to fastly build equation-like constrains to impose the spline fulfill
     equations such as: spl^{nu}(a) = v.
