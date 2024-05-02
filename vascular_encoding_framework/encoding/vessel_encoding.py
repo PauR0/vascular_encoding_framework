@@ -243,7 +243,7 @@ class VesselEncoding(Node, Encoding):
         return vsl_mesh
     #
 
-    def encode_vessel_mesh(self, vsl_mesh, tau_knots, theta_knots, filling='mean', cl=None, debug=False):
+    def encode_vessel_mesh(self, vsl_mesh, tau_knots, theta_knots, laplacian_penalty=1.0, cl=None, debug=False):
         """
         Encode a vessel using the centerline and the anisotropic radius.
         If the centerline have hierarchical data like its parent or joint_t
@@ -262,7 +262,9 @@ class VesselEncoding(Node, Encoding):
 
             knots_tau, knots_theta : int
                 The amount of divisions to build the uniform knot vector.
-                TODO: Add support for non-uniform splines.
+
+            laplacian_penalty : float, optional
+                Default 1. The penalization factor on radius laplacian.
 
             cl : Centerline, opt
                 Default None. The centerline of said vessel. If passed is stored
@@ -285,7 +287,7 @@ class VesselEncoding(Node, Encoding):
         self.radius = Radius.from_points(points=points_vcs,
                                          tau_knots=tau_knots,
                                          theta_knots=theta_knots,
-                                         filling=filling,
+                                         laplacian_penalty=laplacian_penalty,
                                          cl=cl,
                                          debug=debug)
     #

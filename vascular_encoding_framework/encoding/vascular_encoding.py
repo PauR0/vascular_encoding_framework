@@ -122,7 +122,7 @@ class VascularEncoding(Tree, Encoding):
             ve.encode_vessel_mesh(vsl_mesh,
                                   tau_knots=params['knots'][bid]['tau_knots'],
                                   theta_knots=params['knots'][bid]['theta_knots'],
-                                  filling=params['filling'],
+                                  laplacian_penalty=params['laplacian_penalty'],
                                   debug=debug)
 
             self[bid] = ve

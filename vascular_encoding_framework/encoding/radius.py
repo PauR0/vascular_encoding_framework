@@ -3,7 +3,7 @@
 import numpy as np
 
 from ..messages import error_message
-from ..splines.splines import BiSpline, semiperiodic_LSQ_bivariate_approximation
+from ..splines.splines import BiSpline, uniform_penalized_bivariate_spline
 from ..utils._code import attribute_checker
 from ..utils.misc import split_metadata_and_fv
 
@@ -205,7 +205,7 @@ class Radius(BiSpline):
     #
 
     @staticmethod
-    def from_points(points, tau_knots, theta_knots, filling='mean', cl=None, debug=False):
+    def from_points(points, tau_knots, theta_knots, laplacian_penalty=1.0, cl=None, debug=False):
         """
         Function to build a Radius object from an array of points in the Vessel Coordinate System.
         Radius object are a specialized Bivarate Splines. This function allow to build such objects
@@ -222,8 +222,9 @@ class Radius(BiSpline):
                 The number of internal knots in longitudinal and angular dimensions respectively.
                 TODO: Allow building non-uniform BSplines.
 
-            filling : {'mean', 'rbf'}, optional
-                The method used to fill detected holes.
+            laplacian_penalty : float, optional
+                Default 1.0. A penalty factor to apply on the laplacian for spline approximation
+                optimization.
 
             cl : Centerline, optional
                 Default None. The centerline associated to the radius.
@@ -240,22 +241,21 @@ class Radius(BiSpline):
         rd = Radius()
         if cl is not None:
             rd.set_parameters_from_centerline(cl)
+
+        bispl = uniform_penalized_bivariate_spline(x=points[:,0],
+                                                   y=points[:,1],
+                                                   z=points[:,2],
+                                                   nx=tau_knots,
+                                                   ny=theta_knots,
+                                                   laplacian_penalty=laplacian_penalty,
+                                                   kx=rd.kx,
+                                                   ky=rd.ky,
+                                                   bounds=(rd.x0, rd.x1, rd.y0, rd.y1),
+                                                   debug=debug)
         rd.set_parameters(build=True,
                           n_knots_x = tau_knots,
                           n_knots_y = theta_knots,
-                          coeffs    = semiperiodic_LSQ_bivariate_approximation(x=points[:,0],
-                                                                               y=points[:,1],
-                                                                               z=points[:,2],
-                                                                               nx=tau_knots,
-                                                                               ny=theta_knots,
-                                                                               kx=rd.kx,
-                                                                               ky=rd.ky,
-                                                                               bounds=(rd.x0,
-                                                                                       rd.x1,
-                                                                                       rd.y0,
-                                                                                       rd.y1),
-                                                                               filling=filling,
-                                                                               debug=debug))
+                          coeffs    = bispl.get_coeffs())
         return rd
     #
 #
