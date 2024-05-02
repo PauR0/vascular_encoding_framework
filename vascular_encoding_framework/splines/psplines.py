@@ -2,9 +2,8 @@
 
 import numpy as np
 
-from scipy.ndimage import laplace
+from scipy.ndimage import laplace, convolve1d
 from scipy.interpolate import BSpline, BivariateSpline
-from scipy.ndimage import convolve1d
 
 
 def univariate_optimization_loss(c, x, y, t, k, l):
