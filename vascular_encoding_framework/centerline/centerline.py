@@ -1051,7 +1051,7 @@ class Centerline(UniSpline, Node):
         spl = uniform_penalized_spline(points=self(ts),
                                        n_knots=n_knots,
                                        k=self.k,
-                                       param_values=ts,
+                                       param_values=(ts - t0_)/(t1_ - t0_), #Normalized domain
                                        force_ini=True,
                                        force_end=True,
                                        curvature_penalty=0.0)
