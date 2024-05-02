@@ -16,7 +16,7 @@ from .path_extractor import extract_centerline_path
 from ..messages import error_message
 from ..utils._code import Tree, Node, attribute_checker
 from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
-from ..splines.splines import UniSpline, lsq_spline_smoothing
+from ..splines.splines import UniSpline, uniform_penalized_spline
 from ..utils.geometry import polyline_from_points
 from ..utils.misc import split_metadata_and_fv
 
@@ -1048,11 +1048,13 @@ class Centerline(UniSpline, Node):
 
         ts = np.linspace(t0_, t1_, n_samps)
         n_knots = len(self.get_knot_segments(t0_, t1_)) - 2
-        spl = lsq_spline_smoothing(points=self(ts),
-                                   knots=n_knots,
-                                   k=self.k,
-                                   param_values=ts,
-                                   norm_param=True)
+        spl = uniform_penalized_spline(points=self(ts),
+                                       n_knots=n_knots,
+                                       k=self.k,
+                                       param_values=ts,
+                                       force_ini=True,
+                                       force_end=True,
+                                       curvature_penalty=0.0)
 
         cl = Centerline()
         cl.set_parameters(build   = True,
@@ -1073,24 +1075,31 @@ class Centerline(UniSpline, Node):
     #
 
     @staticmethod
-    def from_points(points, knots, cl=None, pt_mode='project', p=None, force_tangent=True, norm_param=True):
+    def from_points(points, n_knots, k=3, curvature_penalty=1.0, param_values=None, pt_mode='project', p=None, force_extremes=True, cl=None):
         """
         Function to build a Centerline object from a list of points. The amount
         knots to perform the LSQ approximation must be provided. An optional
         vector p can be passed to build the adapted frame.
 
-        Arguments:
-        ------------
+        Arguments
+        ---------
 
             points : np.ndarray (N, 3)
                 The 3D-point array to be approximated.
 
-            knots : int or array-like
-                The knot vector used to perform the LSQ spline approximation.
-                If an int is passed a uniform knot vector is build.
+            n_knots : int
+                The number of uniform internal knots to build the knot vector.
 
-            cl : Centerline
-                A Centerline object to be used. The all the data will be overwritten.
+            k : int, optional
+                Default 3. The polynomial degree of the splines.
+
+            curvature_penalty : float, optional
+                Default 1.0. A penaltization factor for the spline approximation.
+
+            param_values : array-like (N,), optional
+                Default None. The parameter values of the points provided so the parametrization
+                of the centerline is approximated assuming cl(param_values) = points. If None
+                provided the nomalized cumulative distance among the points is used.
 
             pt_mode : str
                 The mode option to build the adapted frame by parallel transport.
@@ -1100,39 +1109,28 @@ class Centerline(UniSpline, Node):
             p : np.ndarray
                 The initial v1. If pt_mode == 'project' it is projected onto inlet plane.
 
-            force_tangent : Literal = {False, True, 'ini', 'end'}
-                Whether to add extra weighting to the first and last points in
-                the lsq approximation. If 'ini', resp. 'end', only initial (ending)
-                points are weighted to force the tangent.
+            force_extremes : {False, True, 'ini', 'end'}
+                Default True. Whether to force the centerline to interpolate the boundary behaviour
+                of the approximation. If True the first and last point are interpolated and its
+                tangent is approximated by finite differences using the surrounding points. If
+                'ini', respectively 'end', only one of both extremes is forced.
 
-            norm_params : bool, opt
-                Default True. Whether to normalize the parameter domain interval to
-                [0, 1].
+            cl : Centerline
+                A Centerline object to be used. All the data will be overwritten.
 
-        Returns:
-        ----------
+        Returns
+        -------
             cl : Centerline
                 The centerline object built from the points passed.
         """
 
-        wini=1
-        wend=1
-        if force_tangent:
-            wini=2
-            wend=2
-            if force_tangent == 'ini':
-                wini=2
-                wend=0
-            elif force_tangent == 'end':
-                wini=0
-                wend=2
-
-        spl = lsq_spline_smoothing(points=points,
-                                   knots=knots,
-                                   norm_param=norm_param,
-                                   n_weighted_ini=wini,
-                                   n_weighted_end=wend,
-                                   weight_ratio=10)
+        spl = uniform_penalized_spline(points=points,
+                                       n_knots=n_knots,
+                                       k=k,
+                                       param_values=param_values,
+                                       force_ini=force_extremes in [True, 'ini'],
+                                       force_end=force_extremes in [True, 'end'],
+                                       curvature_penalty=curvature_penalty)
 
         if cl is None:
             cl = Centerline()
@@ -1734,7 +1732,7 @@ class CenterlineNetwork(Tree):
     #
 
     @staticmethod
-    def from_multiblock_paths(paths, knots, graft_rate=0.5, force_tangent=True):
+    def from_multiblock_paths(paths, knots, graft_rate=0.5, force_extremes=True):
         """
         Create a CenterlineNetwork from a pyvista MultiBlock made polydatas with
         points joined by lines, basically like the ouput of CenterlinePathExtractor.
@@ -1759,9 +1757,11 @@ class CenterlineNetwork(Tree):
                 Default is 0.5. A parameter to control the grafting insertion. Represent a distance proportional to the radius
                 traveled towards the parent branch inlet along the centerline at the junction.
 
-            force_tangent : bool, opt
-                Default True. If True, the first and last two points are specially weighted to ensure boundary conditions on the
-                centerline.
+            force_extremes : {False, True, 'ini', 'end'}
+                Default True. Whether to force the centerline to interpolate the boundary behaviour
+                of the approximation. If True the first and last point are interpolated and its
+                tangent is approximated by finite differences using the surrounding points. If
+                'ini', respectively 'end', only one of both extremes is forced.
 
         Returns
         -------
@@ -1795,7 +1795,8 @@ class CenterlineNetwork(Tree):
                     points      = np.concatenate([[joint, pcl((joint_t+pre_joint_t)/2)], paths[f'path_{nid}'].points[ids]])
                 else:
                     joint_t = pre_joint_t
-            cl = Centerline.from_points(points, knots=knots[nid], force_tangent=force_tangent)
+
+            cl = Centerline.from_points(points, n_knots=knots[nid], force_extremes=force_extremes, curvature_penalty=0.1)
             cl.id = nid
             if parents[nid] != 'None':
                 cl.parent = parents[nid]
@@ -1886,8 +1887,8 @@ def extract_centerline(vmesh, params, params_domain=None, params_path=None, debu
     Provided a VascularMesh object with its boundaries propperly defined, this function
     computes the CenterlineNetwork of it.
 
-    Arguments:
-    ------------
+    Arguments
+    ---------
 
         vmesh : VascularMesh
             The VascularMesh object where centerline is to be computed.
@@ -1908,8 +1909,8 @@ def extract_centerline(vmesh, params, params_domain=None, params_path=None, debu
             Defaulting to False. Running in debug mode shows some plots at certain steps.
 
 
-    Returns:
-    ---------
+    Returns
+    -------
 
         cl_net : CenterlineNetwork
             The computed Centerline
@@ -1920,5 +1921,5 @@ def extract_centerline(vmesh, params, params_domain=None, params_path=None, debu
     cl_net    = CenterlineNetwork.from_multiblock_paths(cl_paths,
                                                         knots=params['knots'],
                                                         graft_rate=params['graft_rate'],
-                                                        force_tangent=params['force_tangent'])
+                                                        force_extremes=params['force_extremes'])
     return cl_net
