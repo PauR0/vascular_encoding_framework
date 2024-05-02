@@ -126,21 +126,33 @@ def get_unispline_constraint(t, k, a, v, nu=0):
     return {'type':'eq', 'fun': lambda c: np.linalg.norm(BSpline.construct_fast(t, c.reshape(-1, d), k)(a, nu=nu) - v)}
 #
 
-def get_bivariate_semiperiodic_constraint(c, nx, ny, k):
+def get_bivariate_semiperiodic_constraint(nx, ny, kx, ky):
     """
-    Function to get a constrain dictionary as SLSQP optimization algorithm expects.
+    Function to get a constrain to impose periodicity wrt the second dimension in bivariate spline
+    approximation. The constrained is expressed by means of a dictionary as SLSQP optimization
+    algorithm expects.
 
-    The function can be used to fastly build equation-like constrains to impose the spline fulfill
-    equations such as: spl^{nu}(a) = v.
-    Where a is a value in the definition domain, v a certain real value and nu the derivative order.
-    Recall that nu is at most k (the degree of the polynomial).
+    The returned list of constraints forces the first and last ky columns of coefficients (in
+    matrix formulation) to be equal.
+
+    Arguments
+    ---------
+
+        nx, ny : int
+            The amount of internal knots for the first and second parameters of the function
+            respectively.
+
+        kx, ky : int
+            The degree of the polynomial basis for the first and second parameters of the function.
+
+    Returns
+    -------
+
+        cons : list[dict]
+            The list of dictionary constraints.
     """
 
-    column = lambda coeff, col: coeff.reshape(nx+(kx+1), ny+(ky+1))[:,col]
-    cons = [
-        {'type':'eq', 'fun': lambda c: column(c, 0) - column(c, -3)},
-        {'type':'eq', 'fun': lambda c: column(c, 1) - column(c, -2)},
-        {'type':'eq', 'fun': lambda c: column(c, 2) - column(c, -1)},
-    ]
-
+    as_matrix = lambda c: c.reshape(nx+kx+1, ny+ky+1)
+    cons = [{'type':'eq', 'fun': lambda c: np.linalg.norm(as_matrix(c)[:,:ky] - as_matrix(c)[:, -ky:])}]
     return cons
+#
