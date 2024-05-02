@@ -10,12 +10,15 @@ from scipy.interpolate import (splrep, splev, make_lsq_spline,
                                BSpline, BivariateSpline, LSQBivariateSpline,
                                RBFInterpolator)
 
+from scipy.optimize import minimize
+
 from skimage.morphology import dilation
 from skimage.measure import label, regionprops
 
 from ..utils._code import attribute_checker, attribute_setter
 from ..messages import *
 
+from .psplines import get_unispline_constraint, univariate_optimization_loss
 
 class Spline(ABC):
 
@@ -401,49 +404,109 @@ def get_uniform_knot_vector(xb, xe, n, mode='complete', k=3, ext=None):
     return t
 #
 
-def lsq_spline_smoothing(points,
-                         knots,
-                         k=3,
-                         param_values=None,
-                         norm_param=False,
-                         n_weighted_ini=1,
-                         n_weighted_end=1,
-                         weight_ratio=1.0):
+def get_coefficients_lenght(n_internal_knots, k):
     """
-    Compute the smoothing spline of a list of d-dimensional points.
+    Get the number of coefficients required to build a spline.
 
-    Points must be a numpy array of dimension Nxd for a list of N
-    d-dimensional points.
+    Arguments
+    ---------
 
-    Arguments:
-    -----------
+        n_internal_knots : int or list[int]
+            The amount of internal knots.
+
+        k : int or list[int], 1<=k<=5
+            The polynomial degree
+
+    Returns
+    -------
+        nc : int
+            The amount of coefficients required.
+    """
+
+    if isinstance(n_internal_knots, int):
+        n_internal_knots = [n_internal_knots]
+    if isinstance(k, int):
+        k = [k]
+
+    nc = np.array(n_internal_knots)+np.array(k)+1
+    nc = np.prod(nc)
+    return nc
+#
+
+def compute_normalized_params(points):
+    """
+    Compute the parametrization parameter as a normalized cummulative distance.
+
+    Arguments
+    ---------
+
+        points : np.ndarray (N, d)
+            The point array.
+
+    Returns
+    -------
+        param_values : np.ndarray (N,)
+            The computed parameters array.
+    """
+
+    param_values = [0.0]
+    for i in range(1, points.shape[0]):
+        dist = np.linalg.norm(points[i] - points[i-1])
+        param_values.append(param_values[-1]+dist)
+    param_values = np.array(param_values)
+    param_values = (param_values-param_values[0]) / (param_values[-1] - param_values[0])
+
+    return param_values
+#
+
+def uniform_penalized_spline(points,
+                             n_knots,
+                             k=3,
+                             param_values=None,
+                             force_ini=False,
+                             force_end=False,
+                             curvature_penalty=1.0):
+    """
+    Compute the curvature-penalized approximation spline curve of a list of d-dimensional points.
+
+    Points must be a numpy array of dimension Nxd for a list of N d-dimensional points.
+    The parametrization of the curve can be controlled by the param_values argument, if is None,
+    The parameter is computed as the distance traveled from the first point in a poly-line way, and
+    then normalized from 0 to L.
+
+    The argument curvature_penalty is the penalization factor for the curvature. If set to 0, a regular LSQ
+    approximation is performed.
+
+    Additionally, the argument force_ini and force_end allow to force the optimization to
+    force a specific behaviour at curve extremes. These arguments force the interpolation of
+    the first and last point provided and its tangents. The tangents are approximated by finite
+    differences and added as optimization constraints as well.
+
+    Arguments
+    ---------
 
         points : np.ndarray (N, d)
             The array of points.
 
-        knots : int or array-like
-            The knots where the lsq will be performed.
+        n_knots : int
+            The amount of internal knots.
 
         k : int, opt
             Default is 3. The spline polynomial degree.
 
         param_values : array-like (N,), opt
-            The parameter values for each point. Must be a increasing sequence.
-            If not passed it is computed as the normalized distance traveled.
+            The parameter values for each point. Must be a increasing sequence. If not passed it is
+            computed as the normalized distance traveled.
 
-        norm_param : bool, opt
-            Whether to normalize the domain to interval [0, 1].
+        force_ini : bool, optional
+            Default False. Whether to impose interpolation and tangent at the begginnig of the
+            curve.
 
-        n_weighted_ini : int opt,
-            Default 1. The amount of points weighted at the begining of the list.
-            Useful to "force" the normal at the begining.
+        force_end : bool, optional
+            Default False. Whether to impose interpolation and tangent at the end of the curve.
 
-        n_weighted_end  : int opt,
-            Default 1. The amount of points weighted at the end of the list.
-            Useful to "force" the normal at the begining.
-
-        weight_ratio : float, opt.
-            Default 1.0. The ratio of rate of weights for weighted points.
+        curvature_penalty : float, optional
+            Default 1.0. The penalization factor for the curvature.
 
     Returns:
     ----------
@@ -451,46 +514,33 @@ def lsq_spline_smoothing(points,
             The approximating spline object of scipy.interpolate.
     """
 
-    N = points.shape[0]
+    d = points.shape[1]
 
     if param_values is None:
-        param_values = [0.0]
-        for i in range(1, N):
-            d = np.linalg.norm(points[i] - points[i-1])
-            param_values.append(param_values[-1]+d)
-    param_values = np.array(param_values)
+        param_values = compute_normalized_params(points)
 
-    if norm_param:
-        param_values = (param_values-param_values[0]) / (param_values[-1] - param_values[0])
+    t = get_uniform_knot_vector(param_values[0], param_values[-1], n_knots, mode='complete')
 
-    if isinstance(knots, int):
-        #Computing knots
-        knots = get_uniform_knot_vector(param_values[0], param_values[-1], knots, mode='complete')
+    cons = []
+    if force_ini:
+        tg = (points[1]-points[0])/(param_values[1] - param_values[0])
+        cons.append(get_unispline_constraint(t, k, param_values[0], points[0]))
+        cons.append(get_unispline_constraint(t, k , param_values[0], tg, nu=1))
 
-    #Computing weights taking into account fixed nodes
-    w = compute_n_weights(n=N, n_weighted_ini=n_weighted_ini, n_weighted_end=n_weighted_end, weight_ratio=weight_ratio)
+    if force_end:
+        tg = (points[-1]-points[-2])/(param_values[-1] - param_values[-2])
+        cons.append(get_unispline_constraint(t, k , param_values[-1], points[-1], nu=0))
+        cons.append(get_unispline_constraint(t, k , param_values[-1], tg, nu=1))
+    cons = cons if cons else None
 
-    #Compute spline
-    spl = make_lsq_spline(x=param_values, y=points, t=knots, k=k, w=w)
+    x0 = np.array([points.mean(axis=0)] * get_coefficients_lenght(n_internal_knots=n_knots, k=k)).ravel()
+    res = minimize(fun=univariate_optimization_loss, x0=x0,
+                   args=(param_values, points, t, k, curvature_penalty),
+                   method='SLSQP', constraints=cons)
+
+    spl = BSpline(t=t, c=res.x.reshape(-1, d), k=k)
 
     return spl
-#
-
-def compute_n_weights(n, n_weighted_ini=1, n_weighted_end=1, weight_ratio=None, normalized=True):
-    """
-    Compute weights for univariate splines. Extra weighting can be assigned to
-    initial and ending points to improve normals at the extrema.
-    """
-    if weight_ratio is None:
-        weight_ratio = 2
-
-    w = np.ones((n,))
-    w[:n_weighted_ini]  = weight_ratio
-    w[-n_weighted_end:] = weight_ratio
-    if normalized:
-        w /= np.linalg.norm(w)
-
-    return w
 #
 
 def fix_discontinuity(polar_points, n_first = 10, n_last  = 10, degree = 3, logger=None):
@@ -903,3 +953,4 @@ def fill_gaps(points, f, N=None, M=None, d=5, rbf_interp=False, debug=False):
         plt.show()
 
     return new_points, new_f
+#
