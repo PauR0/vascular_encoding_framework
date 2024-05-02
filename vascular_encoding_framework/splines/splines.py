@@ -6,19 +6,14 @@ from typing import Literal
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scipy.interpolate import (splrep, splev, make_lsq_spline,
-                               BSpline, BivariateSpline, LSQBivariateSpline,
-                               RBFInterpolator)
+from scipy.interpolate import splrep, splev, BSpline, BivariateSpline
 
 from scipy.optimize import minimize
-
-from skimage.morphology import dilation
-from skimage.measure import label, regionprops
 
 from ..utils._code import attribute_checker, attribute_setter
 from ..messages import *
 
-from .psplines import get_unispline_constraint, univariate_optimization_loss
+from .psplines import get_unispline_constraint, univariate_optimization_loss, get_bivariate_semiperiodic_constraint, bivariate_optimization_loss
 
 class Spline(ABC):
 
@@ -647,310 +642,69 @@ def compute_rho_spline(polar_points, n_knots, k=3, logger=None):
     return coeff_r, rmse
 #
 
-def compute_point_weights(points, weighting=None, normalize=True):
+def uniform_penalized_bivariate_spline(x, y, z, nx, ny, laplacian_penalty=1.0, kx=3, ky=3, bounds=None, debug=False):
     """
-    Function to compute weights for a list of points. The weighting of the points
-    is carried by means of the weighting argument. It should be a list of tuples
-    (v, ax, w) specifying the value v, at axis ax, to be weighted by w.
-    If normalize is True (which is the default) The weights are normalized to add
-    up to 1 for optimization's sake.
+    A function to perform a curvature-penalized LSQ approximation of a bivariate function, f(x,y)
+    that is periodic wrt to y.
 
-    Arguments:
-    -----------
-
-        points : np.ndarray, NxD
-            The array of D-dimensional points.
-
-        weighting : array-like, Mx3.
-            The list of tuples with the value, the axis and weights
-            E.g. [(0, 0, 2), (np.pi, 1, 0.5)],
-            with this selection, the points with first coordinate
-            equal to 0 will weight double the base weight, and those
-            whose second coordinate is equal to np.pi will weight half
-            the base weight.
-
-        normalize : bool
-            Default True. Whether to normalize the weights to add up to 1.
-
-    Returns:
+    Arguments
     ---------
-
-        weights : np.ndarray
-            The array of weights
-
-    """
-    weights = np.ones((points.shape[0],))
-
-    if weighting is not None:
-        for v, ax, w in weighting:
-            i = np.isclose(points[:,ax], v, rtol=1e-05, atol=1e-08)
-            weights[i] = w
-
-    if normalize:
-        weights /= weights.sum()
-
-    return weights
-#
-
-def extend_periodically_point_cloud(pts, col=1, T=None, d_max=None):
-    """
-
-    Args:
-    ------
-        pts : np.array Nx3
-            Array of points
-
-        col : int,
-            The periodic variable. By default it is 1, i.e. y axis.
-
-        T : float, optional
-            The period of the function. By default it is pts[:,col].max()-pts[:,col].min()
-
-        d_max : float
-            The maximum distance to extend the period in both sides. By default it is T.
-
-    """
-
-    m = pts[:,col].min()
-    M = pts[:,col].max()
-
-    if T is None:
-        T = M-m
-
-    if d_max is None:
-        d_max = T
-
-    n_copies = int(1 + (T // d_max))
-
-    pts_out = pts.copy()
-    for _ in range(n_copies):
-        L = pts.copy()
-        L[:,col] -= T
-        U = pts.copy()
-        U[:,col] += T
-        pts_out = np.concatenate( (L, pts_out, U))
-    pts_out = pts_out[ (pts_out[:,col] > m - d_max) & (pts_out[:,col] < M + d_max) ]
-
-    return np.unique(pts_out,axis=0)
-#
-
-def semiperiodic_LSQ_bivariate_approximation(x, y, z, nx, ny, weighting=None, ext=None, kx=3, ky=3, bounds=None, filling='mean', debug=False):
-    """
-    A function to perform a LSQ approximation of a bivariate function, f(x,y),
-    that is periodic wrt the y axis, by means of uniform bivariate splines. To emulate periodicity
-    the provide points are periodically extended in the y-axis, and a bivariate spline with
-    its corresponding extended knots is fitted in that space.
-
-    TODO: Allow passing the knot vectors to support non-uniform splines and an int to build the
-    uniform knot.
-
-    Arguments:
-    ------------
 
         x,y,z : np.ndarray
             The samples f(x_i,y_i) = z_i. The three arrays must have the same length.
 
-        weighting : list[tuples], [(v, ax, w)]
-            The list of values v, at axis ax, to be weighted by w. For example, to
-            weight those points with x coordinate equal to 1, with a weight double to
-            the rest, weighting=[(1,0,2)] meaning, the points equals to 1 in the ax 0 weight 2.
-
         nx,ny : int
             The number of subdivisions for each dimension.
 
-        ext : int
-            The amount of partitions to add for the periodic extension.
+        laplacian_penalty : float, optional
+            Default 1. The penalization factor applied the laplacian of the coefficients.
 
-        kx,ky : int
-            The degree of the spline for each dimension.
+        kx,ky : int, optional
+            Default 3. The degree of the spline for each dimension.
 
         bounds : tuple(float)
             The interval extrema of the parameters domain in the form
             (xmin, xmax, ymin, ymax).
 
-        filling : {False, 'mean', 'rbf'}, optional
-            Default 'mean'. Whether to add interpolated points at detected gaps in the x-y point cloud.
-            If False, the hole filling is skipped.
-
         degbug : bool, opt
             Display a plot with the extension of the data and the fitting result.
 
-    Returns:
-    ---------
-        Mcoeff : np.ndarray (nx+kx+1, ny+ky+1)
-            The coefficients of the bivariate spline.
-    """
+    Returns
+    -------
 
-    if ext is None:
-        ext = ky+1
+        bispl : BivariateSpline
+            The bivariate spline object.
+    """
 
     if bounds is None:
         xb, xe = x.min(), x.max()
         yb, ye = y.min(), y.max()
     else:
         xb, xe, yb, ye = bounds
+    tx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='complete', k=kx, ext=None)
+    ty = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='periodic', k=ky, ext=None)
 
-    tx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='internal')
-    ty = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='extended', ext=ext-1)
-    d = ty[1] - ty[0]
+    cons = get_bivariate_semiperiodic_constraint(nx, ny, kx, ky)
+    x0 = np.array([z.mean()]*get_coefficients_lenght(n_internal_knots=[nx, ny], k=[kx, ky]))
+    res = minimize(fun=bivariate_optimization_loss, x0=x0, args=(x, y, z, tx, ty, kx, ky, laplacian_penalty),
+                        method='SLSQP', constraints=cons)
 
-    pts = np.concatenate((x.reshape(-1,1), y.reshape(-1,1), z.reshape(-1,1)), axis=1)
-
-    if filling:
-        #A previous extension is required for if the hole lies in the extrema of the periodic interval
-        pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb)
-
-        rbf_interp = True if filling == 'rbf' else False
-        fill_xy, fill_z = fill_gaps(pts_ext[:, [0, 1]], pts_ext[:, 2], rbf_interp=rbf_interp, debug=debug)
-
-        if fill_xy is not None and fill_z is not None:
-            fill_pts = np.hstack([fill_xy, fill_z[:,None]])
-            pts_ext = np.concatenate([pts_ext, fill_pts])
-            ids = (xb <= pts_ext[:,0]) & (pts_ext[:,0] <= xe) & (yb <= pts_ext[:,1]) & (pts_ext[:,1] <= ye)
-            pts = pts_ext[ids]
-
-    pts_ext = extend_periodically_point_cloud(pts, col=1, T=ye-yb, d_max=ext*d)
-
-    x_ext, y_ext, z_ext = pts_ext[:,0], pts_ext[:,1], pts_ext[:,2]
-    yb_ext, ye_ext = y_ext.min(), y_ext.max()
-
-    weights = compute_point_weights(pts_ext, weighting=weighting)
-    if debug:
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.scatter(x_ext, y_ext, z_ext, c=z_ext, label='ext pts', s=5*(weights/weights.min()), alpha=0.5) #Extended
-        ax.scatter(x, y, z, color='k', s=5, label='orig pts') #Original
-        plt.title('Weights and extension')
-        plt.legend()
-        plt.show()
-
-
-    ty_ext = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='extended', ext=ext-2)
-
-    bspl_ext = LSQBivariateSpline(x_ext, y_ext, z_ext, tx=tx, ty=ty_ext, w=weights, bbox=[xb, xe, yb_ext, ye_ext], kx=kx, ky=ky)
-
-    nyy = ny + 2*(ext-1)
-    Mcoeff_ext=bspl_ext.get_coeffs().reshape(nx+kx+1,nyy+ky+1)
-
-    Mcoeff = Mcoeff_ext[:,ext-1:1-ext]
-
+    bispl         = BivariateSpline()
+    bispl.tck     = tx, ty, res.x
+    bispl.degrees = kx, ky
 
     if debug:
-        #Build the spline
-        bspl_rest = BivariateSpline()
-        tyy_rest = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='periodic')
-        txx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='complete')
-        bspl_rest.tck = txx, tyy_rest, Mcoeff.ravel()
-        bspl_rest.degrees = kx, ky
-
-        #Make the analytic data.
-        ngrid = 100
-        xx = np.linspace(xb, xe, ngrid+1)
-        yy = np.linspace(yb, ye, ngrid+1)
-        yy_ext = np.linspace(yb_ext, ye_ext, ngrid+1)
-        X_ext, Y_ext = np.meshgrid(xx, yy_ext)
+        print(f"Optimization succes: {res.success}. Optimization message: {res.message}")
+        xx = np.linspace(xb, xe, 50)
+        yy = np.linspace(yb, ye, 50)
         X, Y = np.meshgrid(xx, yy)
-        Z_ext = bspl_ext(xx, yy_ext).T
-        Z_rest = bspl_rest(xx,yy).T
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
 
-        #Plot the surfaces.
-        surf = ax.plot_surface(X_ext, Y_ext, Z_ext, color='g', alpha=0.5,
-                            linewidth=0, antialiased=True, label='ext bvspl')
-
-        surf = ax.plot_surface(X, Y, Z_rest, color='r', alpha=0.9,
-                            linewidth=0, antialiased=True, label='rest bvspl')
-
-        #Plot the points
-        ax.scatter(pts_ext[:,0], pts_ext[:,1], pts_ext[:,2], color='b', alpha=0.5, s=2, label='ext pts') #Extended
-        ax.scatter(x, y, z, color='k', label='ext pts') #Original
-        #plt.legend() Due to a bug in matplotlib (3.5.1), this cant be uncomented
+        fg = plt.figure()
+        ax = fg.add_subplot(111, projection='3d')
+        ax.scatter(x, y, z, label='Data set')
+        Z = bispl(X, Y, grid=False)
+        ax.plot_surface(X, Y, Z, linewidth=0, color='r', label='bispl')
         plt.show()
 
-    return Mcoeff
-#
-
-def fill_gaps(points, f, N=None, M=None, d=5, rbf_interp=False, debug=False):
-    """
-    Provided a 2D point cloud, with a field defined on it. This function
-    detects the holes in the image and add new points on it interpolating the map
-    at the new points.
-
-
-    Arguments:
-    -----------
-
-        points : np.ndarray (n, 2)
-            The cartesian coordinates of the points.
-
-        f : np.ndarray (n,)
-            The field values
-
-        N, M : int, opt
-            Default None. The resolution of the grid for searching the gap.
-            If not provided, the average point density is used.
-
-        d : float, opt
-            Default 1.2. If N or M are None, d_ can be used as a factor to
-            increase the estimated average point density.
-
-        rbf_interp : bool, opt
-            Default False. Whether to use radial basis functions to interpolate
-            the field at the gap new points. If false, the average value of the
-            gap neighboring points is used.
-
-        debug : bool,
-            Plot the process.
-    Returns:
-    ---------
-        new_points, new_f : np.ndarray (n,)
-            The new points with the interpolated field
-    """
-
-    pm, pM = points.min(axis=0), points.max(axis=0)
-    if None in [M, N]:
-        d *= points.shape[0] / np.product(pM-pm)
-        N = M = np.round(np.sqrt(d)).astype(int)
-
-    grid = np.ones((N,M), dtype=int)
-    points.min(axis=0)
-
-    v_tr = np.array([N-1, M-1]) / (pM-pm)
-    points_tr = (points-pm)*v_tr
-    ids = np.round(points_tr).astype(int)
-    ids = (ids[None,:,0], ids[None,:,1])
-    grid[ids] = 0
-    grid = label(dilation(grid, footprint=np.ones((2,2))))
-
-    new_points, new_f = [], []
-    for reg in regionprops(grid):
-        rm, cm, rM, cM = reg.bbox
-        ids = (rm <= points_tr[:, 0]) & (points_tr[:, 0] <= rM) & (cm <= points_tr[:, 1]) & (points_tr[:, 1] <= cM)
-        pts_, f_ = points[ids], f[ids]
-        new_pts = reg.coords / v_tr + pm
-        new_points.append(new_pts)
-        if rbf_interp:
-            interp = RBFInterpolator(y=pts_, d=f_, kernel='thin_plate_spline')
-            fs = interp(new_pts)
-        else:
-            fs = np.full((new_pts.shape[0]), fill_value=f_.mean())
-        new_f.append(fs)
-
-    if not new_points or not new_f:
-        return None, None
-
-    new_points = np.vstack(new_points)
-    new_f = np.concatenate(new_f)
-
-    if debug:
-        _, ax = plt.subplots(1, 2)
-        ax[0].imshow(grid.T, origin='lower')
-        ax[0].scatter(points_tr[:,0], points_tr[:,1], s=.5)
-
-        ax[1].scatter(points[:,0],     points[:,1],     c=f,     s=.5)
-        ax[1].scatter(new_points[:,0], new_points[:,1], c=new_f, s=1)
-        plt.show()
-
-    return new_points, new_f
+    return bispl
 #
