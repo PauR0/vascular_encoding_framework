@@ -408,7 +408,6 @@ class Boundary(Node):
         if self.points is not None:
             self.points = (r @ self.points.T).T
     #
-
 #
 
 class Boundaries(Tree):
