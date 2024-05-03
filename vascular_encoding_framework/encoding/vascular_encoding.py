@@ -5,7 +5,7 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from ..messages import error_message
-from ..utils._code import Tree
+from ..utils._code import Tree, check_specific
 from ..utils.misc import split_metadata_and_fv
 
 from .encoding import Encoding
@@ -19,7 +19,7 @@ class VascularEncoding(Tree, Encoding):
         Encoding.__init__(self=self)
     #
 
-    def encode_vascular_mesh(self, vmesh, cl_net, params):
+    def encode_vascular_mesh(self, vmesh, cl_net, tau_knots=15, theta_knots=15, laplacian_penalty=1.0, **kwargs):
         """
         Encode a VascularMesh using a centerline network.
 
@@ -36,8 +36,16 @@ class VascularEncoding(Tree, Encoding):
             cl_net : CenterlineNetwork
                 The centerlines of the vascular network.
 
-            params : dict.
-                A dictionary with the parameters for the encoding.
+            tau_knots, theta_knots : int, optional
+                Default value is 15 for both. The amount of internal knots in for each component of the radius function.
+
+            laplacian_penalty : float, optional
+                Default 1.0.
+
+            **kwargs : dict
+                The above described parameters can be provided per vessel using the kwargs. Say there exist a
+                Vessel whose id is AUX, to set specific parameters AUX, one can pass the argument AUX={tau_knots},
+                to set a specific amount of knots and assuming the default values on the other parameters.
 
         Returns
         -------
@@ -51,13 +59,14 @@ class VascularEncoding(Tree, Encoding):
         """
 
         def encode_and_add_vessel(bid):
+            nonlocal tau_knots, theta_knots, laplacian_penalty
             vsl_enc = VesselEncoding()
             vsl_enc.set_centerline(cl=cl_net[bid])
             vsl_mesh = vsl_enc.extract_vessel_from_network(vmesh=vmesh)
-            vsl_enc.encode_vessel_mesh(vsl_mesh    = vsl_mesh,
-                                       tau_knots   = params['knots'][bid]['tau_knots'],
-                                       theta_knots = params['knots'][bid]['theta_knots'],
-                                       filling     = params['filling'])
+            vsl_enc.encode_vessel_mesh(vsl_mesh          = vsl_mesh,
+                                       tau_knots         = check_specific(kwargs, bid, 'tau_knots', tau_knots),
+                                       theta_knots       = check_specific(kwargs, bid, 'theta_knots', theta_knots),
+                                       laplacian_penalty = check_specific(kwargs, bid, 'laplacian_penalty', laplacian_penalty))
 
             for cid in vsl_enc.children:
                 encode_and_add_vessel(cid)
@@ -66,7 +75,7 @@ class VascularEncoding(Tree, Encoding):
             encode_and_add_vessel(rid)
     #
 
-    def encode_vascular_mesh_decoupling(self, vmesh, cl_net, params, insertion=1, debug=False):
+    def encode_vascular_mesh_decoupling(self, vmesh, cl_net, tau_knots=15, theta_knots=15, laplacian_penalty=1.0, insertion=1.0, debug=False, **kwargs):
         """
         Encode a vascular mesh decoupling each branch as an independent vessel.
 
@@ -82,11 +91,22 @@ class VascularEncoding(Tree, Encoding):
             cl_net : CenterlineNetwork
                 The centerlines of the vascular network.
 
-            params : dict.
-                A dictionary with the parameters for the encoding.
+            tau_knots, theta_knots : int
+                The amount of internal knots in for each component of the radius function.
+
+            laplacian_penalty : float, optional
+                Default 1.0.
+
+            insertion : float, optional
+                Default 1.0.
 
             debug : bool, optional
                 A mode running mode that display plots of the process.
+
+            **kwargs : dict
+                The above described parameters can be provided per vessel using the kwargs. Say there exist a
+                Vessel whose id is AUX, to set specific parameters AUX, one can pass the argument AUX={tau_knots},
+                to set a specific amount of knots and assuming the default values on the other parameters.
 
         Returns
         -------
@@ -101,16 +121,17 @@ class VascularEncoding(Tree, Encoding):
         """
 
         def remove_centerline_graft(bid):
+            nonlocal insertion
             cl = cl_net[bid]
             pve = self[cl.parent]
             tau = pve.compute_centerline_intersection(cl, mode='parameter')
-            r = vmesh.kdt.query(cl(tau))[0] * insertion
+            r = vmesh.kdt.query(cl(tau))[0] * check_specific(kwargs, bid, 'insertion', insertion)
             tau_ = cl.travel_distance_parameter(-1*r, tau) #Traveling a radius distance towards inlet
             cl = cl.trim(t0_=tau_)
             return cl
 
         def decouple_and_encode_vessel(bid):
-
+            nonlocal tau_knots, theta_knots, laplacian_penalty
             cl = cl_net[bid]
             if cl.parent is not None:
                 cl = remove_centerline_graft(bid)
@@ -119,9 +140,9 @@ class VascularEncoding(Tree, Encoding):
             ve.set_centerline(cl)
             vsl_mesh = ve.extract_vessel_from_network(vmesh, debug=debug)
             ve.encode_vessel_mesh(vsl_mesh,
-                                  tau_knots=params['knots'][bid]['tau_knots'],
-                                  theta_knots=params['knots'][bid]['theta_knots'],
-                                  laplacian_penalty=params['laplacian_penalty'],
+                                  tau_knots   = check_specific(kwargs, bid, 'tau_knots', tau_knots),
+                                  theta_knots = check_specific(kwargs, bid, 'theta_knots', theta_knots),
+                                  laplacian_penalty = check_specific(kwargs, bid, 'laplacian_penalty', laplacian_penalty),
                                   debug=debug)
 
             self[bid] = ve
@@ -593,10 +614,10 @@ def encode_vascular_mesh(vmesh, cl_net, params, debug):
     vsc_enc = VascularEncoding()
 
     if params['method'] == 'decoupling':
-        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_net, params=params, debug=debug)
+        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_net, debug=debug, **params)
 
     elif params['method'] == 'at_joint':
-        vsc_enc.encode_vascular_mesh(vmesh, cl_net, params)
+        vsc_enc.encode_vascular_mesh(vmesh, cl_net, **params)
 
     else:
         error_message(f"Wrong value for encoding method argument. Available options are {{ 'decouplin', 'at_joint' }} and given is {params['method']}")

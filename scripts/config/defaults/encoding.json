@@ -5,8 +5,8 @@
     },
 
     "method" : "decoupling",
-    "filling" : "mean",
-    "knots" : {
-        "default" : {"tau_knots" : null, "theta_knots" : null}
-    }
+    "tau_knots"         : 15,
+    "theta_knots"       : 15,
+    "laplacian_penalty" : 1e-2,
+    "insertion"         : 1.0
 }
