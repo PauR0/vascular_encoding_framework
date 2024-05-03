@@ -56,6 +56,8 @@ def compute_centerline(case_dir, params=None, binary=True, overwrite=False, forc
     """
 
     vmesh = load_vascular_mesh(case_dir, suffix='_input')
+    if vmesh is None:
+        return None
 
     if params is None:
         params = read_centerline_config(case_dir)
