@@ -5,7 +5,6 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from ..messages import error_message
-from ..centerline import CenterlineNetwork
 from ..utils._code import Tree
 from ..utils.misc import split_metadata_and_fv
 
