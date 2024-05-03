@@ -82,9 +82,7 @@ def compute_centerline(case_dir, params=None, binary=True, overwrite=False, forc
         save_centerline_path(case_dir=case_dir, cl_path=cl_path, binary=binary, overwrite=overwrite)
 
     cl_net = vef.CenterlineNetwork.from_multiblock_paths(cl_path,
-                                                         knots=params['knots'],
-                                                         graft_rate=params['graft_rate'],
-                                                         force_extremes=params['force_tangent'])
+                                                         **params)
 
     write_centerline_config(path=case_dir, data=params)
     save_centerline(case_dir=case_dir, cl_net=cl_net, binary=binary, overwrite=overwrite)

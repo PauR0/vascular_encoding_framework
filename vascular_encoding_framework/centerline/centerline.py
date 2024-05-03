@@ -14,7 +14,7 @@ from scipy.misc import derivative
 from .domain_extractors import extract_centerline_domain
 from .path_extractor import extract_centerline_path
 from ..messages import error_message
-from ..utils._code import Tree, Node, attribute_checker
+from ..utils._code import Tree, Node, attribute_checker, check_specific
 from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
 from ..splines.splines import UniSpline, uniform_penalized_spline
 from ..utils.geometry import polyline_from_points
@@ -1732,7 +1732,7 @@ class CenterlineNetwork(Tree):
     #
 
     @staticmethod
-    def from_multiblock_paths(paths, knots, graft_rate=0.5, force_extremes=True):
+    def from_multiblock_paths(paths, n_knots=10, curvature_penatly=1, graft_rate=0.5, force_extremes=True, **kwargs):
         """
         Create a CenterlineNetwork from a pyvista MultiBlock made polydatas with
         points joined by lines, basically like the ouput of CenterlinePathExtractor.
@@ -1748,7 +1748,7 @@ class CenterlineNetwork(Tree):
                 called 'parent', that has to be a list with a single id (present in the multiblock names).
                 The names of the polydatas must be separable in "path_" + "id" as in path_AsAo
 
-            knots : dict[str]
+            n_knots : dict[str]
                 A dictionary with the knots to perform the spline curve least squares fitting of each polydata.
                 The id is accessed by the centerline id, and the value can be the list of knots to use, or a int
                 in the latter, a uniform spline is built with the number provided.
@@ -1762,6 +1762,12 @@ class CenterlineNetwork(Tree):
                 of the approximation. If True the first and last point are interpolated and its
                 tangent is approximated by finite differences using the surrounding points. If
                 'ini', respectively 'end', only one of both extremes is forced.
+
+            **kwargs : dict
+                The above described argugments can be provided per branch using the kwargs. Say there exist a
+                path_AUX in the passed multiblock, to set specific parameters for the branch AUX, one can pass
+                the dictionary AUX={n_knots:20}, setting the number of knots to 20 and assuming the default
+                values for the rest of the parameters.
 
         Returns
         -------
@@ -1783,20 +1789,25 @@ class CenterlineNetwork(Tree):
 
         def add_to_network(nid):
 
+            nonlocal n_knots, force_extremes, curvature_penatly, graft_rate
             points = paths[f'path_{nid}'].points
             if parents[nid] != 'None':
                 pcl         = cl_net[parents[nid]]
                 pre_joint   = paths[f'path_{nid}'].points[0]
                 pre_joint_t = pcl.get_projection_parameter(pre_joint)
-                if graft_rate:
-                    joint_t     = pcl.travel_distance_parameter(d=-paths[f'path_{nid}']['radius'][0]*graft_rate, a=pre_joint_t)
+                gr = check_specific(kwargs, nid, "graft_rate", graft_rate)
+                if gr:
+                    joint_t     = pcl.travel_distance_parameter(d=-paths[f'path_{nid}']['radius'][0]*gr, a=pre_joint_t)
                     joint       = pcl(joint_t)
-                    ids         = np.linalg.norm(points - joint, axis=1) > paths[f'path_{nid}']['radius'][0]*graft_rate
+                    ids         = np.linalg.norm(points - joint, axis=1) > paths[f'path_{nid}']['radius'][0]*gr
                     points      = np.concatenate([[joint, pcl((joint_t+pre_joint_t)/2)], paths[f'path_{nid}'].points[ids]])
                 else:
                     joint_t = pre_joint_t
 
-            cl = Centerline.from_points(points, n_knots=knots[nid], force_extremes=force_extremes, curvature_penalty=0.1)
+            cl = Centerline.from_points(points,
+                                        n_knots=check_specific(kwargs, nid, "n_knots", n_knots),
+                                        force_extremes=check_specific(kwargs, nid, "force_extremes", force_extremes),
+                                        curvature_penalty=check_specific(kwargs, nid, "curvature_penalty", curvature_penatly))
             cl.id = nid
             if parents[nid] != 'None':
                 cl.parent = parents[nid]

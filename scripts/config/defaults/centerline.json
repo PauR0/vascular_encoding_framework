@@ -4,9 +4,10 @@
         "version" : "0.0.1"
     },
 
-    "params_domain" : "FILE::seekers.json",
-    "params_path"   : "FILE::cl_path.json",
-    "graft_rate"    : 0.5,
-    "force_tangent" :true,
-    "knots"         : {}
+    "params_domain"     : "FILE::seekers.json",
+    "params_path"       : "FILE::cl_path.json",
+    "n_knots"           : 10,
+    "curvature_penalty" : 1,
+    "graft_rate"        : 0.5,
+    "force_extremes"    : true
 }
