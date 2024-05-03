@@ -419,6 +419,41 @@ class Tree(dict):
     #
 #
 
+def check_specific(params, nid, arg, default):
+    """
+    This function checks if the params dict contains params[nid][arg].
+    Then if it exists it is return, otherwise default argument is returned.
+
+    This function is meant to be used to filter out node specific parameters in
+    in functions applied to a Tree.
+
+    Arguments
+    ---------
+
+        params : dict
+            The Node specific parameter dict.
+
+        arg : str
+            The agument name to check for.
+
+        nid : str
+            The node id to check for.
+
+        default : Any
+            The default value the param arg must have.
+
+    Returns
+    -------
+        : Any
+            Either params[nid][arg] or default.
+    """
+
+    try:
+        return params[nid][arg]
+    except KeyError:
+        return default
+#
+
 def is_sequence(obj):
     """
     Check wether an object is a sequence.
