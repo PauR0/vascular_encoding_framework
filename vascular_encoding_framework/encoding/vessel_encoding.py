@@ -292,6 +292,37 @@ class VesselEncoding(Node, Encoding):
                                          debug=debug)
     #
 
+    def compute_residual(self, p):
+        """
+        This method computes the residual error of the encoding approximation. The method requires
+        the VesselEncoding splines to have been built.
+
+        Given a point p, located in the vessel wall, let (ta, th) be the two first coordinates of
+        the point in the VCS computed using the centerline, then the residual of the approximation
+        at the point is defined as:
+                || p - cl(ta) + rho_w(ta, th)(v1(ta)cos(th) + v2(ta)sin(th)) ||
+
+        Arguments
+        ---------
+
+            p : np.ndarray (N,)
+                The point on the vessel wall.
+
+        Returns
+        -------
+
+            res : float
+                The residual.
+        """
+
+        p_vcs = self.cartesian_to_vcs(p, rho_norm=True)
+        res = np.linalg.norm(p - self.vcs_to_cartesian(tau   = p_vcs[0],
+                                                       theta = p_vcs[1],
+                                                       rho   = p_vcs[2],
+                                                       rho_norm=True))
+        return res
+    #
+
     def compute_centerline_intersection(self, cl, mode='point'):
         """
         Given a centerline that intersects the vessel wall, this method computes the location of
