@@ -3,12 +3,15 @@
 import os
 import argparse
 
-import vascular_encoding_framework as vef
 from vascular_encoding_framework.utils._io import read_json
 import vascular_encoding_framework.messages as msg
 
-from case_io import in_case, load_vascular_mesh, save_vascular_mesh
+from .config.readers import (read_centerline_config,
+                             read_encoding_config)
 
+from .case_io import in_case, load_vascular_mesh, save_vascular_mesh
+from .vef_compute_centerline import compute_centerline
+from .vef_encode import encode
 
 def update_ids(case_dir, new_ids):
     """
@@ -66,7 +69,8 @@ if __name__ == '__main__':
     most of the Vascular Encoding Framework core operations such as centerline computation or
     encoding on a given case. It also allows to run basic routines as changing boundary ids.""")
 
-    parser.add_argument('--cl-config',
+    parser.add_argument('--cc',
+                        '--cl-config',
                         '--centerline-config',
                         dest="cl_config",
                         type=str,
@@ -74,6 +78,23 @@ if __name__ == '__main__':
                         default=None,
                         help="""Path to a json with the configuration parameters for the centerline
                         computation.""")
+
+    parser.add_argument('--ec',
+                        '--enc-config',
+                        '--encoding-config',
+                        dest="enc_config",
+                        type=str,
+                        action='store',
+                        default=None,
+                        help="""Path to a json with the configuration parameters for the encoding
+                        computation.""")
+
+    parser.add_argument('--debug',
+                        dest='debug',
+                        action='store_true',
+                        help="""Run in debug mode. This mode shows some plots at different stages
+                        of the process.""")
+
 
     parser.add_argument('--update-ids',
                         dest="upids",
@@ -96,12 +117,14 @@ if __name__ == '__main__':
     parser.add_argument('-c',
                         '--compute-cl',
                         '--compute-centerline',
+                        dest='compute_centerline',
                         action='store_true',
                         help="""Run centerline computation. If it already exists, it wont be
                         overwritten unless -w flag is also raised.""")
 
     parser.add_argument('-e',
                         '--encode',
+                        dest='encode',
                         action='store_true',
                         help="""Run encoding algorithm. If it already exists, it wont be overwritten
                         unless -w flag is also raised.""")
@@ -124,3 +147,23 @@ if __name__ == '__main__':
 
     if args.show_boundaries:
         show_boundaries(case_dir=args.case)
+
+    if args.compute_centerline:
+        if args.cl_params is not None:
+            cl_params = read_centerline_config(path=args.cl_params, abs_path=True)
+        compute_centerline(case_dir=args.case,
+                           params=cl_params,
+                           binary=True,
+                           overwrite=args.w,
+                           force=False,
+                           debug=args.debug)
+
+    if args.encode:
+        if args.enc_params is not None:
+            enc_params = read_encoding_config(path=args.enc_params, abs_path=True)
+        encode(case_dir  = args.case,
+               params    = enc_params,
+               binary    = True,
+               debug     = args.debug,
+               overwrite = args.w,
+               force     = False)
