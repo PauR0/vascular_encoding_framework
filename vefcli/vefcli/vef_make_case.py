@@ -6,10 +6,10 @@ import argparse
 
 from vascular_encoding_framework import messages as msg
 
-from case_io import load_vascular_mesh, save_vascular_mesh
+from .config.readers import read_centerline_config, read_encoding_config
+from .config.writers import write_centerline_config, write_encoding_config
 
-from config.readers import read_centerline_config, read_encoding_config
-from config.writers import write_centerline_config, write_encoding_config
+from .case_io import load_vascular_mesh, save_vascular_mesh
 
 def handle_case_and_mesh_name(case, mesh, ow=False):
     """

@@ -5,10 +5,10 @@ import argparse
 import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
 
-from config.readers import read_centerline_config
-from config.writers import write_centerline_config
+from .config.readers import read_centerline_config
+from .config.writers import write_centerline_config
 
-from case_io import (load_centerline_domain, save_centerline_domain,
+from .case_io import (load_centerline_domain, save_centerline_domain,
                     load_centerline_path, save_centerline_path,
                     load_vascular_mesh, save_centerline)
 

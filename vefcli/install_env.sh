@@ -38,7 +38,7 @@ build_venv () {
     pip3 install --upgrade pip
     pip3 install wheel
     pip3 install -r "$SCRIPTPATH/requirements.txt"
-    pip3 install -e $SCRIPTPATH
+    pip3 install $SCRIPTPATH
     deactivate
 }
 

@@ -3,12 +3,11 @@
 import argparse
 
 import vascular_encoding_framework as vef
-from vascular_encoding_framework import messages as msg
 
-from config.readers import read_encoding_config
-from config.writers import write_encoding_config
+from .config.readers import read_encoding_config
+from .config.writers import write_encoding_config
 
-from case_io import (load_vascular_mesh, load_centerline,
+from .case_io import (load_vascular_mesh, load_centerline,
                      save_vascular_encoding)
 
 

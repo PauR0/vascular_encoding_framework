@@ -6,12 +6,15 @@ import argparse
 from vascular_encoding_framework.utils._io import read_json
 import vascular_encoding_framework.messages as msg
 
-from .config.readers import (read_centerline_config,
-                             read_encoding_config)
 
-from .case_io import in_case, load_vascular_mesh, save_vascular_mesh
 from .vef_compute_centerline import compute_centerline
 from .vef_encode import encode
+
+from .config.readers import (read_centerline_config,
+                            read_encoding_config)
+
+from .case_io import in_case, load_vascular_mesh, save_vascular_mesh
+
 
 def update_ids(case_dir, new_ids):
     """
