@@ -22,13 +22,12 @@ readme       = {file = ["README.md"]}
 [tool.setuptools]
 include-package-data = true
 
-[tool.setuptools.packages.find]
-where = ["vef_scripts"]
-include = ["vef_scripts*"]
-namespaces = false
+[tool.setuptools.packages]
+find = {}
+
 
 [tool.setuptools.package-data]
-vef_scripts = ['config/default/*.json']
+vef_scripts = ['vef_scripts/config/default/*.json']
 
 [project.urls]
 homepage = "https://github.com/PauR0/vascular_encoding_framework"
