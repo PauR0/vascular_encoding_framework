@@ -24,3 +24,13 @@ vef_compute_centerline does not require the Encoding directory to exist or to co
 TODO: Study the option of emedding this package onto vef __main__.py at top level.
 PEP-338: https://peps.python.org/pep-0338/
 """
+
+__all__ = [
+    "make_case",
+    "compute_centerline",
+    "encode",
+]
+
+from .vef_make_case import make_case
+from .vef_compute_centerline import compute_centerline
+from .vef_encode import encode
