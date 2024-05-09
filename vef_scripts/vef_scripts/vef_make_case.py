@@ -45,7 +45,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
         msg.warning_message(f"The case: {case_dir} already exists and overwritting is set to False. Nothing will be created.")
         return None, None
 
-    return mesh, case
+    return case, mesh
 #
 
 def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, overwrite=False, cl_params=None, ec_params=None):
@@ -55,6 +55,8 @@ def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, 
     in Meshes directory inside the case. If the mesh_fname is passed, the module also
     attempts to compute the boundaries and save them at the Meshes directory.
     """
+
+    case_dir, mesh_fname = handle_case_and_mesh_name(case_dir, mesh_fname, ow=overwrite)
 
     if cl_params is None:
         cl_params = read_centerline_config(case_dir)
@@ -129,7 +131,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    mesh_path, case_path = handle_case_and_mesh_name(case=args.case, mesh=args.mesh, ow=args.w)
+    case_path, mesh_path = handle_case_and_mesh_name(case=args.case, mesh=args.mesh, ow=args.w)
     if case_path is None:
         sys.exit(0)
 
