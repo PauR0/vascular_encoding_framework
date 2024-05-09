@@ -3,11 +3,11 @@ requires      = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name    = "vefcli"
+name    = "vef_scripts"
 authors = [{name="Pau Romero", email="pau.romero@uv.es"}]
 version = "0.0.1"
 dynamic = ["dependencies", "readme"]#, "version"]
-description = "Python module to be used as a commandline interface for vascular encoding framework."
+description = "Python module interface to vascular encoding framework using the case directory logic."
 #license = {text = ""}
 #requires-python = ">=3.8"
 
@@ -23,12 +23,12 @@ readme       = {file = ["README.md"]}
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["vefcli"]
-include = ["vefcli*"]
+where = ["vef_scripts"]
+include = ["vef_scripts*"]
 namespaces = false
 
 [tool.setuptools.package-data]
-vefcli = ['config/default/*.json']
+vef_scripts = ['config/default/*.json']
 
 [project.urls]
 homepage = "https://github.com/PauR0/vascular_encoding_framework"
