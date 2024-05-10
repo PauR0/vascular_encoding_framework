@@ -124,7 +124,7 @@ if args.ec_params is not None:
 
 
 if args.mode == 'make_case':
-    make_case(case_dir=args.case, mesh_fname=args.mesh, show_boundaries=args.show_bounds, overwrite=args.w, cl_params=cl_params, ec_params=ec_params)
+    make_case(case_dir=args.case, mesh_fname=args.mesh, show_boundaries=args.show_boundaries, overwrite=args.w, cl_params=cl_params, ec_params=ec_params)
     sys.exit(0)
 #
 
