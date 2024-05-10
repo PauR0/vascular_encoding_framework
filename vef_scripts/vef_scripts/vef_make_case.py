@@ -45,7 +45,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
         msg.warning_message(f"The case: {case_dir} already exists and overwritting is set to False. Nothing will be created.")
         return None, None
 
-    return case, mesh
+    return case_dir, mesh
 #
 
 def make_case(case_dir, mesh_fname=None, hierarchy=None, show_boundaries=False, overwrite=False, cl_params=None, ec_params=None):
