@@ -133,7 +133,7 @@ if args.mode == 'run_case':
     case = args.case if args.case is not None else os.getcwd()
 
     if args.upids:
-        update_ids(case_dir=args.case, new_ids=args.upids)
+        update_ids(case_dir=case, new_ids=args.upids)
 
     if args.show_boundaries:
         show_boundaries(case_dir=case)
