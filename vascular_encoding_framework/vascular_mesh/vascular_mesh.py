@@ -231,13 +231,14 @@ class VascularMesh(pv.PolyData):
 
         computing_message("mesh boundaries")
         bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
-        bnds = bnds.connectivity()
+        bnds = bnds.connectivity(extraction_mode='all', label_regions=True)
         boundaries = Boundaries()
 
-        for i in np.unique(bnds['RegionId']):
+        rid = bnds.get_array('RegionId', preference='point')
+        for i in np.unique(rid):
             ii = str(int(i))
 
-            b = bnds.extract_cells(bnds['RegionId'] == i).extract_surface(pass_pointid=False, pass_cellid=False)
+            b = bnds.extract_points(rid == i).extract_surface(pass_pointid=False, pass_cellid=False)
             b = triangulate_cross_section(b)
 
             bd = Boundary()
