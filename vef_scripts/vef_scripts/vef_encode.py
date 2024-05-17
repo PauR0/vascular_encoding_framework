@@ -11,7 +11,7 @@ from .case_io import (load_vascular_mesh, load_centerline,
                      save_vascular_encoding)
 
 
-def encode(case_dir, params=None, binary=True, debug=False, overwrite=False, force=False):
+def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     """
     Given a vef case directory where there is a vascular mesh with the '_input' suffix, whose
     centerline is also stored at the Centerline subdir. This function-script allows the computation
@@ -41,9 +41,6 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False, for
         overwrite : bool, opt
             Default False. Whether to existing files
 
-        force : bool, opt
-            Default False. Whether to force recomputation even if files exist at case_dir.
-            WARNING: Forcing recomputation does not imply overwritting!
 
     Return
     ------
