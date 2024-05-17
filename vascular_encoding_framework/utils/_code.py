@@ -343,6 +343,10 @@ class Tree(dict):
             self[self[new_id].parent].remove_child(old_id)
             self[self[new_id].parent].add_child(new_id)
 
+        elif self[new_id].parent is None:
+            self.roots.remove(old_id)
+            self.roots.add(new_id)
+
         for cid in self[new_id].children:
             self[cid].parent = new_id
     #
