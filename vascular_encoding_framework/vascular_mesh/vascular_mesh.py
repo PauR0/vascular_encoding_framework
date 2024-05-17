@@ -312,6 +312,7 @@ class VascularMesh(pv.PolyData):
         if print_data:
             print(self.boundaries)
 
+        p.add_axes()
         p.show()
 
         return
