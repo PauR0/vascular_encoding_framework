@@ -6,6 +6,7 @@ A function-factory seems to be incompatible with docstring.
 """
 
 import os
+from copy import deepcopy
 
 import pyvista as pv
 
@@ -14,34 +15,45 @@ from vascular_encoding_framework.utils._io import is_writable
 from vascular_encoding_framework import messages as msg
 
 
-def in_case(case_dir, subdir, name):
-    """
-    Modify the provided path according to fit to case directory structure.
+_case_convention = {
+    "boundaries" : ["Meshes",     "boundaries.json"],
+    "mesh"       : ["Meshes",     "mesh.vtk"],
+    "cl_domain"  : ["Centerline", "domain.vtk"],
+    "cl_path"    : ["Centerline", "path.vtm"],
+    "centerline" : ["Centerline", "centerline.vtm"],
+    "encoding"   : ["Encoding",   "encoding.vtm"],
+}
+#
 
+def get_case_convention(obj, suffix="", case_dir=""):
+    """
+    Get the path relative to a case directory for the main objects of vef_scripts module.
 
     Arguments
-    -----------
+    ---------
 
-        case_dir : str
-            The case directory.
+        obj : {"boundaries", "mesh", "domain", "cl_path", "centerline", "encoding"}
+            The name of the object to get the path.
 
-        subdir : str or list[str]
-            the actual subdirectory the path must end. It can be either a string
-            or a list of strings as in ['foo', 'bar'] -> case_dir/foo/bar/
+        suffix : str, optional
+            Defaulting to empty string. An string to append to filename before the extension.
 
-        name : str
-            The filename.
+        case_dir : str, optional
+            Defaulting to empty string. A path to a case directory to be pre-appended.
 
     Returns
-    ----------
-        :  str
-            The appropriate path/to/file fulfilling the case directory criteria.
+    -------
+
+        cfname : str
+            The path, relative to top case directory level, of the object with the provided suffix.
+
     """
 
-    if isinstance(subdir, list):
-        return os.path.join(case_dir, *subdir, name)
-
-    return os.path.join(case_dir, subdir, name)
+    cfname = deepcopy(_case_convention[obj])
+    name, ext = cfname[-1].split('.')
+    cfname[-1] = f"{name}{suffix}.{ext}"
+    cfname = os.path.join(*cfname)
+    return os.path.join(case_dir, cfname)
 #
 
 def make_subdirs(case_dir, subdir):
@@ -67,7 +79,7 @@ def make_subdirs(case_dir, subdir):
     os.makedirs(sd, exist_ok=True)
 #
 
-def load_vascular_mesh(path, suffix="", ext="vtk", abs_path=False):
+def load_vascular_mesh(path, suffix="", abs_path=False):
     """
     Load a vascular mesh with all the available data at a given case directory.
 
@@ -94,8 +106,8 @@ def load_vascular_mesh(path, suffix="", ext="vtk", abs_path=False):
         mesh_fname   = path
         bounds_fname = None
     else:
-        mesh_fname   = in_case(path, "Meshes", f"mesh{suffix}.{ext}")
-        bounds_fname = in_case(path, "Meshes", f"boundaries{suffix}.json")
+        mesh_fname   = get_case_convention("mesh",       suffix=suffix, case_dir=path)
+        bounds_fname = get_case_convention("boundaries", suffix=suffix, case_dir=path)
 
     try:
         vmesh = vef.VascularMesh.read(filename=mesh_fname, boundaries_fname=bounds_fname)
@@ -106,7 +118,7 @@ def load_vascular_mesh(path, suffix="", ext="vtk", abs_path=False):
         return None
 #
 
-def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=False, overwrite=False):
+def save_vascular_mesh(vmesh, path, suffix="", binary=True, abs_path=False, overwrite=False):
     """
     Save a vascular mesh with all the available data at a given path. By default
     this function assumes path is a case directory and uses default name convention.
@@ -138,8 +150,8 @@ def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=
 
     if not abs_path:
         make_subdirs(path, 'Meshes')
-        mesh_fname   = os.path.join(path, 'Meshes', f'mesh{suffix}.{ext}')
-        bounds_fname = os.path.join(path, 'Meshes', f'boundaries{suffix}')
+        mesh_fname   = get_case_convention("mesh",       suffix=suffix, case_dir=path)
+        bounds_fname = get_case_convention("boundaries", suffix=suffix, case_dir=path)
 
     else:
         dirname, nameext = os.path.split(path)
@@ -154,7 +166,7 @@ def save_vascular_mesh(vmesh, path, suffix="", binary=True, ext="vtk", abs_path=
         msg.warning_message(f"Overwritting is set to false, and {mesh_fname} or {bounds_fname} already exists. Nothig will be written.")
 #
 
-def load_centerline_domain(case_dir):
+def load_centerline_domain(case_dir, suffix=""):
     """
     Load the centerline domain under the case directory convention.
 
@@ -168,13 +180,17 @@ def load_centerline_domain(case_dir):
         case_dir : str
             The path to the case directory.
 
+        suffix : string
+            A string indicating a suffix in the mesh name. E.g. suffix="_input"
+            means domain_input.vtk
+
     Returns
     -------
         cl_domain : pv.UnstructuredGrid
             The loaded lumen discretization.
     """
 
-    fname = in_case(case_dir, 'Centerline', 'domain.vtk')
+    fname = get_case_convention(obj='cl_domain', suffix=suffix, case_dir=case_dir)
     cl_domain = None
     if os.path.exists(fname):
         cl_domain = pv.read(fname)
@@ -182,7 +198,7 @@ def load_centerline_domain(case_dir):
     return cl_domain
 #
 
-def save_centerline_domain(case_dir, cl_domain, binary=True, overwrite=False):
+def save_centerline_domain(case_dir, cl_domain, suffix="", binary=True, overwrite=False):
     """
     Save the centerline domain under the case directory convention.
 
@@ -200,6 +216,10 @@ def save_centerline_domain(case_dir, cl_domain, binary=True, overwrite=False):
         cl_domain : pv.UnstructuredGrid
             The computed centerline domain as a pyvista UnstructuredGrid.
 
+        suffix : string
+            A string indicating a suffix in the mesh name. E.g. suffix="_input"
+            means domain_input.vtk
+
         binary : bool, opt.
             Default True. Wheteher to save vtk files in binary format.
 
@@ -208,13 +228,13 @@ def save_centerline_domain(case_dir, cl_domain, binary=True, overwrite=False):
     """
 
     make_subdirs(case_dir, 'Centerline')
-    fname = in_case(case_dir, 'Centerline', 'domain.vtk')
+    fname = get_case_convention(obj='cl_domain', suffix=suffix, case_dir=case_dir)
     message = f"{fname} exists and overwritting is set to False."
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_domain.save(fname, binary=binary)
 #
 
-def load_centerline_path(case_dir):
+def load_centerline_path(case_dir, suffix=""):
     """
     Load the centerline path under the case directory convention.
 
@@ -228,8 +248,14 @@ def load_centerline_path(case_dir):
 
     Arguments
     ---------
+
         case_dir : str
             The path to the case directory.
+
+        suffix : string
+            A string indicating a suffix in the mesh name. E.g. suffix="_input"
+            means domain_input.vtk
+
 
     Returns
     -------
@@ -237,7 +263,7 @@ def load_centerline_path(case_dir):
             The loaded paths optimizing the distance to the wall.
     """
 
-    fname = in_case(case_dir, 'Centerline', 'path.vtm')
+    fname = get_case_convention(obj='cl_path', suffix=suffix, case_dir=case_dir)
 
     cl_paths = None
     if os.path.exists(fname):
@@ -246,7 +272,7 @@ def load_centerline_path(case_dir):
     return cl_paths
 #
 
-def save_centerline_path(case_dir, cl_path, binary=True, overwrite=False):
+def save_centerline_path(case_dir, cl_path, suffix="", binary=True, overwrite=False):
     """
     Save the centerline path under the case directory convention.
 
@@ -267,6 +293,10 @@ def save_centerline_path(case_dir, cl_path, binary=True, overwrite=False):
         cl_path : pv.MultiBlock
             The computed centerline paths as a pyvista MultiBlock.
 
+        suffix : string
+            A string indicating a suffix in the mesh name. E.g. suffix="_input"
+            means domain_input.vtk
+
         binary : bool, opt.
             Default True. Wheteher to save vtk files in binary format.
 
@@ -275,7 +305,7 @@ def save_centerline_path(case_dir, cl_path, binary=True, overwrite=False):
     """
 
     make_subdirs(case_dir, 'Centerline')
-    fname = in_case(case_dir, 'Centerline', 'path.vtm')
+    fname = get_case_convention(obj='cl_path', suffix=suffix, case_dir=case_dir)
     message = f"{fname} exists and overwritting is set to False."
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_path.save(fname, binary=binary)
@@ -309,7 +339,7 @@ def load_centerline(case_dir, suffix=""):
             The loaded centerline
     """
 
-    fname = in_case(case_dir, 'Centerline', f'centerline{suffix}.vtm')
+    fname = get_case_convention(obj='centerline', suffix=suffix, case_dir=case_dir)
 
     cl_net = None
     if os.path.exists(fname):
@@ -353,7 +383,7 @@ def save_centerline(case_dir, cl_net, suffix="", binary=True, overwrite=False):
     """
 
     make_subdirs(case_dir, 'Centerline')
-    fname = in_case(case_dir, 'Centerline', f'centerline{suffix}.vtm')
+    fname = get_case_convention(obj='centerline', suffix=suffix, case_dir=case_dir)
     message = f"{fname} exists and overwritting is set to False."
     cl_mb = cl_net.to_multiblock(add_attributes=True)
     if is_writable(fname=fname, overwrite=overwrite, message=message):
@@ -388,7 +418,7 @@ def load_vascular_encoding(case_dir, suffix=""):
             The loaded vascular encoding
     """
 
-    fname = in_case(case_dir, 'Encoding', f'encoding{suffix}.vtm')
+    fname = get_case_convention(obj='encoding', suffix=suffix, case_dir=case_dir)
 
     vsc_enc = None
     if os.path.exists(fname):
@@ -427,7 +457,7 @@ def save_vascular_encoding(case_dir, vsc_enc, suffix="", binary=True, overwrite=
     """
 
     make_subdirs(case_dir, 'Encoding')
-    fname = in_case(case_dir, 'Encoding', f'encoding{suffix}.vtm')
+    fname = get_case_convention(obj='encoding', suffix=suffix, case_dir=case_dir)
     message = f"{fname} exists and overwritting is set to False."
     enc_mb = vsc_enc.to_multiblock()
     if is_writable(fname=fname, overwrite=overwrite, message=message):

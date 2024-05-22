@@ -12,7 +12,7 @@ from .vef_encode import encode
 from .config.readers import (read_centerline_config,
                             read_encoding_config)
 
-from .case_io import in_case, load_vascular_mesh, save_vascular_mesh
+from .case_io import load_vascular_mesh, save_vascular_mesh
 
 
 def update_ids(case_dir, new_ids):
@@ -39,7 +39,7 @@ def update_ids(case_dir, new_ids):
     """
 
     if not isinstance(new_ids, dict):
-        nids_fname = in_case(case_dir, subdir='', name='new_ids.json')
+        nids_fname = os.path.join(case_dir, 'new_ids.json')
         new_ids = read_json(nids_fname)
 
     vmesh = load_vascular_mesh(path=case_dir, suffix='_input')
