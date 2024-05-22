@@ -1,7 +1,5 @@
 
 
-import argparse
-
 import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
 
@@ -89,57 +87,3 @@ def compute_centerline(case_dir, params=None, binary=True, overwrite=False, forc
 
     return cl_net
 #
-
-
-
-
-
-
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(description="""Script to compute the centerline of a vascular
-    structure using the Vascular Encoding Framework conventions. The computation of the centerline
-    requires a vascular mesh with _input suffix to exist in the case. Parameters can be tuned using
-    a centerline.json file stored in the case directory, otherwise default values are used.""")
-
-    parser.add_argument('--debug',
-                        dest='debug',
-                        action='store_true',
-                        help="""Run in debug mode. This mode shows some plots at different stages of the process.""")
-
-    parser.add_argument('-f',
-                        '--force',
-                        dest='force',
-                        action='store_true',
-                        help="""Force the computation of domain and path.""")
-
-    parser.add_argument('-w',
-                        action='store_true',
-                        help="""Force overwriting if it already exists.""")
-
-    parser.add_argument('--ascii',
-                        dest='binary',
-                        action='store_false',
-                        help="""Whether to write ouput files in binary. Default is binary mode.""")
-
-    parser.add_argument('-p',
-                        '--params',
-                        dest='params',
-                        type=str,
-                        default=None,
-                        help = """Alternative json file with the desired params.""")
-
-    parser.add_argument('case',
-                        action='store',
-                        default=None,
-                        help="""The path/name with the case. If none is provided,
-                        a directory called vef_case.""")
-
-    args = parser.parse_args()
-
-    params = None
-    if args.params is not None:
-        params = read_centerline_config(path=args.params, abs_path=True)
-
-    compute_centerline(case_dir=args.case, params=params, overwrite=args.w, force=args.force, debug=args.debug)
-    #
