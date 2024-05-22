@@ -80,7 +80,6 @@ def make_case(case_dir, mesh_fname=None, vmesh=None, show_boundaries=False, over
 
         meshes_dir = os.path.join(case_dir, 'Meshes')
         os.makedirs(meshes_dir, exist_ok=True)
-        save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, ext='vtk', overwrite=overwrite)
-#
-
+        save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, overwrite=overwrite)
+    return case_dir
 #
