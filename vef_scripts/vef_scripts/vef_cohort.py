@@ -168,8 +168,9 @@ def save_cohort_object(cohort_dir, cohort, suffix="", binary=False, overwrite=Fa
         if not os.path.exists(case_dir):
             error_message(f"Wrong case_dir at: {case_dir}. The {type(obj)} object wont be saved.")
 
-        if isinstance(obj, (vef.VascularEncoding, vef.CenterlineNetwork, vef.VascularMesh)):
+        if not isinstance(obj, (vef.VascularEncoding, vef.CenterlineNetwork, vef.VascularMesh)):
             error_message("Only VascularEncoding, CenterlineNetwork adn VascularMesh objects are supported for cohort saving.")
+            return
 
         if isinstance(obj, vef.CenterlineNetwork):
             save_centerline(case_dir=case_dir, cl_net=obj, suffix=suffix, binary=binary, overwrite=overwrite)
