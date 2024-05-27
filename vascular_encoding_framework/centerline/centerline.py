@@ -976,6 +976,10 @@ class Centerline(UniSpline, Node):
                 self.set_parameters(extra=str(value[0]))
         self.build()
 
+        if 'v1' in poly.point_data:
+            self.compute_adapted_frame(p=poly.get_array('v1', preference='point')[0],
+                                       mode='as_is')
+
         node_atts = list(Node().__dict__) + ['joint_t']
         for att in node_atts:
             if att in poly.field_data:
