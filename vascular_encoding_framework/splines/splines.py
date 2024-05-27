@@ -642,7 +642,7 @@ def compute_rho_spline(polar_points, n_knots, k=3, logger=None):
     return coeff_r, rmse
 #
 
-def uniform_penalized_bivariate_spline(x, y, z, nx, ny, laplacian_penalty=1.0, kx=3, ky=3, bounds=None, debug=False):
+def uniform_penalized_bivariate_spline(x, y, z, nx, ny, laplacian_penalty=1.0, y_periodic=False, kx=3, ky=3, bounds=None, debug=False):
     """
     A function to perform a curvature-penalized LSQ approximation of a bivariate function, f(x,y)
     that is periodic wrt to y.
@@ -658,6 +658,9 @@ def uniform_penalized_bivariate_spline(x, y, z, nx, ny, laplacian_penalty=1.0, k
 
         laplacian_penalty : float, optional
             Default 1. The penalization factor applied the laplacian of the coefficients.
+
+        y_periodic : bool, optional
+            Default True. Whether to impose periodicity on y coefficients.
 
         kx,ky : int, optional
             Default 3. The degree of the spline for each dimension.
@@ -681,20 +684,23 @@ def uniform_penalized_bivariate_spline(x, y, z, nx, ny, laplacian_penalty=1.0, k
         yb, ye = y.min(), y.max()
     else:
         xb, xe, yb, ye = bounds
-    tx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='complete', k=kx, ext=None)
-    ty = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='periodic', k=ky, ext=None)
 
-    cons = get_bivariate_semiperiodic_constraint(nx, ny, kx, ky)
+    tx = get_uniform_knot_vector(xb=xb, xe=xe, n=nx, mode='complete', k=kx, ext=None)
+    ty = get_uniform_knot_vector(xb=yb, xe=ye, n=ny, mode='periodic' if y_periodic else 'extended', k=ky, ext=None)
+
+    cons = None
+    if y_periodic:
+        cons = get_bivariate_semiperiodic_constraint(nx=nx, ny=ny, kx=kx, ky=ky)
+
     x0 = np.array([z.mean()]*get_coefficients_lenght(n_internal_knots=[nx, ny], k=[kx, ky]))
     res = minimize(fun=bivariate_optimization_loss, x0=x0, args=(x, y, z, tx, ty, kx, ky, laplacian_penalty),
-                        method='SLSQP', constraints=cons)
+                        method='SLSQP', constraints=cons, options={"disp":debug}) #"maxiter":25, can be set as an option
 
     bispl         = BivariateSpline()
     bispl.tck     = tx, ty, res.x
     bispl.degrees = kx, ky
 
     if debug:
-        print(f"Optimization succes: {res.success}. Optimization message: {res.message}")
         xx = np.linspace(xb, xe, 50)
         yy = np.linspace(yb, ye, 50)
         X, Y = np.meshgrid(xx, yy)
