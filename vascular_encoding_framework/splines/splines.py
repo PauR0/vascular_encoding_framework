@@ -363,7 +363,7 @@ def get_uniform_knot_vector(xb, xe, n, mode='complete', k=3, ext=None):
         It is useful when combined with scipy B-Splines functions.
 
     ext : int
-        Default is None. Ignored if mode != 'extended'. The times to extend the knot vector from
+        Default is k. Ignored if mode != 'extended'. The times to extend the knot vector from
         both ends preserving the separation between nodes.
 
 
@@ -389,7 +389,7 @@ def get_uniform_knot_vector(xb, xe, n, mode='complete', k=3, ext=None):
 
     elif mode == 'extended':
         if ext is None:
-            raise ValueError(f"Wrong value ({ext}) for ext argument using extended mode.")
+            ext = k
 
         t = np.concatenate([t[0]+np.arange(-ext, 0)*d, t, t[-1]+np.arange(ext+1)[1:]*d])
 
