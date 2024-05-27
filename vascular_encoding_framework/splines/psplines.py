@@ -62,11 +62,17 @@ def bivariate_optimization_loss(c, x, y, z, tx, ty, kx, ky, l):
         c : np.ndarray (m,)
             The coefficients of the splines to use.
 
-        Bx : np.ndarray (N, m)
-            The matrix with the evaluation of the domain points by the basis splines.
+        x, y, z : np.ndarray (N,)
+            The domain arrays (x, y) and its observations (z).
 
-        y : np.ndarray (N,)
-            The observations of the function at the domain points.
+        tx, ty : np.ndarray (n_{x,y},)
+            The knot vectors with its respective lengths.
+
+        kx, ky : int
+            The degree at each dimension.
+
+        l : float
+            The penalization factor to apply on laplacian.
 
     Returns
     -------
