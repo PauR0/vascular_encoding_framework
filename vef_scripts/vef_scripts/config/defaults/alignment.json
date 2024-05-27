@@ -1,0 +1,10 @@
+{
+    "metadata" : {
+        "type" : "alignment",
+        "version" : "0.0.1"
+    },
+    "alignment_method" : "procrustes",
+    "alignment_params" : null,
+    "n_iters"          : 3,
+    "reference_id"     : 0
+}

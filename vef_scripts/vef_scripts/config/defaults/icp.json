@@ -1,0 +1,8 @@
+{
+    "metadata" : {
+        "type" : "icp",
+        "version" : "0.0.1"
+    },
+    "max_iterations" : 100,
+    "max_landmarks"  : 100
+}
