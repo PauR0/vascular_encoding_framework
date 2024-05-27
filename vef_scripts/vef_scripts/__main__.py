@@ -162,16 +162,15 @@ if args.mode not in MODES:
     sys.exit(-1)
 
 
-cl_params=None
-if args.cl_params is not None:
-    cl_params = read_centerline_config(path=args.cl_params, abs_path=True)
-
-ec_params=None
-if args.ec_params is not None:
-    ec_params = read_encoding_config(path=args.ec_params, abs_path=True)
-
-
 if args.mode == 'case':
+
+    cl_params=None
+    if args.cl_params is not None:
+        cl_params = read_centerline_config(path=args.cl_params, abs_path=True)
+
+    ec_params=None
+    if args.ec_params is not None:
+        ec_params = read_encoding_config(path=args.ec_params, abs_path=True)
 
     if args.make:
         case = make_case(case_dir=args.path, mesh_fname=args.mesh, overwrite=args.w, cl_params=cl_params, ec_params=ec_params)
@@ -209,7 +208,8 @@ if args.mode == 'cohort':
                    n_proc=args.n_proc)
 
     if args.centerline:
-
+        cl_params_fname = args.cl_params if args.cl_params is not None else os.path.join(cohort_dir, 'centerline.json')
+        cl_params = read_centerline_config(cohort_dir) if os.path.exists(cl_params_fname) else None
         cohort_run(cohort_dir=cohort_dir,
                    routine=_Centerliner(params=cl_params,
                                         binary=args.binary,
@@ -220,7 +220,8 @@ if args.mode == 'cohort':
                    n_proc=args.n_proc)
 
     if args.encode:
-
+        ec_params_fname = args.ec_params if args.ec_params is not None else os.path.join(cohort_dir, 'encoding.json')
+        ec_params = read_encoding_config(cohort_dir) if os.path.exists(ec_params_fname) else None
         cohort_run(cohort_dir=cohort_dir,
                    routine=_Encoder(params=ec_params,
                                     binary=args.binary,
