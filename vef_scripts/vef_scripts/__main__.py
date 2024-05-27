@@ -13,7 +13,7 @@ from .config.readers import *
 from .config.writers import *
 
 from .vef_make_case import make_case
-from .vef_case import update_ids, show_boundaries
+from .vef_case import update_ids, show_boundaries, show_adapted_frame
 from .vef_compute_centerline import compute_centerline
 from .vef_encode import encode
 from .vef_align import align_encodings
@@ -87,6 +87,12 @@ parser.add_argument('--show-boundaries',
                     dest="show_boundaries",
                     action='store_true',
                     help="""Display the input mesh and boundaries stored on Meshes dir.""")
+
+parser.add_argument('--show-adapted',
+                    '--show-adapted-frame',
+                    dest="show_adapted",
+                    action='store_true',
+                    help="""Display the parallel transport of the adapte frame along centerline network.""")
 
 parser.add_argument('-e',
                     '--encode',
@@ -181,6 +187,9 @@ if args.mode == 'case':
 
     if args.centerline:
         compute_centerline(case_dir=case, params=cl_params, binary=args.binary, overwrite=args.w, force=args.force, debug=args.debug)
+
+    if args.show_adapted:
+        show_adapted_frame(case_dir=case, suffix="")
 
     if args.encode:
         encode(case_dir=case, params=ec_params, binary=args.binary, debug=args.debug, overwrite=args.w)
