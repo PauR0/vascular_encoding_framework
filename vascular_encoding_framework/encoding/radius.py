@@ -248,6 +248,7 @@ class Radius(BiSpline):
                                                    nx=tau_knots,
                                                    ny=theta_knots,
                                                    laplacian_penalty=laplacian_penalty,
+                                                   y_periodic=True,
                                                    kx=rd.kx,
                                                    ky=rd.ky,
                                                    bounds=(rd.x0, rd.x1, rd.y0, rd.y1),
