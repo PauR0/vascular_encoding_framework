@@ -1589,7 +1589,7 @@ class CenterlineNetwork(Tree):
         Returns:
         --------
 
-            pr : np.ndarray (3,)
+            p : np.ndarray (3,)
                 The projection of the point in the centerline
 
             t : float, opt
@@ -1609,9 +1609,9 @@ class CenterlineNetwork(Tree):
         p, t, d = self[cl_id].get_projection_point(p=p, method=method, full_output=True)
 
         if full_output:
-            return t, cl_id, d
+            return p, t, cl_id, d
 
-        return t
+        return p
     #
 
     def cartesian_to_vcs(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
