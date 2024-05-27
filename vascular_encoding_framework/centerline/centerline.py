@@ -1620,8 +1620,8 @@ class CenterlineNetwork(Tree):
         computes its expression in the Vessel Coordinate System (VCS) of the
         centerline it has been associated to.
 
-        Arguments:
-        -----------
+        Arguments
+        ---------
 
             p : np.ndarray (3,)
                 The 3D point.
@@ -1641,8 +1641,8 @@ class CenterlineNetwork(Tree):
             full_output : bool, opt
                 Default False. Whether to add the cl_id to the returns.
 
-        Returns:
-        --------
+        Returns
+        -------
 
             p_vcs : np.ndarray (3,)
                 The (tau, theta, rho) coordinates of the given point.

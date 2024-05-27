@@ -67,8 +67,8 @@ class VesselEncoding(Node, Encoding):
         requires the attribute centerline to be set, additionally if rho normalization
         is desired, the radius spline attributes must have been built.
 
-        Arguments:
-        -------------
+        Arguments
+        ---------
 
             p : np.ndarray (3,)
                 A 3D point in cartesian coordinates.
@@ -82,8 +82,8 @@ class VesselEncoding(Node, Encoding):
                 The minimization method to use. See get_projection_parameter
                 for more infor.
 
-        Returns:
-        ---------
+        Returns
+        -------
 
             p_vcs : np.ndarray(3,)
                 The coordinates of the point in the VCS.
@@ -110,8 +110,8 @@ class VesselEncoding(Node, Encoding):
         Using numpy broadcasting this metho allows working with arrays of vessel
         coordinates.
 
-        Arguments:
-        ----------
+        Arguments
+        ---------
 
             tau : float or arraylike (N,)
                 The longitudinal coordinate of the point
@@ -184,8 +184,8 @@ class VesselEncoding(Node, Encoding):
         This method requires self.centerline. Warning: If argument cl is passed, the
         centerline object is set as self.centerline.
 
-        Arguments:
-        -----------
+        Arguments
+        ---------
 
             vmesh : pv.PolyData
                 The vascular network surface mesh.
@@ -198,8 +198,8 @@ class VesselEncoding(Node, Encoding):
             cl : Centerline
                 The Vessel centerline.
 
-        Returns:
-        ---------
+        Returns
+        -------
             vsl_mesh : pv.PolyData
                 The vessel polydata extracted.
         """
@@ -260,8 +260,8 @@ class VesselEncoding(Node, Encoding):
         self.centerline what may overwrite possible existing data.
 
 
-        Arguments:
-        -----------
+        Arguments
+        ---------
 
             vsl_mesh : pv.PolyData
                 The mesh representing the vessel.
@@ -276,8 +276,9 @@ class VesselEncoding(Node, Encoding):
                 Default None. The centerline of said vessel. If passed is stored
                 at self.centerline and node data is copied from it.
 
-        Returns:
-        ---------
+        Returns
+        -------
+
             self : VesselEncoding
                 The VesselEncoding object.
         """
@@ -338,8 +339,8 @@ class VesselEncoding(Node, Encoding):
         Warning: If the passed centerline intersects more than one time, only the first found will
         be returned.
 
-        Arguments:
-        --------------
+        Arguments
+        ---------
 
             cl : Centerline
                 The intersecting centerline.
@@ -347,8 +348,8 @@ class VesselEncoding(Node, Encoding):
             mode : {'point', 'parameter'}, opt
                 Default 'point'. What to return.
 
-        Returns:
-        ---------
+        Returns
+        -------
             : np.ndarray or float
                 The intersection (parameter or point).
 
@@ -374,8 +375,8 @@ class VesselEncoding(Node, Encoding):
         """
         Make a triangle mesh of the encoded vessel.
 
-        Arguments:
-        -----------
+        Arguments
+        ---------
 
             tau_res : int, opt
                 The number of longitudinal discretizations.
@@ -392,8 +393,8 @@ class VesselEncoding(Node, Encoding):
                 Defaulting to True. Whether to add the VCS coordinates of
                 each point as a point array.
 
-        Returns:
-        ---------
+        Returns
+        -------
 
             vsl_mesh : VascularMesh
         """
