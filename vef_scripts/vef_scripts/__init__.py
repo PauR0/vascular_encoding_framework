@@ -29,8 +29,10 @@ __all__ = [
     "make_case",
     "compute_centerline",
     "encode",
+    "align_encodings"
 ]
 
 from .vef_make_case import make_case
 from .vef_compute_centerline import compute_centerline
 from .vef_encode import encode
+from .vef_align import align_encodings
