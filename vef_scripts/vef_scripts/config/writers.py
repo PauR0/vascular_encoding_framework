@@ -39,6 +39,11 @@ def pretty_write(j, fname, write_replacements=None):
         f.write(j)
 #
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, np.ndarray):
+            return o.tolist()
+        return json.JSONEncoder.default(self, o)
 
 def get_json_writer(default_fname):
 
@@ -56,7 +61,7 @@ def get_json_writer(default_fname):
             if data:
                 for k in data:
                     params[k] = data[k]
-            pretty_write(json.dumps(params), json_file)
+            pretty_write(json.dumps(params, cls=NumpyEncoder), json_file)
         except FileNotFoundError:
             pass
         #
