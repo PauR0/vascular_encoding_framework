@@ -1,7 +1,5 @@
 
 
-import argparse
-
 import vascular_encoding_framework as vef
 
 from .config.readers import read_encoding_config
