@@ -1142,7 +1142,7 @@ class Centerline(UniSpline, Node):
             k       = spl.k,
             knots   = spl.t,
             coeffs  = spl.c,
-            n_knots = len(spl.t) - 2*(spl.k+1), #TODO: We only account for internal knots This should be explained somewhere....
+            n_knots = n_knots,
             extra   = 'linear')
 
         cl.compute_adapted_frame(mode=pt_mode, p=p)
