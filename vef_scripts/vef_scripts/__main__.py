@@ -232,6 +232,11 @@ if args.mode == 'cohort':
                    n_proc=args.n_proc,
                    desc=f'Cohort mode: Encoding')
 
+    if args.align:
+        gpa_params = None
+        if args.gpa_params is not None:
+            gpa_params = read_alignment_config(path=args.gpa_params)
+        align_encodings(cohort_dir=cohort_dir, params=gpa_params, exclude=args.exclude, overwrite=args.w)
 
 
     sys.exit(0)
