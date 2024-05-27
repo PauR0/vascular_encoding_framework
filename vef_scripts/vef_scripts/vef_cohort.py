@@ -10,6 +10,7 @@ import os
 from inspect import signature
 from multiprocessing import Pool
 
+from tqdm.contrib.concurrent import process_map
 import vascular_encoding_framework as vef
 from vascular_encoding_framework.messages import error_message
 
@@ -182,7 +183,7 @@ def save_cohort_object(cohort_dir, cohort, suffix="", binary=False, overwrite=Fa
             error_message(f"Wrong object type {type(obj)}. Only {{VascularEncoding, CenterlineNetwork, VascularMesh}} are supported.")
 #
 
-def cohort_run(cohort_dir, routine, exclude=None, n_proc=1):
+def cohort_run(cohort_dir, routine, exclude=None, n_proc=1, desc=None):
     """
     Function to execute a functionality across the cohort directory.
 
@@ -201,15 +202,23 @@ def cohort_run(cohort_dir, routine, exclude=None, n_proc=1):
 
         n_proc : int
             Number of parallel processes in which to run the routine across the cohort.
+
+        desc : str
+            The description of the routine to be displayed in the progress bar.
     """
 
     if not callable(routine):
         return error_message(f"Wrong value for kind argument in cohort_run. Passed is {routine}, \
                              allowed are callable objects that take a path to a case directory as input.")
 
+    if desc is None:
+        desc = f"Running {routine.__class__.__name__}"
+
     case_dirs = get_case_directories(cohort_dir=cohort_dir, exclude=exclude, cohort_relative=False)
-    with Pool(processes=n_proc) as pool:
-        pool.map(routine, case_dirs)
+    process_map(routine, case_dirs, max_workers=n_proc, desc=desc)
+
+    #with Pool(processes=n_proc) as pool:
+    #    pool.map(routine, case_dirs)
 #
 
 class _Routinizer:

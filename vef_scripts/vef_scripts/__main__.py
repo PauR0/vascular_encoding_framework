@@ -201,11 +201,11 @@ if args.mode == 'cohort':
     cohort_dir = args.path if args.path is not None else os.getcwd()
 
     if args.upids:
-
         cohort_run(cohort_dir=cohort_dir,
                    routine=_Updater(new_ids=args.upids),
                    exclude=args.exclude,
-                   n_proc=args.n_proc)
+                   n_proc=args.n_proc,
+                   desc='Cohort mode: updating boundaries')
 
     if args.centerline:
         cl_params_fname = args.cl_params if args.cl_params is not None else os.path.join(cohort_dir, 'centerline.json')
@@ -217,7 +217,8 @@ if args.mode == 'cohort':
                                         force=args.force,
                                         debug=False),
                    exclude=args.exclude,
-                   n_proc=args.n_proc)
+                   n_proc=args.n_proc,
+                   desc='Cohort mode: computing centerline')
 
     if args.encode:
         ec_params_fname = args.ec_params if args.ec_params is not None else os.path.join(cohort_dir, 'encoding.json')
@@ -228,7 +229,9 @@ if args.mode == 'cohort':
                                     overwrite=args.w,
                                     debug=False),
                    exclude=args.exclude,
-                   n_proc=args.n_proc)
+                   n_proc=args.n_proc,
+                   desc=f'Cohort mode: Encoding')
+
 
 
     sys.exit(0)
