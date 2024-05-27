@@ -1,4 +1,5 @@
 
+import numpy as np
 
 import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
@@ -10,6 +11,39 @@ from .case_io import (load_centerline_domain, save_centerline_domain,
                     load_centerline_path, save_centerline_path,
                     load_vascular_mesh, save_centerline)
 
+
+def set_v1_from_boundary_roots(vmesh, params):
+    """
+    This function checks the v1 in the boundary roots of the boundaries tree of a VascularMesh.
+    Then if it's not None, the v1 is set on the centerlines starting on the roots.
+
+    Arguments
+    ---------
+
+        vmesh : VascularMesh
+            The vascular mesh with boundaries defined.
+
+        params : dict
+            The parameter dictionary.
+
+    Returns
+    -------
+
+        params : dict
+            The parameter dictionary with the new entries with the v1 appropriately defined.
+    """
+
+    for rid in vmesh.boundaries.roots:
+        b_root = vmesh.boundaries[rid]
+        if b_root.v1 is not None:
+            for chid in b_root.children:
+                if not chid in params:
+                    params[chid] = {}
+                params[chid]['p'] = np.copy(b_root.v1)
+                params[chid]['pt_mode'] = 'project'
+
+    return params
+#
 
 def compute_centerline(case_dir, params=None, binary=True, overwrite=False, force=False, debug=False):
     """
@@ -59,6 +93,8 @@ def compute_centerline(case_dir, params=None, binary=True, overwrite=False, forc
 
     if params is None:
         params = read_centerline_config(case_dir)
+
+    set_v1_from_boundary_roots(vmesh=vmesh, params=params)
 
     cl_domain = load_centerline_domain(case_dir)
     if cl_domain is None or force:
