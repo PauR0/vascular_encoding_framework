@@ -214,10 +214,15 @@ class VesselEncoding(Node, Encoding):
             vmesh.compute_normals(inplace=True)
         normals = vmesh.get_array('Normals', preference='point')
 
+        vcs = []
         ids = np.zeros((vmesh.n_points,))
         for i in range(vmesh.n_points):
             p = vmesh.points[i]
-            q, t, _ = self.centerline.get_projection_point(p, full_output=True)
+
+            p_vcs = self.centerline.cartesian_to_vcs(p, method='scalar')
+            vcs.append(p_vcs)
+
+            q, t = self.centerline(p_vcs[0]), p_vcs[0]
             int_pts, _ = vmesh.ray_trace(q, p, first_point=False)
             if int_pts.shape[0] < 2:
                 q2p = normalize(p-q)
@@ -232,6 +237,7 @@ class VesselEncoding(Node, Encoding):
                         else:
                             ids[i] = 1
 
+        vmesh['vcs'] = np.array(vcs)
         vsl_mesh = vmesh.extract_points(ids.astype(bool), adjacent_cells=True, include_cells=True).connectivity(extraction_mode='largest')
         if debug:
             p = pv.Plotter()
