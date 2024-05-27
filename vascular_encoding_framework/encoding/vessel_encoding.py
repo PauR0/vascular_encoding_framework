@@ -1,5 +1,7 @@
 
 
+from copy import deepcopy
+
 import pyvista as pv
 import numpy as np
 from scipy.optimize import minimize_scalar
@@ -7,7 +9,7 @@ from scipy.optimize import minimize_scalar
 
 from ..messages import *
 from ..centerline import Centerline
-from ..utils._code import Node, attribute_checker
+from ..utils._code import Node, attribute_checker, is_numeric
 from ..utils.spatial import normalize, radians_to_degrees
 from ..utils.misc import split_metadata_and_fv
 
@@ -147,7 +149,9 @@ class VesselEncoding(Node, Encoding):
             rho   = gr[2].reshape(-1, 1)
 
         if rho_norm:
-            rho_norm = rho.copy()
+            if is_numeric(rho):
+                rho = np.array([rho])
+            rho_norm = deepcopy(rho)
             rho *= self.radius(tau, np.ravel(theta)).reshape(rho.shape)
         else:
             rho_norm = rho / self.radius(tau, np.ravel(theta)).reshape(rho.shape)
