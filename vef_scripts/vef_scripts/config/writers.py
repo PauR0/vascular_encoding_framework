@@ -2,10 +2,13 @@
 __all__ = [
     "write_centerline_config",
     "write_encoding_config",
+    "write_alignment_config",
 ]
 
 import os
 import json
+
+import numpy as np
 
 from .readers import read_json
 from . import _defaults_dir
@@ -75,4 +78,5 @@ def get_json_writer(default_fname):
 
 write_centerline_config = get_json_writer('centerline.json')
 write_encoding_config = get_json_writer('encoding.json')
+write_alignment_config  = get_json_writer('alignment.json')
 #
