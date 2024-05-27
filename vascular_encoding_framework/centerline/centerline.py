@@ -1807,7 +1807,10 @@ class CenterlineNetwork(Tree):
             cl = Centerline.from_points(points,
                                         n_knots=check_specific(kwargs, nid, "n_knots", n_knots),
                                         force_extremes=check_specific(kwargs, nid, "force_extremes", force_extremes),
-                                        curvature_penalty=check_specific(kwargs, nid, "curvature_penalty", curvature_penatly))
+                                        curvature_penalty=check_specific(kwargs, nid, "curvature_penalty", curvature_penatly),
+                                        pt_mode=check_specific(kwargs, nid, "pt_mode", 'project'),
+                                        p=check_specific(kwargs, nid, "p", None))
+
             cl.id = nid
             if parents[nid] != 'None':
                 cl.parent = parents[nid]
