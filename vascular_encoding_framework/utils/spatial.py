@@ -103,7 +103,7 @@ def normalize(v):
     return v / norm
 #
 
-def compute_ref_from_points(points, message=None):
+def compute_ref_from_points(points):
     """
     Compute a local reference frame by means of a principal component analysis.
 
@@ -124,17 +124,12 @@ def compute_ref_from_points(points, message=None):
 
     """
 
-    if message is None:
-        message='local PCA frame'
-
-    computing_message(info=message)
     pca = PCA()
     pca.fit(points)
     center = pca.mean_
     e1 = pca.components_[0]
     e2 = pca.components_[1]
     e3 = pca.components_[2]
-    done_message(info=message)
 
     return center, e1, e2, e3
 #

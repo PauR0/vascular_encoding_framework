@@ -53,9 +53,7 @@ class VascularMesh(pv.PolyData):
 
     def compute_kdt(self):
         """ Compute the KDTree for the points in the wall mesh """
-        computing_message(info="KDTree")
         self.kdt = KDTree(self.points)
-        done_message(info="KDTree")
     #
 
     def compute_local_ref(self):
@@ -153,9 +151,7 @@ class VascularMesh(pv.PolyData):
         meshes are not supported in this library. Although pyvista does support
         them.
         """
-        computing_message("mesh triangulation")
         m = super().triangulate(inplace=inplace, **kwargs)
-        done_message("mesh triangulation")
         return m
     #
 
@@ -165,9 +161,7 @@ class VascularMesh(pv.PolyData):
         this library inplace is set to True.
         """
 
-        computing_message("mesh normals")
         m = super().compute_normals(inplace=inplace, **kwargs)
-        done_message("mesh normals")
         return m
     #
 
@@ -229,7 +223,6 @@ class VascularMesh(pv.PolyData):
                 The computed boundaries object.
         """
 
-        computing_message("mesh boundaries")
         bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
         bnds = bnds.connectivity(extraction_mode='all', label_regions=True)
         boundaries = Boundaries()
@@ -251,7 +244,6 @@ class VascularMesh(pv.PolyData):
             self.boundaries   = boundaries
             self.n_boundaries = len(self.boundaries)
 
-        done_message("mesh boundaries")
         return boundaries
     #
 
@@ -338,7 +330,6 @@ class VascularMesh(pv.PolyData):
 
         """
 
-        computing_message('vascular mesh translation')
         super().translate(t, inplace=True)
 
         if self.closed is not None:
@@ -346,7 +337,6 @@ class VascularMesh(pv.PolyData):
 
         if self.boundaries is not None:
             self.boundaries.translate(t)
-        done_message('vascular mesh translation')
 
         if update_kdt:
             self.compute_kdt()
@@ -365,8 +355,6 @@ class VascularMesh(pv.PolyData):
                 Default True. Whether to update the kdt for query distances on mesh points.
         """
 
-        computing_message('vascular mesh rotation')
-
         R = compose_transformation_matrix(r=r)
         self.transform(trans=R, transform_all_input_vectors=transform_all_input_vectors, inplace=True)
 
@@ -378,7 +366,6 @@ class VascularMesh(pv.PolyData):
 
         if update_kdt:
             self.compute_kdt()
-        done_message('vascular mesh rotation')
     #
 
     def scale(self, s, update_kdt=True):
@@ -396,7 +383,7 @@ class VascularMesh(pv.PolyData):
                 Default True. Whether to update the kdt for query distances on
                 mesh points
         """
-        computing_message('vascular mesh scaling.')
+
         super().scale(s, inplace=True)
 
         if self.closed is not None:
@@ -407,7 +394,6 @@ class VascularMesh(pv.PolyData):
 
         if update_kdt:
             self.compute_kdt()
-        done_message('vascular mesh scaling.')
     #
 
     @staticmethod
