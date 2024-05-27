@@ -8,6 +8,7 @@ will have an argument to exclude some desired cases.
 
 import os
 from inspect import signature
+from copy import deepcopy
 from multiprocessing import Pool
 
 from tqdm.contrib.concurrent import process_map
@@ -232,7 +233,7 @@ class _Routinizer:
         self.__params = {}
 
         sgntr = signature(func)
-        self.__params = { name : kwargs.get(name, param.default)
+        self.__params = { name : deepcopy(kwargs.get(name, param.default))
                          for name, param in sgntr.parameters.items()
                          if not param.default is param.empty}
     #
