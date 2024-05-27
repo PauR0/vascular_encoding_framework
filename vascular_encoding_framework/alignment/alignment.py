@@ -50,7 +50,7 @@ def OrthogonalProcrustes(A, B):
 
     """
 
-    assert A.shape == B.shape
+    assert A.shape == B.shape, f"Shape mismatch A: {A.shape}, B: {B.shape}"
 
     num_rows, num_cols = A.shape
     if num_rows != 3:
