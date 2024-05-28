@@ -1021,7 +1021,7 @@ class Centerline(UniSpline, Node):
         return Centerline().from_polydata(poly)
     #
 
-    def trim(self, t0_, t1_=None, pass_atts=True, n_samps=100):
+    def trim(self, t0_, t1_=None, trim_knots=False, pass_atts=True, n_samps=100):
         """
         This method trims the centerline from t0_ to t1_ and
         returns the new segment as a centelrine object. If pass_atts is true
@@ -1029,29 +1029,38 @@ class Centerline(UniSpline, Node):
         The amount of knots for the trimmed centerline will be computed taking
         into account the amount of knot_segments in the interval [t0_, t1_].
 
-        Arguments:
-        -------------
+        Arguments
+        ---------
 
             t0_, t1_ : float
                 The lower and upper extrema to trim. If t1_ is None, self.t1 is assumed.
 
-            pass_atts : bool, opt
+            trim_knots : bool, optional
+                Default False. If true the number of knots is reduced to keep the spacing as it
+                was in the untrimmed centerline. Otherwise, the number of knots is kept.
+
+            pass_atts : bool, optional
                 Default True. Whether to pass all the attributes of the current centerline
                 to the trimmed one.
 
-            n_samps : int, opt
+            n_samps : int, optional
                 Default 100. The amount of samples to generate to perform the approximation.
-        Returns:
-        -----------
+
+        Returns
+        -------
+
             cl : Centerline
                 The trimmed centerline.
+
         """
 
         if t1_ is None:
             t1_ = self.t1
 
         ts = np.linspace(t0_, t1_, n_samps)
-        n_knots = len(self.get_knot_segments(t0_, t1_)) - 2
+        n_knots = self.n_knots
+        if trim_knots:
+            n_knots = len(self.get_knot_segments(t0_, t1_)) - 2
         spl = uniform_penalized_spline(points=self(ts),
                                        n_knots=n_knots,
                                        k=self.k,
