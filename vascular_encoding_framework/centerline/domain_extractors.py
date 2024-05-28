@@ -336,7 +336,7 @@ class Flux(CenterlineDomainExtractor):
         computing_message("mesh voxelization")
         self.volume = pv.voxelize(self.mesh,
                                   density=d,
-                                  check_surface=True)
+                                  check_surface=False)
         done_message("mesh voxelization")
 
         if update:
