@@ -375,7 +375,7 @@ class VesselEncoding(Node, Encoding):
         return cl(res.x)
     #
 
-    def make_surface_mesh(self, tau_res=None, theta_res=None, tau_ini=None, tau_end=None, theta_ini=None, theta_end=None, vcs=True):
+    def make_surface_mesh(self, tau_resolution=None, theta_resolution=None, tau_ini=None, tau_end=None, theta_ini=None, theta_end=None, vcs=True):
         """
         Make a triangle mesh of the encoded vessel.
 
@@ -403,11 +403,11 @@ class VesselEncoding(Node, Encoding):
             vsl_mesh : VascularMesh
         """
 
-        if tau_res is None:
-            tau_res=100
+        if tau_resolution is None:
+            tau_resolution=100
 
-        if theta_res is None:
-            theta_res=100
+        if theta_resolution is None:
+            theta_resolution=100
 
         if tau_ini is None:
             tau_ini = self.centerline.t0,
@@ -423,23 +423,23 @@ class VesselEncoding(Node, Encoding):
         if theta_end != self.radius.y1:
             close=False
 
-        taus   = np.linspace(tau_ini, tau_end, tau_res)
-        thetas = np.linspace(theta_ini, theta_end, theta_res)
+        taus   = np.linspace(tau_ini, tau_end, tau_resolution)
+        thetas = np.linspace(theta_ini, theta_end, theta_resolution)
         rhos   = [1.0]
 
         points, tau, theta, rho, rho_n = self.vcs_to_cartesian(tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
         triangles = []
 
-        for i in range(tau_res):
+        for i in range(tau_resolution):
             if i > 0:
-                for j in range(theta_res):
-                    if j == theta_res-1:
+                for j in range(theta_resolution):
+                    if j == theta_resolution-1:
                         if close:
-                            triangles.append([3, i*theta_res + j, (i-1)*theta_res + j, (i-1)*theta_res ])
-                            triangles.append([3, i*theta_res + j,     i*theta_res,     (i-1)*theta_res ])
+                            triangles.append([3, i*theta_resolution + j, (i-1)*theta_resolution + j, (i-1)*theta_resolution ])
+                            triangles.append([3, i*theta_resolution + j,     i*theta_resolution,     (i-1)*theta_resolution ])
                     else:
-                        triangles.append([3, i*theta_res + j, (i-1)*theta_res + j,   (i-1)*theta_res + j+1 ])
-                        triangles.append([3, i*theta_res + j,     i*theta_res + j+1, (i-1)*theta_res + j+1 ])
+                        triangles.append([3, i*theta_resolution + j, (i-1)*theta_resolution + j,   (i-1)*theta_resolution + j+1 ])
+                        triangles.append([3, i*theta_resolution + j,     i*theta_resolution + j+1, (i-1)*theta_resolution + j+1 ])
 
         vsl_mesh = pv.PolyData(points, triangles)
         if vcs:
@@ -484,7 +484,7 @@ class VesselEncoding(Node, Encoding):
         vsl_mb = pv.MultiBlock()
         vsl_mb['centerline'] = self.centerline.to_polydata(add_attributes=add_attributes, t_res=tau_res)
 
-        wall = self.make_surface_mesh(tau_res=tau_res, theta_res=theta_res)
+        wall = self.make_surface_mesh(tau_resolution=tau_res, theta_resolution=theta_res)
         if add_attributes:
             #Adding tau atts
             wall.add_field_data(np.array([self.radius.x0, self.radius.x1]), 'tau_interval',      deep=True)

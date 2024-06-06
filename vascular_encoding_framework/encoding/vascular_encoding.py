@@ -155,26 +155,32 @@ class VascularEncoding(Tree, Encoding):
         return self
     #
 
-    def make_surface_mesh(self, params=None, join_at_surface=False):
+    def make_surface_mesh(self, tau_resolution=100, theta_resolution=50, join_at_surface=False, **kwargs):
         """
         Make a triangle mesh of the encoded vascular network.
 
-        Arguments:
-        -----------
-
-            params : dict, optional
-                Default None. A dictionary where the keys are each vessel encoding id, and
-                the values are the pairs (tau_res, theta_res), i.e. the resolution
-                for each dimension in the parametrization. If None, de VesselEncoding default
-                is assumed.
-
-            join_at_surface : bool, optional.
-                Whether to project the inlet points to closest points on parent mesh.
-
-        Returns:
+        Arguments
         ---------
 
-            vsl_mesh : VascularMesh
+            tau_resolution, theta_resolution : int, optional
+                The amount of points to use for longitudinal and angular discretization
+
+            join_at_surface : bool, optional
+                Whether to project the inlet points to closest points on parent mesh.
+
+            kwargs : dict, optional
+                By means of the kwargs, branch-specific parameters can be used by passing
+                a dictionary with them. For instance, let us assume that exists a branch
+                with id 'B1' which is shorter, and the general longitudinal resolution is
+                a bit excessive, then we can pass an extra argument B1={'tau_resolution'=20}
+                and only 20 points will be used on that branch.
+
+        Returns
+        -------
+
+            vmesh : VascularMesh
+                The reconstructed wall meshes for each encoded vessel. Note that at current
+                state, meshes are not "sewed" toghether.
         """
 
         vmesh = pv.PolyData()
@@ -184,24 +190,23 @@ class VascularEncoding(Tree, Encoding):
             nonlocal vmesh
             ve = self[vid]
 
-            tau_res, theta_res = None, None
-            if params is not None:
-                tau_res, theta_res = params[vid]
-
             if ve.parent is not None:
                 pve = self[ve.parent]
                 tau_ini = ve.centerline.t0
                 if join_at_surface:
                     tau_ini = pve.compute_centerline_intersection(ve.centerline, mode='parameter')
-                vsl = ve.make_surface_mesh(tau_res, theta_res, tau_ini=tau_ini)
-                if join_at_surface:
+                vsl = ve.make_surface_mesh(tau_resolution   = check_specific(kwargs, vid, 'tau_knots', tau_resolution),
+                                           theta_resolution = check_specific(kwargs, vid, 'tau_knots', theta_resolution),
+                                           tau_ini=tau_ini)
+                if check_specific(kwargs, vid, 'join_at_surface', join_at_surface):
                     kdt = KDTree(vmesh.points)
                     ids = vsl['tau'] == vsl['tau'].min()
                     _, sids = kdt.query(vsl.points[ids])
                     vsl.points[ids] = vmesh.points[sids]
                 vmesh += vsl
             else:
-                vsl = ve.make_surface_mesh(tau_res, theta_res)
+                vsl = ve.make_surface_mesh(tau_resolution   = check_specific(kwargs, vid, 'tau_knots', tau_resolution),
+                                           theta_resolution = check_specific(kwargs, vid, 'tau_knots', theta_resolution))
                 vmesh += vsl
 
             for cid in ve.children:
