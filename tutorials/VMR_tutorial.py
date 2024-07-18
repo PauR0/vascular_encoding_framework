@@ -7,8 +7,6 @@ using the search functionality on the filters tab of the repository web.
 
 After downloading and unziping it, the user can either move the directory inside the tutorials
 directory or modify this file to set the path to the unziped directory.
-
-- Works with conda final_vascular_env
 """
 
 
@@ -18,13 +16,17 @@ import sys
 import numpy as np
 import pyvista as pv
 import vascular_encoding_framework as vef
-from vascular_encoding_framework.jose.casepath import CasePath
 from vascular_encoding_framework.utils.graphic import plot_adapted_frame
 
-case_path_obj = CasePath()
-case_path = case_path_obj.get_case_path()
-print(f"Final case directory: {case_path}")
+"""
+To ensure that the code correctly references your working directory, you need to modify 
+the case_path variable. 
 
+If your directory structure is /home/user/desktop/vascular_encoding_framework/tutorials/0010_H_AO_H, 
+you can set it as follows:
+"""
+
+case_path = f"{os.path.expanduser('~')}/Escritorio/vascular_encoding_framework/tutorials/0010_H_AO_H"
 mesh_path = os.path.join(case_path, 'Meshes', '0093_0001.vtp')
 
 mesh = pv.read(mesh_path)
@@ -71,49 +73,10 @@ c_domain = vef.centerline.extract_centerline_domain(
 
 # Compute the path tree
 cp_xtractor = vef.centerline.CenterlinePathExtractor()
-cp_xtractor.debug = False
+cp_xtractor.debug = True
 cp_xtractor.set_centerline_domain(c_domain)
 cp_xtractor.set_vascular_mesh(vmesh, update_boundaries=True)
 cp_xtractor.compute_paths()
-
-# Check if paths were computed successfully
-if cp_xtractor.paths is None or cp_xtractor.paths.n_blocks == 0:
-    print("Failed to compute paths. Unable to create CenterlineNetwork.")
-    sys.exit()
-
-# Function to log path computation
-
-
-def log_path_computation(start, end):
-    print(f"Attempting to compute path from boundary {start} to {end}")
-    try:
-        path_ids = cp_xtractor.boundaries[start].id_path
-        if path_ids is None or len(path_ids) == 0:
-            print(f"No valid path found from boundary {start} to {end}")
-            return None
-        path = c_domain.points[path_ids]
-        print(f"Path found: {len(path)} points")
-        return path
-    except Exception as e:
-        print(f"Error computing path: {str(e)}")
-        return None
-
-
-# Compute paths manually
-paths = []
-for start, data in hierarchy.items():
-    for end in data['children']:
-        path = log_path_computation(start, end)
-        if path is not None and len(path) > 0:
-            paths.append(path)
-
-# Visualize the paths
-for i, path in enumerate(paths):
-    plotter = pv.Plotter(off_screen=False)
-    plotter.add_mesh(mesh, opacity=0.5)  # Use the original mesh loaded
-    plotter.add_mesh(c_domain, color='red', point_size=2)
-    plotter.add_mesh(pv.PolyData(path), color='green', line_width=5)
-    plotter.show(screenshot=f'path_{i}.png')
 
 print(f"Number of centerline domain points: {len(c_domain.points)}")
 print(f"Centerline domain bounding box: {c_domain.bounds}")
@@ -158,7 +121,7 @@ try:
     vmesh['theta'] = vcs[:, 1]
     vmesh['rho'] = vcs[:, 2]
 
-    # Print data statistics
+    # Print data statistics (These are for Unitary Tests)
     print("Tau values - Mean:",
           np.mean(vmesh['tau']), "Std:", np.std(vmesh['tau']))
     print(
