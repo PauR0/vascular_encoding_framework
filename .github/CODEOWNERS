@@ -1,0 +1,4 @@
+# Default owner for everything in the repo.
+# Unless a later match takes precedence, PauR0
+# will be requested for review when someone opens a PR.
+*       @PauR0
