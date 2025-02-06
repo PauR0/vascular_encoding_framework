@@ -9,10 +9,11 @@ After downloading and unziping it, the user can either move the directory inside
 directory or modify this file to set the path to the unziped directory.
 
 """
-
 import os
+
 import numpy as np
 import pyvista as pv
+
 import vascular_encoding_framework as vef
 from vascular_encoding_framework.utils.graphic import plot_adapted_frame
 
@@ -36,12 +37,12 @@ vmesh.plot_boundary_ids()
 
 # After visualizing it, we can define the desired hierarchy as follows:
 hierarchy = {
-    "5": {"id": "5", "parent": None, "children": {"0"}, },
-    "0": {"id": "0", "parent": "5",  "children": {"3", "4", "1"}},
-    "3": {"id": "3", "parent": "0",  "children": {"2"}},
-    "4": {"id": "4", "parent": "0",  "children": {}},
-    "1": {"id": "1", "parent": "0",  "children": {}},
-    "2": {"id": "2", "parent": "3",  "children": {}},
+    '5': {'id': '5', 'parent': None, 'children': {'0'}, },
+    '0': {'id': '0', 'parent': '5',  'children': {'3', '4', '1'}},
+    '3': {'id': '3', 'parent': '0',  'children': {'2'}},
+    '4': {'id': '4', 'parent': '0',  'children': {}},
+    '1': {'id': '1', 'parent': '0',  'children': {}},
+    '2': {'id': '2', 'parent': '3',  'children': {}},
 }
 vmesh.set_boundary_data(hierarchy)
 
@@ -69,12 +70,12 @@ cp_xtractor.compute_paths()
 # Before jumping into analytic/spline encoding let us define the knots for each branch, i.e.
 # degrees of freedom for the fitting procedure.
 knot_params = {
-    "5": {"cl_knots": None, "tau_knots": None, "theta_knots": None},
-    "0": {"cl_knots": 15,   "tau_knots": 19,   "theta_knots": 19},
-    "3": {"cl_knots": 15,   "tau_knots": 10,   "theta_knots": 10},
-    "4": {"cl_knots": 15,   "tau_knots": 10,   "theta_knots": 10},
-    "1": {"cl_knots": 15,   "tau_knots": 10,   "theta_knots": 10},
-    "2": {"cl_knots": 15,   "tau_knots": 10,   "theta_knots": 10},
+    '5': {'cl_knots': None, 'tau_knots': None, 'theta_knots': None},
+    '0': {'cl_knots': 15,   'tau_knots': 19,   'theta_knots': 19},
+    '3': {'cl_knots': 15,   'tau_knots': 10,   'theta_knots': 10},
+    '4': {'cl_knots': 15,   'tau_knots': 10,   'theta_knots': 10},
+    '1': {'cl_knots': 15,   'tau_knots': 10,   'theta_knots': 10},
+    '2': {'cl_knots': 15,   'tau_knots': 10,   'theta_knots': 10},
 }
 
 # We are in conditions of defining the centerline network.
@@ -84,7 +85,8 @@ cl_net = vef.CenterlineNetwork.from_multiblock_paths(
 )
 
 # The centerline on its own allows us to compute some useful fields like the Vessel Coordinates, but
-# first, let's check that centerline has been well computed and let us inspect how the adapted frame looks
+# first, let's check that centerline has been well computed and let us inspect how the adapted frame
+# looks like.
 plot_adapted_frame(cl_net, vmesh, scale=.5)
 
 # The computation of centerline association and the vessel coordinates usually takes a while.
