@@ -1,0 +1,31 @@
+default_language_version:
+    python: python3.10
+
+default_stages: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: debug-statements
+      - id: double-quote-string-fixer
+      - id: name-tests-test
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.14.0
+    hooks:
+      - id: reorder-python-imports
+
+  - repo: https://github.com/hhatto/autopep8
+    rev: v2.3.2
+    hooks:
+      - id: autopep8
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
