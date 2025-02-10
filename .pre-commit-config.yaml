@@ -15,10 +15,10 @@ repos:
       - id: name-tests-test
       - id: requirements-txt-fixer
 
-  - repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.14.0
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
     hooks:
-      - id: reorder-python-imports
+      - id: isort
 
   - repo: https://github.com/hhatto/autopep8
     rev: v2.3.2

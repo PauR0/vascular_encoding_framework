@@ -1,17 +1,17 @@
-
 __all__ = [
-    "write_centerline_config",
-    "write_encoding_config",
-    "write_alignment_config",
+    'write_centerline_config',
+    'write_encoding_config',
+    'write_alignment_config',
 ]
 
-import os
 import json
+import os
 
 import numpy as np
 
-from .readers import read_json
 from . import _defaults_dir
+from .readers import read_json
+
 
 def pretty_write(j, fname, write_replacements=None):
     """
@@ -35,18 +35,20 @@ def pretty_write(j, fname, write_replacements=None):
                               ['{"', '{\n "'], ['"}', '"\n}']]
 
     for r in write_replacements:
-        j = j.replace(r[0],r[1])
-    j += "\n"
+        j = j.replace(r[0], r[1])
+    j += '\n'
 
     with open(fname, 'w', encoding='utf-8') as f:
         f.write(j)
 #
+
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, np.ndarray):
             return o.tolist()
         return json.JSONEncoder.default(self, o)
+
 
 def get_json_writer(default_fname):
 
@@ -78,5 +80,5 @@ def get_json_writer(default_fname):
 
 write_centerline_config = get_json_writer('centerline.json')
 write_encoding_config = get_json_writer('encoding.json')
-write_alignment_config  = get_json_writer('alignment.json')
+write_alignment_config = get_json_writer('alignment.json')
 #

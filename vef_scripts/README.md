@@ -1,4 +1,4 @@
 vef_scripts
 -----------
 
-Scripting Module for the Vascular Encoding Framework using the case directory convention.
+Command Line Interface (CLI) for the Vascular Encoding Framework using the case directory convention.

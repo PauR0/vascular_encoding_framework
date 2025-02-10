@@ -1,15 +1,15 @@
-
 __all__ = [
     'read_centerline_config',
     'read_encoding_config',
     'read_alignment_config',
 ]
 
-import os
 import json
+import os
 from copy import deepcopy
 
 from . import _defaults_dir
+
 
 def read_json(file):
     """
@@ -34,6 +34,7 @@ def read_json(file):
     return params
 #
 
+
 def param_from_file(params, path):
     """
     Provide support to redirect parameter to another json to prevent nested jsons.
@@ -42,18 +43,24 @@ def param_from_file(params, path):
     for k, v in params.items():
         if isinstance(v, str):
 
-            if v.startswith("FILE::"): #Two semicolon -> _defaults_dir
-                params[k] = read_json(os.path.join(_defaults_dir, v.removeprefix("FILE::")))
+            if v.startswith('FILE::'):  # Two semicolon -> _defaults_dir
+                params[k] = read_json(
+                    os.path.join(
+                        _defaults_dir,
+                        v.removeprefix('FILE::')))
 
-            elif v.startswith("FILE:"): #One semicolon -> same_dir
-                params[k] = read_json(os.path.join(path, v.removeprefix("FILE:")))
+            elif v.startswith('FILE:'):  # One semicolon -> same_dir
+                params[k] = read_json(os.path.join(
+                    path, v.removeprefix('FILE:')))
 
-            elif v.startswith("PARAM:") : #Two semicolon -> _defaults_dir
-                p, fname = v[v.find('('):v.rfind(')')].replace(' ', '').split(',')
+            elif v.startswith('PARAM:'):  # Two semicolon -> _defaults_dir
+                p, fname = v[v.find('('):v.rfind(')')].replace(
+                    ' ', '').split(',')
 
-                if v.startswith("PARAM::") : #Two semicolon -> _defaults_dir
-                    params[k] = read_json(os.path.join(_defaults_dir, fname))[p]
-                if v.startswith("PARAM:") : ##One semicolon -> same_dir
+                if v.startswith('PARAM::'):  # Two semicolon -> _defaults_dir
+                    params[k] = read_json(
+                        os.path.join(_defaults_dir, fname))[p]
+                if v.startswith('PARAM:'):  # One semicolon -> same_dir
                     params[k] = read_json(os.path.join(path, fname))[p]
 
         elif isinstance(v, dict):
@@ -61,6 +68,7 @@ def param_from_file(params, path):
 
     return params
 #
+
 
 def get_json_reader(default_name):
     """
@@ -87,7 +95,7 @@ def get_json_reader(default_name):
     params = read_json(os.path.join(_defaults_dir, default_name))
     fname = default_name
 
-    def json_reader(path=None,abs_path=False):
+    def json_reader(path=None, abs_path=False):
 
         new_params = deepcopy(params)
         try:
@@ -99,7 +107,7 @@ def get_json_reader(default_name):
 
             read_params = read_json(json_file)
             for k in read_params:
-                    new_params[k] = read_params[k]
+                new_params[k] = read_params[k]
         except (FileNotFoundError, TypeError):
             pass
 
@@ -111,7 +119,7 @@ def get_json_reader(default_name):
 #
 
 
-read_centerline_config = get_json_reader(default_name="centerline.json")
-read_encoding_config   = get_json_reader('encoding.json')
-read_alignment_config  = get_json_reader('alignment.json')
+read_centerline_config = get_json_reader(default_name='centerline.json')
+read_encoding_config = get_json_reader('encoding.json')
+read_alignment_config = get_json_reader('alignment.json')
 #

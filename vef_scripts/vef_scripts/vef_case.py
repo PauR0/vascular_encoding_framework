@@ -1,12 +1,10 @@
-
-
 import os
 
-from vascular_encoding_framework.utils._io import read_json
 import vascular_encoding_framework.messages as msg
+from vascular_encoding_framework.utils._io import read_json
 from vascular_encoding_framework.utils.graphic import plot_adapted_frame
 
-from .case_io import load_vascular_mesh, save_vascular_mesh, load_centerline
+from .case_io import load_centerline, load_vascular_mesh, save_vascular_mesh
 
 
 def update_ids(case_dir, new_ids):
@@ -40,8 +38,13 @@ def update_ids(case_dir, new_ids):
 
     for oid, nid in new_ids.items():
         vmesh.boundaries.change_node_id(old_id=oid, new_id=nid)
-    save_vascular_mesh(vmesh=vmesh, path=case_dir, suffix='_input', overwrite=True)
+    save_vascular_mesh(
+        vmesh=vmesh,
+        path=case_dir,
+        suffix='_input',
+        overwrite=True)
 #
+
 
 def show_boundaries(case_dir):
     """
@@ -58,7 +61,8 @@ def show_boundaries(case_dir):
     vmesh.plot_boundary_ids(print_data=True)
 #
 
-def show_adapted_frame(case_dir, suffix=""):
+
+def show_adapted_frame(case_dir, suffix=''):
     """
     Plot the parallel transport of the adapted frame of the centerline of a case directory.
 
@@ -72,7 +76,7 @@ def show_adapted_frame(case_dir, suffix=""):
     """
 
     cl_net = load_centerline(case_dir=case_dir, suffix=suffix)
-    suffix = suffix if suffix else "_input"
-    vmesh  = load_vascular_mesh(case_dir, suffix=suffix)
+    suffix = suffix if suffix else '_input'
+    vmesh = load_vascular_mesh(case_dir, suffix=suffix)
     plot_adapted_frame(cntrln=cl_net, vmesh=vmesh, show=True)
 #

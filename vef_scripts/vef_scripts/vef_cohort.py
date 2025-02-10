@@ -5,26 +5,31 @@ A cohort directory is but a directory containing case directories. It may
 contain other kind of files and directories, and most of the input functions
 will have an argument to exclude some desired cases.
 """
-
 import os
-from inspect import signature
 from copy import deepcopy
+from inspect import signature
 from multiprocessing import Pool
 
 from tqdm.contrib.concurrent import process_map
+
 import vascular_encoding_framework as vef
 from vascular_encoding_framework.messages import error_message
 
+from .case_io import (get_case_convention, load_centerline,
+                      load_vascular_encoding, load_vascular_mesh,
+                      save_centerline, save_vascular_encoding,
+                      save_vascular_mesh)
 from .vef_case import update_ids
 from .vef_compute_centerline import compute_centerline
 from .vef_encode import encode
 
-from .case_io import (load_centerline, load_vascular_encoding, load_vascular_mesh,
-                      save_centerline, save_vascular_encoding, save_vascular_mesh,
-                      get_case_convention)
 
-
-def get_case_directories(cohort_dir, exclude=None, required=None, suffix="", cohort_relative=True):
+def get_case_directories(
+        cohort_dir,
+        exclude=None,
+        required=None,
+        suffix='',
+        cohort_relative=True):
     """
     Get a list with the cases directories in a cohort dir.
 
@@ -65,7 +70,8 @@ def get_case_directories(cohort_dir, exclude=None, required=None, suffix="", coh
     case_dirs = []
     for d in sorted(os.listdir(cohort_dir)):
         full_d = os.path.join(cohort_dir, d)
-        req = '.' if required is None else get_case_convention(required, suffix=suffix, case_dir=full_d) #'.' Should always exist
+        req = '.' if required is None else get_case_convention(
+            required, suffix=suffix, case_dir=full_d)  # '.' Should always exist
         if os.path.isdir(full_d) and os.path.exists(req) and d not in exclude:
             if cohort_relative:
                 case_dirs.append(d)
@@ -75,7 +81,13 @@ def get_case_directories(cohort_dir, exclude=None, required=None, suffix="", coh
     return case_dirs
 #
 
-def load_cohort_object(cohort_dir, which, exclude=None, keys_from_dirs=True, suffix=''):
+
+def load_cohort_object(
+        cohort_dir,
+        which,
+        exclude=None,
+        keys_from_dirs=True,
+        suffix=''):
     """
     Load a certain object from a cohort directory.
 
@@ -109,7 +121,8 @@ def load_cohort_object(cohort_dir, which, exclude=None, keys_from_dirs=True, suf
 
     """
 
-    assert which in {'encoding', 'centerline'}, error_message(f"Can't load object {which} from cohort. Available options are {{'centerline', 'encoding'}}.", prnt=False)
+    assert which in {'encoding', 'centerline'}, error_message(
+        f"Can't load object {which} from cohort. Available options are {{'centerline', 'encoding'}}.", prnt=False)
 
     if exclude is None:
         exclude = []
@@ -119,9 +132,18 @@ def load_cohort_object(cohort_dir, which, exclude=None, keys_from_dirs=True, suf
     elif which == 'centerline':
         loader = load_centerline
     elif which == 'mesh':
-        loader = lambda case_dir, suffix: load_vascular_mesh(path=case_dir, suffix=suffix)
+        def loader(
+            case_dir,
+            suffix): return load_vascular_mesh(
+            path=case_dir,
+            suffix=suffix)
 
-    cases = get_case_directories(cohort_dir=cohort_dir, exclude=exclude, required=which, suffix=suffix, cohort_relative=False)
+    cases = get_case_directories(
+        cohort_dir=cohort_dir,
+        exclude=exclude,
+        required=which,
+        suffix=suffix,
+        cohort_relative=False)
     cohort = {}
     for case in cases:
         obj = loader(case_dir=case, suffix=suffix)
@@ -130,13 +152,19 @@ def load_cohort_object(cohort_dir, which, exclude=None, keys_from_dirs=True, suf
             if callable(keys_from_dirs):
                 k = keys_from_dirs(case)
             else:
-                k =case
+                k = case
             cohort[k] = obj
 
     return cohort
 #
 
-def save_cohort_object(cohort_dir, cohort, suffix="", binary=False, overwrite=False):
+
+def save_cohort_object(
+        cohort_dir,
+        cohort,
+        suffix='',
+        binary=False,
+        overwrite=False):
     """
     Save a certain object at case directories contained in a cohort directory.
 
@@ -166,24 +194,47 @@ def save_cohort_object(cohort_dir, cohort, suffix="", binary=False, overwrite=Fa
 
         case_dir = os.path.join(cohort_dir, case)
         if not os.path.exists(case_dir):
-            error_message(f"Wrong case_dir at: {case_dir}. The {type(obj)} object wont be saved.")
+            error_message(
+                f'Wrong case_dir at: {case_dir}. The {type(obj)} object wont be saved.')
 
-        if not isinstance(obj, (vef.VascularEncoding, vef.CenterlineNetwork, vef.VascularMesh)):
-            error_message("Only VascularEncoding, CenterlineNetwork adn VascularMesh objects are supported for cohort saving.")
+        if not isinstance(
+            obj,
+            (vef.VascularEncoding,
+             vef.CenterlineNetwork,
+             vef.VascularMesh)):
+            error_message(
+                'Only VascularEncoding, CenterlineNetwork adn VascularMesh objects are supported for cohort saving.')
             return
 
         if isinstance(obj, vef.CenterlineNetwork):
-            save_centerline(case_dir=case_dir, cl_net=obj, suffix=suffix, binary=binary, overwrite=overwrite)
+            save_centerline(
+                case_dir=case_dir,
+                cl_net=obj,
+                suffix=suffix,
+                binary=binary,
+                overwrite=overwrite)
 
         elif isinstance(obj, vef.VascularEncoding):
-            save_vascular_encoding(case_dir=case_dir, vsc_enc=obj, suffix=suffix, binary=binary, overwrite=overwrite)
+            save_vascular_encoding(
+                case_dir=case_dir,
+                vsc_enc=obj,
+                suffix=suffix,
+                binary=binary,
+                overwrite=overwrite)
 
         elif isinstance(obj, vef.VascularMesh):
-            save_vascular_mesh(vmesh=obj, path=case_dir, suffix=suffix, binary=binary, overwrite=overwrite)
+            save_vascular_mesh(
+                vmesh=obj,
+                path=case_dir,
+                suffix=suffix,
+                binary=binary,
+                overwrite=overwrite)
 
         else:
-            error_message(f"Wrong object type {type(obj)}. Only {{VascularEncoding, CenterlineNetwork, VascularMesh}} are supported.")
+            error_message(
+                f'Wrong object type {type(obj)}. Only {{VascularEncoding, CenterlineNetwork, VascularMesh}} are supported.')
 #
+
 
 def cohort_run(cohort_dir, routine, exclude=None, n_proc=1, desc=None):
     """
@@ -210,39 +261,45 @@ def cohort_run(cohort_dir, routine, exclude=None, n_proc=1, desc=None):
     """
 
     if not callable(routine):
-        return error_message(f"Wrong value for kind argument in cohort_run. Passed is {routine}, \
-                             allowed are callable objects that take a path to a case directory as input.")
+        return error_message(
+            f'Wrong value for kind argument in cohort_run. Passed is {routine}, \
+                             allowed are callable objects that take a path to a case directory as input.')
 
     if desc is None:
-        desc = f"Running {routine.__class__.__name__}"
+        desc = f'Running {routine.__class__.__name__}'
 
-    case_dirs = get_case_directories(cohort_dir=cohort_dir, exclude=exclude, cohort_relative=False)
+    case_dirs = get_case_directories(
+        cohort_dir=cohort_dir,
+        exclude=exclude,
+        cohort_relative=False)
     process_map(routine, case_dirs, max_workers=n_proc, desc=desc)
 
-    #with Pool(processes=n_proc) as pool:
+    # with Pool(processes=n_proc) as pool:
     #    pool.map(routine, case_dirs)
 #
+
 
 class _Routinizer:
     """
     Auxiliar class to make callable objects suitable for Pool parallelization.
     """
 
-    def __init__(self, func, **kwargs)->None:
+    def __init__(self, func, **kwargs) -> None:
 
-        self.__func   = func
+        self.__func = func
         self.__params = {}
 
         sgntr = signature(func)
-        self.__params = { name : deepcopy(kwargs.get(name, param.default))
+        self.__params = {name: deepcopy(kwargs.get(name, param.default))
                          for name, param in sgntr.parameters.items()
-                         if not param.default is param.empty}
+                         if param.default is not param.empty}
     #
 
-    def __call__(self, case_dir)->None:
+    def __call__(self, case_dir) -> None:
         self.__func(case_dir, **self.__params)
     #
 #
+
 
 class _Updater(_Routinizer):
 
@@ -251,12 +308,14 @@ class _Updater(_Routinizer):
     #
 #
 
+
 class _Centerliner(_Routinizer):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(func=compute_centerline, **kwargs)
     #
 #
+
 
 class _Encoder(_Routinizer):
 

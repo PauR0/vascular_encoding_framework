@@ -1,12 +1,9 @@
-
-
 import vascular_encoding_framework as vef
 
+from .case_io import (load_centerline, load_vascular_mesh,
+                      save_vascular_encoding)
 from .config.readers import read_encoding_config
 from .config.writers import write_encoding_config
-
-from .case_io import (load_vascular_mesh, load_centerline,
-                     save_vascular_encoding)
 
 
 def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
@@ -54,14 +51,18 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     if cl_net is None:
         return None
 
-
     if params is None:
         params = read_encoding_config(case_dir)
 
-    vsc_enc = vef.encode_vascular_mesh(vmesh=vmesh, cl_net=cl_net, params=params, debug=debug)
+    vsc_enc = vef.encode_vascular_mesh(
+        vmesh=vmesh, cl_net=cl_net, params=params, debug=debug)
 
     write_encoding_config(path=case_dir, data=params)
-    save_vascular_encoding(case_dir=case_dir, vsc_enc=vsc_enc, binary=binary, overwrite=overwrite)
+    save_vascular_encoding(
+        case_dir=case_dir,
+        vsc_enc=vsc_enc,
+        binary=binary,
+        overwrite=overwrite)
 
     return vsc_enc
 #

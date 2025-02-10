@@ -1,15 +1,13 @@
-
 import numpy as np
 
 import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
 
+from .case_io import (load_centerline_domain, load_centerline_path,
+                      load_vascular_mesh, save_centerline,
+                      save_centerline_domain, save_centerline_path)
 from .config.readers import read_centerline_config
 from .config.writers import write_centerline_config
-
-from .case_io import (load_centerline_domain, save_centerline_domain,
-                    load_centerline_path, save_centerline_path,
-                    load_vascular_mesh, save_centerline)
 
 
 def set_v1_from_boundary_roots(vmesh, params):
@@ -37,7 +35,7 @@ def set_v1_from_boundary_roots(vmesh, params):
         b_root = vmesh.boundaries[rid]
         if b_root.v1 is not None:
             for chid in b_root.children:
-                if not chid in params:
+                if chid not in params:
                     params[chid] = {}
                 params[chid]['p'] = np.copy(b_root.v1)
                 params[chid]['pt_mode'] = 'project'
@@ -45,7 +43,14 @@ def set_v1_from_boundary_roots(vmesh, params):
     return params
 #
 
-def compute_centerline(case_dir, params=None, binary=True, overwrite=False, force=False, debug=False):
+
+def compute_centerline(
+        case_dir,
+        params=None,
+        binary=True,
+        overwrite=False,
+        force=False,
+        debug=False):
     """
     Given a vef case directory with an existing mesh with the '_input' suffix, this function-script
     allows the computation of the centerline and its storing at the Centerline subdir.
@@ -98,28 +103,37 @@ def compute_centerline(case_dir, params=None, binary=True, overwrite=False, forc
 
     cl_domain = load_centerline_domain(case_dir)
     if cl_domain is None or force:
-        msg.computing_message("cenerline domain")
-        cl_domain = vef.centerline.extract_centerline_domain(vmesh=vmesh,
-                                                             params=params['params_domain'],
-                                                             debug=debug)
-        msg.done_message("cenerline domain")
-        save_centerline_domain(case_dir=case_dir, cl_domain=cl_domain, binary=binary, overwrite=overwrite)
+        msg.computing_message('cenerline domain')
+        cl_domain = vef.centerline.extract_centerline_domain(
+            vmesh=vmesh, params=params['params_domain'], debug=debug)
+        msg.done_message('cenerline domain')
+        save_centerline_domain(
+            case_dir=case_dir,
+            cl_domain=cl_domain,
+            binary=binary,
+            overwrite=overwrite)
 
     cl_path = load_centerline_path(case_dir)
     if cl_path is None or force:
-        msg.computing_message("centerline paths")
-        cl_path = vef.centerline.extract_centerline_path(vmesh=vmesh,
-                                                          cl_domain=cl_domain,
-                                                          params=params['params_path'],
-                                                          debug=debug)
-        msg.done_message("centerline paths")
-        save_centerline_path(case_dir=case_dir, cl_path=cl_path, binary=binary, overwrite=overwrite)
+        msg.computing_message('centerline paths')
+        cl_path = vef.centerline.extract_centerline_path(
+            vmesh=vmesh, cl_domain=cl_domain, params=params['params_path'], debug=debug)
+        msg.done_message('centerline paths')
+        save_centerline_path(
+            case_dir=case_dir,
+            cl_path=cl_path,
+            binary=binary,
+            overwrite=overwrite)
 
     cl_net = vef.CenterlineNetwork.from_multiblock_paths(cl_path,
                                                          **params)
 
     write_centerline_config(path=case_dir, data=params)
-    save_centerline(case_dir=case_dir, cl_net=cl_net, binary=binary, overwrite=overwrite)
+    save_centerline(
+        case_dir=case_dir,
+        cl_net=cl_net,
+        binary=binary,
+        overwrite=overwrite)
 
     return cl_net
 #
