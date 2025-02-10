@@ -2,13 +2,14 @@
 
 from abc import ABC, abstractmethod
 
-from scipy.spatial import KDTree
 import numpy as np
 import pyvista as pv
+from scipy.spatial import KDTree
 
 from ..messages import *
-from ..vascular_mesh import VascularMesh
 from ..utils._code import attribute_checker, attribute_setter
+from ..vascular_mesh import VascularMesh
+
 
 class CenterlineDomainExtractor(ABC):
     """
@@ -19,7 +20,7 @@ class CenterlineDomainExtractor(ABC):
 
     def __init__(self):
 
-        self.mesh          = None
+        self.mesh = None
         self.output_domain = None
     #
 
@@ -36,7 +37,7 @@ class CenterlineDomainExtractor(ABC):
         Method to set parameters as attributes of the objects.
         """
         cl = self.__class__()
-        params = {k:v for k,v in kwargs.items() if k in cl.__dict__}
+        params = {k: v for k, v in kwargs.items() if k in cl.__dict__}
         attribute_setter(self, **params)
     #
 
@@ -48,6 +49,7 @@ class CenterlineDomainExtractor(ABC):
     def run(self):
         ...
 #
+
 
 class Seekers(CenterlineDomainExtractor):
     """
@@ -67,20 +69,20 @@ class Seekers(CenterlineDomainExtractor):
 
         super().__init__()
 
-        self.mesh          : pv.PolyData = None
-        self.output_domain : pv.PolyData = None
+        self.mesh: pv.PolyData = None
+        self.output_domain: pv.PolyData = None
 
-        self.seekers : pv.Polydata = None
+        self.seekers: pv.Polydata = None
 
-        #Parameters
-        self.reduction_rate  : float = 0.75
-        self.smooth_iters    : int   = 100
-        self.eps             : float = 1e-3
-        self.check_dirs      : bool  = True,
-        self.check_inside    : bool  = False,
-        self.multi_ray_trace : bool  = False
+        # Parameters
+        self.reduction_rate: float = 0.75
+        self.smooth_iters: int = 100
+        self.eps: float = 1e-3
+        self.check_dirs: bool = True,
+        self.check_inside: bool = False,
+        self.multi_ray_trace: bool = False
 
-        self.debug : bool = False
+        self.debug: bool = False
     #
 
     def set_mesh(self, m, update=True):
@@ -102,10 +104,20 @@ class Seekers(CenterlineDomainExtractor):
                 The seekers initial position.
         """
 
-        if not attribute_checker(obj=self, atts=['mesh', 'reduction_rate'], info='Cannot compute initial seekers position.'):
+        if not attribute_checker(
+                obj=self,
+                atts=[
+                    'mesh',
+                    'reduction_rate'],
+                info='Cannot compute initial seekers position.'):
             return False
 
-        self.seekers = self.mesh.decimate(target_reduction=self.reduction_rate, attribute_error=False).smooth(n_iter=self.smooth_iters).compute_normals(cell_normals=False, point_normals=True)
+        self.seekers = self.mesh.decimate(
+            target_reduction=self.reduction_rate,
+            attribute_error=False).smooth(
+            n_iter=self.smooth_iters).compute_normals(
+            cell_normals=False,
+            point_normals=True)
         return self.seekers
     #
 
@@ -114,16 +126,19 @@ class Seekers(CenterlineDomainExtractor):
         Flip the seekers directions to point inwards.
         """
 
-        computing_message("flipped normals")
+        computing_message('flipped normals')
         self.seekers = self.seekers.compute_normals(flip_normals=True)
         if self.debug:
-            p=pv.Plotter()
+            p = pv.Plotter()
             p.add_mesh(self.mesh, opacity=0.5)
-            p.add_mesh(self.seekers, render_points_as_spheres=True, style='points')
-            p.add_mesh(self.seekers.glyph(orient="Normals", scale="Normals"))
+            p.add_mesh(
+                self.seekers,
+                render_points_as_spheres=True,
+                style='points')
+            p.add_mesh(self.seekers.glyph(orient='Normals', scale='Normals'))
             p.show()
 
-        done_message("flipped normals")
+        done_message('flipped normals')
     #
 
     def check_seekers_direction(self, n_tests=50):
@@ -136,35 +151,57 @@ class Seekers(CenterlineDomainExtractor):
         """
 
         eps = self.mesh.length * self.eps
-        ids = np.random.randint(low=0, high=self.seekers.n_points-1, size=n_tests)
+        ids = np.random.randint(
+            low=0,
+            high=self.seekers.n_points - 1,
+            size=n_tests)
         dirs = self.seekers.get_array('Normals', preference='point')[ids]
-        #The initial position is moved an epsilon inwards to prevent capturing the initial intersection.
+        # The initial position is moved an epsilon inwards to prevent capturing
+        # the initial intersection.
         start = self.seekers.points[ids] + dirs * eps
-        stop  = self.seekers.points[ids] + dirs * self.mesh.length
+        stop = self.seekers.points[ids] + dirs * self.mesh.length
         intersection = []
         for stt, stp in zip(start, stop):
-            p = np.array([self.seekers.ray_trace(origin=stt, end_point=stp, first_point=True)[0]])
+            p = np.array([self.seekers.ray_trace(
+                origin=stt, end_point=stp, first_point=True)[0]])
             if p.size == 0:
                 p = stp
             intersection.append(p.ravel())
         intersection = np.vstack(intersection)
 
-        pts = pv.PolyData((start+intersection)/2)
+        pts = pv.PolyData((start + intersection) / 2)
         pts = pts.select_enclosed_points(self.mesh)
 
         if self.debug:
             p = pv.Plotter()
             p.add_mesh(self.mesh, opacity=0.5)
-            p.add_mesh(start, color='b', render_points_as_spheres=True, label='start')
-            p.add_mesh(stop, color='r', render_points_as_spheres=True, label='stop')
-            p.add_mesh(intersection, color='pink', render_points_as_spheres=True, label='intersection')
-            p.add_mesh(pts, color='orange', render_points_as_spheres=True, label='midpoint')
-            arrows = pv.PolyData().append_polydata(*[pv.Line(pointa=s, pointb=b) for s, b in zip(start, intersection)])
+            p.add_mesh(
+                start,
+                color='b',
+                render_points_as_spheres=True,
+                label='start')
+            p.add_mesh(
+                stop,
+                color='r',
+                render_points_as_spheres=True,
+                label='stop')
+            p.add_mesh(
+                intersection,
+                color='pink',
+                render_points_as_spheres=True,
+                label='intersection')
+            p.add_mesh(
+                pts,
+                color='orange',
+                render_points_as_spheres=True,
+                label='midpoint')
+            arrows = pv.PolyData().append_polydata(
+                *[pv.Line(pointa=s, pointb=b) for s, b in zip(start, intersection)])
             p.add_mesh(arrows, color='g', label='Normals')
             p.add_legend()
             p.show()
 
-        if pts["SelectedPoints"].sum() < n_tests * (2/3):
+        if pts['SelectedPoints'].sum() < n_tests * (2 / 3):
             self.flip_seekers_directions()
     #
 
@@ -195,7 +232,10 @@ class Seekers(CenterlineDomainExtractor):
 
         """
 
-        if not attribute_checker(self, atts=['mesh'], info="Cannot run seekers."):
+        if not attribute_checker(
+                self,
+                atts=['mesh'],
+                info='Cannot run seekers.'):
             return False
 
         if self.seekers is None:
@@ -204,50 +244,66 @@ class Seekers(CenterlineDomainExtractor):
         if self.check_dirs:
             self.check_seekers_direction()
 
-
         self.seekers.active_vectors_name = 'Normals'
 
         dirs = self.seekers.active_normals
 
         d = self.mesh.length
         eps = d * 1e-4
-        start = self.seekers.points + dirs*eps #The initial position is moved an epsilon inwards to prevent capturing the initial intersection.
+        # The initial position is moved an epsilon inwards to prevent capturing
+        # the initial intersection.
+        start = self.seekers.points + dirs * eps
 
         if self.multi_ray_trace:
-            intersection, _, _ = self.mesh.multi_ray_trace(origins=start, directions=dirs, first_point=True, retry=True)
+            intersection, _, _ = self.mesh.multi_ray_trace(
+                origins=start, directions=dirs, first_point=True, retry=True)
 
         else:
             stop = self.seekers.points + dirs * d
             intersection = []
             for (stt, stp) in zip(start, stop):
-                p = np.array([self.mesh.ray_trace(origin=stt, end_point=stp, first_point=True)[0] ])
+                p = np.array([self.mesh.ray_trace(
+                    origin=stt, end_point=stp, first_point=True)[0]])
                 if p.size == 0:
                     p = stp
                 intersection.append(p.ravel())
 
         intersection = np.vstack(intersection)
 
-        self.output_domain = pv.PolyData((start+intersection) / 2)
-
+        self.output_domain = pv.PolyData((start + intersection) / 2)
 
         if self.check_inside:
-            self.output_domain = self.output_domain.select_enclosed_points(self.mesh).threshold(value=0.5, scalars='SelectedPoints', all_scalars=False, method='upper')
-
+            self.output_domain = self.output_domain.select_enclosed_points(
+                self.mesh).threshold(
+                value=0.5,
+                scalars='SelectedPoints',
+                all_scalars=False,
+                method='upper')
 
         if self.debug:
             p = pv.Plotter(shape=(1, 3))
 
-            p.subplot(0,0)
+            p.subplot(0, 0)
             p.add_mesh(self.mesh)
 
             p.subplot(0, 1)
             p.add_mesh(self.mesh, opacity=0.5)
-            p.add_mesh(start, style='points', render_points_as_spheres=True, point_size=5, color='r')
+            p.add_mesh(
+                start,
+                style='points',
+                render_points_as_spheres=True,
+                point_size=5,
+                color='r')
             p.add_arrows(start, dirs)
 
             p.subplot(0, 2)
             p.add_mesh(self.mesh, opacity=0.3)
-            p.add_mesh(self.output_domain, style='points', render_points_as_spheres=True, point_size=5, color='b')
+            p.add_mesh(
+                self.output_domain,
+                style='points',
+                render_points_as_spheres=True,
+                point_size=5,
+                color='b')
             p.link_views()
             p.show()
 
@@ -273,21 +329,22 @@ class Flux(CenterlineDomainExtractor):
 
         super().__init__()
 
-        self.mesh              : pv.PolyData = None
-        self.output_domain     : pv.PolyData = None
+        self.mesh: pv.PolyData = None
+        self.output_domain: pv.PolyData = None
 
-        self.volume     : pv.UnstructuredGrid = None
-        self.mesh_kdt   : KDTree = None
-        self.volume_kdt : KDTree = None
+        self.volume: pv.UnstructuredGrid = None
+        self.mesh_kdt: KDTree = None
+        self.volume_kdt: KDTree = None
 
         # Parameters
-        self.dx    : float = None
-        self.dy    : float = None
-        self.dz    : float = None
-        self.thrs  : float = 0.0
-        self.relax : bool  = False #Setting this to true may help in bad connectivity scenarios.
+        self.dx: float = None
+        self.dy: float = None
+        self.dz: float = None
+        self.thrs: float = 0.0
+        # Setting this to true may help in bad connectivity scenarios.
+        self.relax: bool = False
 
-        self.debug  : bool = False
+        self.debug: bool = False
     #
 
     def set_mesh(self, m, update=True):
@@ -311,33 +368,35 @@ class Flux(CenterlineDomainExtractor):
     #
 
     def compute_mesh_kdt(self):
-        computing_message("KDTree")
+        computing_message('KDTree')
         self.mesh_kdt = KDTree(self.mesh.points)
-        computing_message("KDTree")
+        computing_message('KDTree')
     #
 
     def compute_voxelization(self, update=True):
-
         """
         Compute the discretization of the inner volume of a closed surface by
         sampling the bounding box with sx, sy and sz spacing and rejecting outside points.
         """
 
-        if not attribute_checker(self, atts=['mesh'], info="Cannot voxelize mesh."):
+        if not attribute_checker(
+                self,
+                atts=['mesh'],
+                info='Cannot voxelize mesh.'):
             return False
 
         s = [self.dx, self.dy, self.dz]
-        if not None in s:
+        if None not in s:
             d = np.array(s)
         else:
             d = None
-            self.dx, self.dy, self.dz = [self.mesh.length/100]*3
+            self.dx, self.dy, self.dz = [self.mesh.length / 100] * 3
 
-        computing_message("mesh voxelization")
+        computing_message('mesh voxelization')
         self.volume = pv.voxelize(self.mesh,
                                   density=d,
                                   check_surface=False)
-        done_message("mesh voxelization")
+        done_message('mesh voxelization')
 
         if update:
             self.compute_volume_kdt()
@@ -346,9 +405,9 @@ class Flux(CenterlineDomainExtractor):
     #
 
     def compute_volume_kdt(self):
-        computing_message("volume KDTree")
+        computing_message('volume KDTree')
         self.volume_kdt = KDTree(self.volume.points)
-        computing_message("volume KDTree")
+        computing_message('volume KDTree')
     #
 
     def run(self):
@@ -364,8 +423,11 @@ class Flux(CenterlineDomainExtractor):
 
         """
 
-        computing_message("centerline domain extraction using the flux...")
-        if not attribute_checker(self, atts=['mesh'], info="Cannot run seekers."):
+        computing_message('centerline domain extraction using the flux...')
+        if not attribute_checker(
+                self,
+                atts=['mesh'],
+                info='Cannot run seekers.'):
             return False
 
         if self.mesh_kdt is None:
@@ -377,26 +439,36 @@ class Flux(CenterlineDomainExtractor):
         if self.volume_kdt is None:
             self.compute_volume_kdt()
 
-        computing_message("flux field")
+        computing_message('flux field')
         self.volume['radius'] = self.mesh_kdt.query(self.volume.points)[0]
         self.volume = self.volume.compute_derivative(scalars='radius')
 
-        r = np.max((self.dx, self.dy, self.dz))*1.2
+        r = np.max((self.dx, self.dy, self.dz)) * 1.2
+
         def net_flux(p):
             neighs = self.volume_kdt.query_ball_point(p, r=r)
-            flux = lambda i: (self.volume.points[i]-p).dot(self.volume["gradient"][i])
-            fluxes = list(map(flux,neighs))
+
+            def flux(i): return (
+                self.volume.points[i] -
+                p).dot(
+                self.volume['gradient'][i])
+            fluxes = list(map(flux, neighs))
             return np.sum(fluxes)
 
         self.volume['flux'] = list(map(net_flux, self.volume.points))
-        done_message("flux field")
+        done_message('flux field')
 
         # Normalize and make it positive
-        normalize_field = lambda arr: arr / np.abs(arr).min() + 1
+        def normalize_field(arr): return arr / np.abs(arr).min() + 1
         self.volume['flux'] = normalize_field(self.volume['flux'])
-        self.output_domain  = self.volume.threshold(value=self.thrs, scalars='flux', all_scalars=self.relax, method='lower').connectivity(extraction_mode='largest')
+        self.output_domain = self.volume.threshold(
+            value=self.thrs,
+            scalars='flux',
+            all_scalars=self.relax,
+            method='lower').connectivity(
+            extraction_mode='largest')
 
-        done_message("centerline domain extraction using the flux...")
+        done_message('centerline domain extraction using the flux...')
 
         if self.debug:
             p = pv.Plotter()
@@ -407,7 +479,6 @@ class Flux(CenterlineDomainExtractor):
         return self.output_domain
     #
 #
-
 
 
 def extract_centerline_domain(vmesh, params=None, debug=False):
@@ -442,7 +513,8 @@ def extract_centerline_domain(vmesh, params=None, debug=False):
         params['method'] = 'seekers'
 
     if params['method'] not in ['seekers', 'flux']:
-        error_message(f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {params['method']}.")
+        error_message(
+            f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {params['method']}.")
         return False
 
     if params['method'] == 'seekers':
@@ -450,19 +522,20 @@ def extract_centerline_domain(vmesh, params=None, debug=False):
     elif params['method'] == 'flux':
         alg = Flux()
     else:
-        print("How the hell have we arrived here?")
+        print('How the hell have we arrived here?')
         return False
     alg.debug = debug
 
-    update=True
+    update = True
     input_mesh = vmesh
     if isinstance(vmesh, VascularMesh):
         if vmesh.closed is None:
             vmesh.compute_closed_mesh()
-        input_mesh = vmesh.closed.compute_normals(cell_normals=False, point_normals=True)
+        input_mesh = vmesh.closed.compute_normals(
+            cell_normals=False, point_normals=True)
         if vmesh.kdt is not None and params['method'] == 'flux':
             alg.mesh_kdt = vmesh.kdt
-            update=False
+            update = False
 
     alg.set_mesh(m=input_mesh, update=update)
 

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+
 class Encoding(ABC):
     """
     Base class for encoding object. This class contains the method required to exist in an encoding.
@@ -14,7 +15,7 @@ class Encoding(ABC):
     #
 
     @abstractmethod
-    def get_metadata(self, **kwargs)->np.ndarray:
+    def get_metadata(self, **kwargs) -> np.ndarray:
         """
         This method returns a copy of the metadata array.
 
@@ -34,8 +35,9 @@ class Encoding(ABC):
         """
         ...
     #
+
     @abstractmethod
-    def set_metadata(self, md, **kwargs)->np.ndarray:
+    def set_metadata(self, md, **kwargs) -> np.ndarray:
         """
         This method extracts and sets the attributes from a the metadata array.
 
@@ -56,7 +58,7 @@ class Encoding(ABC):
     #
 
     @abstractmethod
-    def get_feature_vector_length(self, **kwargs)->int:
+    def get_feature_vector_length(self, **kwargs) -> int:
         """
         This method returns the length of the feature vector.
 
@@ -69,7 +71,7 @@ class Encoding(ABC):
     #
 
     @abstractmethod
-    def to_feature_vector(self, add_metadata=True, **kwargs)->np.ndarray:
+    def to_feature_vector(self, add_metadata=True, **kwargs) -> np.ndarray:
         """
         Convert the Encoding to a feature vector.
 
@@ -124,7 +126,8 @@ class Encoding(ABC):
         vsc_enc.set_metadata(md)
         n = vsc_enc.get_feature_vector_length()
         if len(fv) != n:
-            error_message(f"Cannot build a VascularEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.")
+            error_message(
+                f'Cannot build a VascularEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.')
             return None
 
         ini = 0

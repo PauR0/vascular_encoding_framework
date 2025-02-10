@@ -3,9 +3,8 @@
 import numpy as np
 import pyvista as pv
 
-from ..messages import *
 from ..centerline import Centerline, CenterlineNetwork
-
+from ..messages import *
 
 
 def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
@@ -39,19 +38,25 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
 
         pdt = pv.PolyData()
         pdt.points = cl.samples
-        pdt.lines = np.array([[2, i, i+1] for i in range(cl.n_samples-1)], dtype=int)
-        plotter.add_mesh(pdt, color='k', render_lines_as_tubes=True, line_width=5)
+        pdt.lines = np.array([[2, i, i + 1]
+                             for i in range(cl.n_samples - 1)], dtype=int)
+        plotter.add_mesh(
+            pdt,
+            color='k',
+            render_lines_as_tubes=True,
+            line_width=5)
 
-        pdt['tangent'] = np.array([cl.get_tangent(t) for t in cl.parameter_samples])
-        tgts = pdt.glyph(orient="tangent", factor=scale)
+        pdt['tangent'] = np.array([cl.get_tangent(t)
+                                  for t in cl.parameter_samples])
+        tgts = pdt.glyph(orient='tangent', factor=scale)
         plotter.add_mesh(tgts, color='r')
 
-        pdt['v1']      = np.array([cl.v1(t) for t in cl.parameter_samples])
-        v1 = pdt.glyph(orient="v1", factor=scale)
+        pdt['v1'] = np.array([cl.v1(t) for t in cl.parameter_samples])
+        v1 = pdt.glyph(orient='v1', factor=scale)
         plotter.add_mesh(v1, color='g')
 
-        pdt['v2']      = np.array([cl.v2(t) for t in cl.parameter_samples])
-        v2 = pdt.glyph(orient="v2", factor=scale)
+        pdt['v2'] = np.array([cl.v2(t) for t in cl.parameter_samples])
+        v2 = pdt.glyph(orient='v2', factor=scale)
         plotter.add_mesh(v2, color='b')
 
         if isinstance(cntrln, CenterlineNetwork) and hasattr(cl, 'children'):
@@ -66,7 +71,8 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
             plot_cl_pl(cntrln[rid])
 
     else:
-        error_message("The argument cntrln must be an instance of Centerline or CenterlineNetwork.")
+        error_message(
+            'The argument cntrln must be an instance of Centerline or CenterlineNetwork.')
         return
 
     if vmesh is not None:
@@ -75,6 +81,7 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
     if show:
         plotter.show()
 #
+
 
 def plot_open_boundary_ids(poly, plotter=None, show=True):
     """
@@ -102,19 +109,23 @@ def plot_open_boundary_ids(poly, plotter=None, show=True):
         plotter = pv.Plotter()
 
     if poly.is_manifold:
-        warning_message("No boundary edges found.")
+        warning_message('No boundary edges found.')
         return plotter
 
-    boundaries = poly.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
+    boundaries = poly.extract_feature_edges(
+        boundary_edges=True,
+        non_manifold_edges=False,
+        feature_edges=False,
+        manifold_edges=False)
     boundaries = boundaries.connectivity()
 
     plotter.add_mesh(poly, opacity=0.5)
-    print("."*20)
+    print('.' * 20)
     for i in np.unique(boundaries['RegionId']):
         boundary = boundaries.extract_points(boundaries['RegionId'] == i)
         plotter.add_point_labels(np.array(boundary.center), [str(i)])
-        print(f"{i} : {boundary.center}")
-    print("."*20)
+        print(f'{i} : {boundary.center}')
+    print('.' * 20)
 
     if show:
         plotter.show()

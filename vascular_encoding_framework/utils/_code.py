@@ -14,9 +14,9 @@ class Node:
 
     def __init__(self, nd=None) -> None:
 
-        self.id             = None
-        self.parent         = None
-        self.children : set = set()
+        self.id = None
+        self.parent = None
+        self.children: set = set()
 
         if nd is not None:
             self.set_data_from_other_node(nd=nd)
@@ -24,7 +24,8 @@ class Node:
 
     def __str__(self):
         long_atts = ['points', 'faces']
-        strout="\n".join([f"{k}".ljust(20, '.')+f": {v}" for k, v in self.__dict__.items() if k not in long_atts])
+        strout = '\n'.join([f'{k}'.ljust(
+            20, '.') + f': {v}' for k, v in self.__dict__.items() if k not in long_atts])
         for att in long_atts:
             if att in self.__dict__:
                 val = getattr(self, att)
@@ -32,7 +33,7 @@ class Node:
                     n = len(val)
                     if att == 'faces':
                         n /= 4
-                    strout += f"\nn_{att}".ljust(20, '.')+f": {n}"
+                    strout += f'\nn_{att}'.ljust(20, '.') + f': {n}'
 
         return strout
     #
@@ -64,7 +65,7 @@ class Node:
             for k, v in kwargs.items():
                 if v is not None:
                     if is_arrayable(v):
-                        kwargs_np[k]= k=np.array(v)
+                        kwargs_np[k] = k = np.array(v)
             kwargs = kwargs_np
 
         attribute_setter(self, **kwargs)
@@ -83,7 +84,7 @@ class Node:
                 The node from which attributes will be copied.
         """
 
-        self.set_data(**{k : getattr(nd, k) for k in Node().__dict__})
+        self.set_data(**{k: getattr(nd, k) for k in Node().__dict__})
     #
 
     def add_child(self, c):
@@ -101,31 +102,33 @@ class Node:
     #
 #
 
+
 class Tree(dict):
     """
     Abstract class for trees. It inherits from dictionary structure so its
     easier to get-set items.
     """
 
-
     def __init__(self) -> None:
         """
         Tree constructor.
         """
         super().__init__()
-        #This way we allow more than one tree to be hold. Actually more like a forest...
-        self.roots : set = set()
+        # This way we allow more than one tree to be hold. Actually more like a
+        # forest...
+        self.roots: set = set()
         return
     #
 
     def __str__(self):
-        outstr = ""
-        ind = " "
+        outstr = ''
+        ind = ' '
 
         def append_str(nid, outstr, l=0):
-            strout = "\n".join([ind*4*l+s for s in self[nid].__str__().split("\n")]) + "\n\n"
+            strout = '\n'.join(
+                [ind * 4 * l + s for s in self[nid].__str__().split('\n')]) + '\n\n'
             for cid in self[nid].children:
-                strout += append_str(cid, outstr, l=l+1)
+                strout += append_str(cid, outstr, l=l + 1)
 
             return strout
 
@@ -144,20 +147,25 @@ class Tree(dict):
 
     def __setitem__(self, __key, nd: Node) -> None:
 
-        #Checking it has parent and children attributes. Since Nones are admited, attribute_checker is not well suited.
+        # Checking it has parent and children attributes. Since Nones are
+        # admited, attribute_checker is not well suited.
         for att in ['parent', 'children']:
             if not hasattr(nd, att):
-                error_message(f"Aborted insertion of node with id: {__key}. It has no {att} attribute.")
+                error_message(
+                    f'Aborted insertion of node with id: {__key}. It has no {att} attribute.')
                 return
 
         if nd.parent is not None and nd.parent not in self.keys():
-            error_message(f"Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree.")
+            error_message(
+                f'Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree.')
             return
 
         if not isinstance(__key, str):
-            warning_message(f"node {__key} has been set with a non-string key. This may turn in troubles...")
+            warning_message(
+                f'node {__key} has been set with a non-string key. This may turn in troubles...')
         if __key != nd.id:
-            warning_message(f"node id attribute is {nd.id} and node id in tree has been set as {__key}.")
+            warning_message(
+                f'node id attribute is {nd.id} and node id in tree has been set as {__key}.')
 
         super().__setitem__(__key, nd)
 
@@ -204,12 +212,13 @@ class Tree(dict):
             The removed node, as pop method does in dictionaries.
         """
 
-        #Children are now roots
+        # Children are now roots
         for child in self[k].children:
             self[child].parent = None
             self.roots.add(child)
 
-        #If k is a root remove from roots set, otherwise remove it from parent children set.
+        # If k is a root remove from roots set, otherwise remove it from parent
+        # children set.
         if self[k].parent is None:
             self.roots.discard(k)
         else:
@@ -287,12 +296,13 @@ class Tree(dict):
             out : bool
                 True if parent-child attributes are not in contradiction among nodes, False otherwise.
         """
-        out=True
+        out = True
         for nid, node in self.items():
             if node.parent is not None:
                 if nid not in self[node.parent].children:
-                    warning_message(f"Inconsistency found: {nid} has {node.parent} as parent, but it is not in its children set.")
-                    out=False
+                    warning_message(
+                        f'Inconsistency found: {nid} has {node.parent} as parent, but it is not in its children set.')
+                    out = False
         return out
     #
 
@@ -333,7 +343,8 @@ class Tree(dict):
         """
 
         if new_id in self:
-            error_message(f"{new_id} is already present. Cant rename {old_id} to {new_id}.")
+            error_message(
+                f'{new_id} is already present. Cant rename {old_id} to {new_id}.')
             return
 
         self[old_id].id = new_id
@@ -399,13 +410,15 @@ class Tree(dict):
 
         tree = Tree()
 
-        roots = [nid for nid, node in hierarchy.items() if node['parent'] in [None, 'None']]
+        roots = [nid for nid, node in hierarchy.items() if node['parent'] in [
+            None, 'None']]
 
-        def add_node(nid):#, children, parent=None, **kwargs):
+        def add_node(nid):  # , children, parent=None, **kwargs):
 
             for k in Node().__dict__:
                 if k not in hierarchy[nid]:
-                    error_message(f"cant build hierarchy base on dict. Node {nid} has no entry for {k}")
+                    error_message(
+                        f'cant build hierarchy base on dict. Node {nid} has no entry for {k}')
                     return False
 
             n = Node()
@@ -413,7 +426,7 @@ class Tree(dict):
             n.set_data(**hierarchy[nid])
             tree[n.id] = n
             for cid in n.children:
-                    add_node(nid=cid)
+                add_node(nid=cid)
             return True
 
         for rid in roots:
@@ -422,6 +435,7 @@ class Tree(dict):
         return tree
     #
 #
+
 
 def check_specific(params, nid, arg, default):
     """
@@ -458,6 +472,7 @@ def check_specific(params, nid, arg, default):
         return default
 #
 
+
 def is_sequence(obj):
     """
     Check wether an object is a sequence.
@@ -472,11 +487,12 @@ def is_sequence(obj):
     ---------
         True or False.
     """
-    if isinstance(obj, str) and len(obj)<2:
+    if isinstance(obj, str) and len(obj) < 2:
         return False
 
     return hasattr(obj, '__iter__') and callable(getattr(obj, '__iter__'))
 #
+
 
 def is_numeric(obj):
     """
@@ -498,6 +514,7 @@ def is_numeric(obj):
         return False
     return True
 #
+
 
 def is_arrayable(seq):
     """
@@ -530,6 +547,7 @@ def is_arrayable(seq):
     return True
 #
 
+
 def attribute_checker(obj, atts, info=None, opts=None):
     """
     Function to check if attribute has been set and print error message.
@@ -560,18 +578,21 @@ def attribute_checker(obj, atts, info=None, opts=None):
         for att in atts:
             if getattr(obj, att) is None:
                 if info is not None:
-                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}....")
+                    error_message(
+                        info=f'{info}. Attribute {att} is {getattr(obj, att)}....')
                 return False
 
     else:
         for att, opt in zip(atts, opts):
             if getattr(obj, att) not in opt:
                 if info is not None:
-                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}, and it must be in [{opt}]....")
+                    error_message(
+                        info=f'{info}. Attribute {att} is {getattr(obj, att)}, and it must be in [{opt}]....')
                 return False
 
     return True
 #
+
 
 def attribute_setter(obj, **kwargs):
     """

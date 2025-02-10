@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Literal, Dict, Any
-
+from typing import Any, Dict, Literal
 
 import numpy as np
 import pyvista as pv
 
-
-from ..messages import *
 from ..encoding.encoding import Encoding
+from ..messages import *
 from ..utils._code import attribute_checker, attribute_setter
-
-
-from .alignment import Alignment, IterativeClosestPoint, RigidProcrustesAlignment, as_an_array
+from .alignment import (Alignment, IterativeClosestPoint,
+                        RigidProcrustesAlignment, as_an_array)
 
 
 class GeneralizedProcrustesAlignment:
@@ -30,16 +27,17 @@ class GeneralizedProcrustesAlignment:
 
     def __init__(self):
 
-        self.data_set : Dict[str : np.ndarray | pv.DataObject] = None
+        self.data_set: Dict[str: np.ndarray | pv.DataObject] = None
 
-        self.alignment_method : Literal['procrustes', 'ICP'] = 'procrustes'
-        self.alignment_params : Dict[str:Any]                = None
-        self.alignment        : Alignment                    = None
+        self.alignment_method: Literal['procrustes', 'ICP'] = 'procrustes'
+        self.alignment_params: Dict[str:Any] = None
+        self.alignment: Alignment = None
 
-        self.data_set       : Dict[str : np.ndarray | pv.DataObject | Encoding] = None
-        self.n_iters        : int = 3
-        self.reference_id   : int | str = 0 #The key (or its index) of the shape to use in the
-                                            #first iteration as the mean shape.
+        self.data_set: Dict[str: np.ndarray | pv.DataObject | Encoding] = None
+        self.n_iters: int = 3
+        # The key (or its index) of the shape to use in the
+        self.reference_id: int | str = 0
+        # first iteration as the mean shape.
         self.build_alignment()
     #
 
@@ -48,7 +46,7 @@ class GeneralizedProcrustesAlignment:
         Method to set parameters as attributes of the object.
         """
         gpa = self.__class__()
-        params = {k:v for k,v in kwargs.items() if k in gpa.__dict__}
+        params = {k: v for k, v in kwargs.items() if k in gpa.__dict__}
         attribute_setter(self, **params)
 
         if build:
@@ -62,7 +60,11 @@ class GeneralizedProcrustesAlignment:
         Warning: This method overwrites the existing alignment attribute and its current parameter.
         """
 
-        if not attribute_checker(self, ['alignment_method'], info="Cannot set alignment.", opts=[['procrustes', 'ICP']]):
+        if not attribute_checker(self,
+                                 ['alignment_method'],
+                                 info='Cannot set alignment.',
+                                 opts=[['procrustes',
+                                        'ICP']]):
             return
 
         if self.alignment_method == 'ICP':
@@ -70,7 +72,8 @@ class GeneralizedProcrustesAlignment:
         elif self.alignment_method == 'procrustes':
             self.alignment = RigidProcrustesAlignment()
         else:
-            error_message("Something must've gone wrong before getting to this point.")
+            error_message(
+                "Something must've gone wrong before getting to this point.")
 
         if self.alignment_params is not None:
             self.alignment.set_parameters(**self.alignment_params)
@@ -89,10 +92,14 @@ class GeneralizedProcrustesAlignment:
                 The mean point set.
         """
 
-        if not attribute_checker(self, atts=['data_set'], info="Can't compute mean shape."):
+        if not attribute_checker(
+                self,
+                atts=['data_set'],
+                info="Can't compute mean shape."):
             return None
 
-        return np.mean([as_an_array(v) for _, v in self.data_set.items()], axis=0)
+        return np.mean([as_an_array(v)
+                       for _, v in self.data_set.items()], axis=0)
     #
 
     def run(self):
@@ -100,14 +107,17 @@ class GeneralizedProcrustesAlignment:
         Compute the GPA over the data set.
         """
 
-        if not attribute_checker(self, ['alignment', 'data_set'], info="Cant run Generalized Procrustes Alignment."):
+        if not attribute_checker(
+            self, [
+                'alignment', 'data_set'], info='Cant run Generalized Procrustes Alignment.'):
             return
 
         if isinstance(self.reference_id, int):
             if self.reference_id >= len(self.data_set):
-                error_message(f"The reference_id ({self.reference_id}) is greater than the amount \
+                error_message(
+                    f'The reference_id ({self.reference_id}) is greater than the amount \
                               of elements in data set ({len(self.data_set)}). Using the id at first \
-                              position.")
+                              position.')
                 self.reference_id = 0
 
             self.reference_id = list(self.data_set.keys())[self.reference_id]

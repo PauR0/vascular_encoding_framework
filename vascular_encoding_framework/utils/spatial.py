@@ -1,16 +1,17 @@
 
 
 import numpy as np
-
 from sklearn.decomposition import PCA
 
 from ..messages import *
 
+
 def planar_coordinates(points, c0, v1, v2):
-    M = np.array([v1.T,v2.T])
-    points2d = np.dot(M, points-c0.reshape((3,1)))
+    M = np.array([v1.T, v2.T])
+    points2d = np.dot(M, points - c0.reshape((3, 1)))
     return points2d
 #
+
 
 def polar_to_cart(x_pol):
     """
@@ -28,12 +29,13 @@ def polar_to_cart(x_pol):
         x_cart : np.ndarray (2,N)
             The points in cartesian 2D coordinates.
     """
-    return x_pol[1]*np.array((np.cos(x_pol[0]),np.sin(x_pol[0])))
+    return x_pol[1] * np.array((np.cos(x_pol[0]), np.sin(x_pol[0])))
 #
+
 
 def cart_to_polar(x_cart, sort=True):
     """
-    Cartesian 2D to polar coordinates with angular coord in [0, 2\pi]
+    Cartesian 2D to polar coordinates with angular coord in [0, 2\\pi]
 
     Arguments:
     ------------
@@ -50,16 +52,17 @@ def cart_to_polar(x_cart, sort=True):
         x_pol : np.ndarray
             Points in polar coordinates.
     """
-    x_pol = np.array( (np.arctan2(x_cart[1], x_cart[0]),
-                       np.linalg.norm(x_cart,axis=0)) )
-    x_pol[0][x_pol[0]<0] += 2*np.pi
+    x_pol = np.array((np.arctan2(x_cart[1], x_cart[0]),
+                      np.linalg.norm(x_cart, axis=0)))
+    x_pol[0][x_pol[0] < 0] += 2 * np.pi
 
-    #Sorting the array points by the value in the first row!
+    # Sorting the array points by the value in the first row!
     if sort:
-        x_pol = x_pol[:,np.argsort(x_pol[0,:])]
+        x_pol = x_pol[:, np.argsort(x_pol[0, :])]
 
     return x_pol
 #
+
 
 def get_theta_coord(points, c, v1, v2, deg=False):
     """
@@ -80,11 +83,11 @@ def get_theta_coord(points, c, v1, v2, deg=False):
     """
 
     if len(points.shape) == 1:
-        points = points[None, :] #Adding a dimension
+        points = points[None, :]  # Adding a dimension
 
     u1, u2 = planar_coordinates(points.T, c0=c, v1=v1, v2=v2)
-    th = np.arctan2(u2,u1)
-    th[th < 0] += 2*np.pi
+    th = np.arctan2(u2, u1)
+    th[th < 0] += 2 * np.pi
 
     if deg:
         th = radians_to_degrees(r=th)
@@ -95,6 +98,7 @@ def get_theta_coord(points, c, v1, v2, deg=False):
     return th
 #
 
+
 def normalize(v):
     """ Normalize a vector """
     norm = np.linalg.norm(v)
@@ -102,6 +106,7 @@ def normalize(v):
         return v
     return v / norm
 #
+
 
 def compute_ref_from_points(points):
     """
@@ -134,6 +139,7 @@ def compute_ref_from_points(points):
     return center, e1, e2, e3
 #
 
+
 def sort_glob_ids_by_angle(gids, points, c, v1, v2):
 
     if not isinstance(gids, np.ndarray):
@@ -143,6 +149,7 @@ def sort_glob_ids_by_angle(gids, points, c, v1, v2):
     ids = th.argsort()
     return gids[ids]
 #
+
 
 def radians_to_degrees(r):
     """
@@ -161,9 +168,10 @@ def radians_to_degrees(r):
             The degrees.
 
     """
-    deg = 180/np.pi * r
+    deg = 180 / np.pi * r
     return deg
 #
+
 
 def decompose_transformation_matrix(matrix):
     """
@@ -189,17 +197,18 @@ def decompose_transformation_matrix(matrix):
 
     """
 
-    #Translation
+    # Translation
     t = matrix[0:-1, 3]
-    #Scale
-    s = np.linalg.norm(matrix[[0,1,2],:3], axis=0)
-    #Rotation
-    r = matrix[0:-1,0:-1]
+    # Scale
+    s = np.linalg.norm(matrix[[0, 1, 2], :3], axis=0)
+    # Rotation
+    r = matrix[0:-1, 0:-1]
     for i in range(3):
-        r[:,i] = r[:,i]*(1/s[i])
+        r[:, i] = r[:, i] * (1 / s[i])
 
     return t, s, r
 #
+
 
 def compose_transformation_matrix(t=None, s=None, r=None):
     """
@@ -230,7 +239,7 @@ def compose_transformation_matrix(t=None, s=None, r=None):
     matrix = np.eye(4)
 
     if r is not None:
-        matrix[0:-1,0:-1] = r
+        matrix[0:-1, 0:-1] = r
 
     if s is not None:
         matrix[:3, :3] *= s
@@ -240,6 +249,7 @@ def compose_transformation_matrix(t=None, s=None, r=None):
 
     return matrix
 #
+
 
 def transform_point_array(points, t=None, s=None, r=None):
     """
@@ -268,10 +278,10 @@ def transform_point_array(points, t=None, s=None, r=None):
             The transformed points
     """
 
-    pts_ext = np.hstack([points, np.ones((points.shape[0],1))])
+    pts_ext = np.hstack([points, np.ones((points.shape[0], 1))])
     matrix = compose_transformation_matrix(t=t, s=s, r=r)
     points_tr = (matrix @ pts_ext.T).T
-    points_tr = points_tr[:,:3]
+    points_tr = points_tr[:, :3]
 
     return points_tr
 #

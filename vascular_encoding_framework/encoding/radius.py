@@ -7,6 +7,7 @@ from ..splines.splines import BiSpline, uniform_penalized_bivariate_spline
 from ..utils._code import attribute_checker
 from ..utils.misc import split_metadata_and_fv
 
+
 class Radius(BiSpline):
 
     def __init__(self):
@@ -18,7 +19,7 @@ class Radius(BiSpline):
         self.extra_x = 'constant'
 
         self.y0 = 0
-        self.y1 = 2*np.pi
+        self.y1 = 2 * np.pi
         self.extra_y = 'periodic'
     #
 
@@ -60,7 +61,7 @@ class Radius(BiSpline):
                       self.ky,
                       self.n_knots_x,
                       self.n_knots_y,
-                      ])
+                       ])
 
         return md
     #
@@ -85,11 +86,11 @@ class Radius(BiSpline):
         """
 
         self.set_parameters(
-            build = False,
-            kx        = round(md[1]),
-            ky        = round(md[2]),
-            n_knots_x = round(md[3]),
-            n_knots_y = round(md[4]),
+            build=False,
+            kx=round(md[1]),
+            ky=round(md[2]),
+            n_knots_x=round(md[3]),
+            n_knots_y=round(md[4]),
         )
     #
 
@@ -110,9 +111,14 @@ class Radius(BiSpline):
 
         """
 
-        if not attribute_checker(self, ['n_knots_x', 'n_knots_y', 'kx', 'ky'], info="Cannot compute the Radius feature vector length."):
+        if not attribute_checker(self,
+                                 ['n_knots_x',
+                                  'n_knots_y',
+                                  'kx',
+                                  'ky'],
+                                 info='Cannot compute the Radius feature vector length.'):
             return None
-        rk = (self.n_knots_x+self.kx+1)*(self.n_knots_y+self.ky+1)
+        rk = (self.n_knots_x + self.kx + 1) * (self.n_knots_y + self.ky + 1)
         return rk
     #
 
@@ -143,7 +149,6 @@ class Radius(BiSpline):
         :py:meth:`get_metadata`
         :py:meth:`from_feature_vector`
         """
-
 
         fv = self.coeffs.ravel()
 
@@ -190,22 +195,29 @@ class Radius(BiSpline):
         rd = Radius()
         rd.set_metadata(md)
 
-        r , k = (rd.n_knots_x + rd.kx + 1), (rd.n_knots_y + rd.ky + 1)
+        r, k = (rd.n_knots_x + rd.kx + 1), (rd.n_knots_y + rd.ky + 1)
         rk = r * k
         if len(fv) != rk:
-            error_message(f"Cannot build a Radius object from feature vector. Expected rk knots ((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided.")
+            error_message(
+                f'Cannot build a Radius object from feature vector. Expected rk knots ((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided.')
             return
 
         rd.set_parameters(
             build=True,
-            coeffs = fv,
+            coeffs=fv,
         )
 
         return rd
     #
 
     @staticmethod
-    def from_points(points, tau_knots, theta_knots, laplacian_penalty=1.0, cl=None, debug=False):
+    def from_points(
+            points,
+            tau_knots,
+            theta_knots,
+            laplacian_penalty=1.0,
+            cl=None,
+            debug=False):
         """
         Function to build a Radius object from an array of points in the Vessel Coordinate System.
         Radius object are a specialized Bivarate Splines. This function allow to build such objects
@@ -242,21 +254,22 @@ class Radius(BiSpline):
         if cl is not None:
             rd.set_parameters_from_centerline(cl)
 
-        bispl = uniform_penalized_bivariate_spline(x=points[:,0],
-                                                   y=points[:,1],
-                                                   z=points[:,2],
+        bispl = uniform_penalized_bivariate_spline(x=points[:, 0],
+                                                   y=points[:, 1],
+                                                   z=points[:, 2],
                                                    nx=tau_knots,
                                                    ny=theta_knots,
                                                    laplacian_penalty=laplacian_penalty,
                                                    y_periodic=True,
                                                    kx=rd.kx,
                                                    ky=rd.ky,
-                                                   bounds=(rd.x0, rd.x1, rd.y0, rd.y1),
+                                                   bounds=(
+                                                       rd.x0, rd.x1, rd.y0, rd.y1),
                                                    debug=debug)
         rd.set_parameters(build=True,
-                          n_knots_x = tau_knots,
-                          n_knots_y = theta_knots,
-                          coeffs    = bispl.get_coeffs())
+                          n_knots_x=tau_knots,
+                          n_knots_y=theta_knots,
+                          coeffs=bispl.get_coeffs())
         return rd
     #
 #

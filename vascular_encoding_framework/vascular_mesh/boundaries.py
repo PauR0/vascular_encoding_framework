@@ -7,10 +7,11 @@ import pyvista as pv
 from scipy.interpolate import BSpline
 
 from ..messages import *
-from ..utils.spatial import planar_coordinates, cart_to_polar, normalize
-from ..splines.splines import get_uniform_knot_vector, compute_rho_spline
-from ..utils._code   import Tree, Node, attribute_checker
-from ..utils._io import write_json, read_json
+from ..splines.splines import compute_rho_spline, get_uniform_knot_vector
+from ..utils._code import Node, Tree, attribute_checker
+from ..utils._io import read_json, write_json
+from ..utils.spatial import cart_to_polar, normalize, planar_coordinates
+
 
 class Boundary(Node):
 
@@ -20,30 +21,32 @@ class Boundary(Node):
 
     def __init__(self, nd=None) -> None:
 
-        #Added Node parent.
+        # Added Node parent.
         super().__init__(nd=None)
 
-        #Local reference frame
-        self.center : np.ndarray = None # Shape = (3,)
-        self.normal : np.ndarray = None # Shape = (3,)
-        self.v1     : np.ndarray = None # Shape = (3,)
-        self.v2     : np.ndarray = None # Shape = (3,)
+        # Local reference frame
+        self.center: np.ndarray = None  # Shape = (3,)
+        self.normal: np.ndarray = None  # Shape = (3,)
+        self.v1: np.ndarray = None  # Shape = (3,)
+        self.v2: np.ndarray = None  # Shape = (3,)
 
-        #Locus
-        self.points         : np.ndarray  = None # Shape = (N,3)
-        self.points2D_cart  : np.ndarray  = None # Shape = (N,2)
-        self.points2D_polar : np.ndarray  = None # Shape = (N,2)
+        # Locus
+        self.points: np.ndarray = None  # Shape = (N,3)
+        self.points2D_cart: np.ndarray = None  # Shape = (N,2)
+        self.points2D_polar: np.ndarray = None  # Shape = (N,2)
 
-        #To cast into a polydata
-        self.faces : np.ndarray = None #Recomended shape is (N, 4) being the first column == 3. (Triangular faces)
+        # To cast into a polydata
+        # Recomended shape is (N, 4) being the first column == 3. (Triangular
+        # faces)
+        self.faces: np.ndarray = None
 
-        #Boundary curve
-        self.rho_spl     : BSpline = None
-        self.rho_coef    : np.ndarray = None # Shape = (n_knots_rho + k+1,)
-        self.n_knots_rho : int = None
-        self.k           : int = 3
+        # Boundary curve
+        self.rho_spl: BSpline = None
+        self.rho_coef: np.ndarray = None  # Shape = (n_knots_rho + k+1,)
+        self.n_knots_rho: int = None
+        self.k: int = 3
 
-        #Inherit node data
+        # Inherit node data
         if nd is not None:
             self.set_data(**nd.__dict__)
     #
@@ -73,7 +76,8 @@ class Boundary(Node):
 
         outdict = {}
         if compact:
-            atts = list(Node().__dict__.keys()) + ['center', 'normal', 'v1', 'v2']
+            atts = list(Node().__dict__.keys()) + \
+                ['center', 'normal', 'v1', 'v2']
         else:
             atts = self.__dict__.keys()
 
@@ -81,7 +85,8 @@ class Boundary(Node):
             v = self.__dict__[k]
             if serialize and isinstance(v, (set, np.ndarray)):
                 if isinstance(v, np.ndarray):
-                    if v.dtype == 'float32': v=v.astype(float)
+                    if v.dtype == 'float32':
+                        v = v.astype(float)
                     v = v.astype(float)
                 v = list(v)
             outdict[k] = v
@@ -89,7 +94,12 @@ class Boundary(Node):
         return outdict
     #
 
-    def set_data(self, to_numpy=True, update=False, build_splines=False, **kwargs):
+    def set_data(
+            self,
+            to_numpy=True,
+            update=False,
+            build_splines=False,
+            **kwargs):
         """
         Method to set attributes by means of kwargs.
         E.g.
@@ -111,7 +121,7 @@ class Boundary(Node):
 
         super().set_data(to_numpy=to_numpy, **kwargs)
 
-        if "points" in kwargs and update:
+        if 'points' in kwargs and update:
             self.from_3D_to_polar()
 
         if build_splines:
@@ -119,7 +129,6 @@ class Boundary(Node):
     #
 
     def from_3D_to_2D(self, pts=None):
-
         """
         Tansform 3D Cartesian points to local plannar coordinates
         of the local reference system and return them.
@@ -142,14 +151,26 @@ class Boundary(Node):
 
         """
 
-        attribute_checker(self, ['points', 'center', 'v1', 'v2'], info='Cannot compute plannar coordinates.'+\
-                                                                            f'Boundary with id {self.id} has no v1 and v2....')
+        attribute_checker(
+            self,
+            [
+                'points',
+                'center',
+                'v1',
+                'v2'],
+            info='Cannot compute plannar coordinates.' +
+            f'Boundary with id {self.id} has no v1 and v2....')
 
         if pts is None:
-            self.points2D_cart = planar_coordinates(self.points.T, c0=self.center, v1=self.v1, v2=self.v2).T
+            self.points2D_cart = planar_coordinates(
+                self.points.T, c0=self.center, v1=self.v1, v2=self.v2).T
             return self.points2D_cart.copy()
 
-        return planar_coordinates(points=pts.T, c0=self.center, v1=self.v1, v2=self.v2).T
+        return planar_coordinates(
+            points=pts.T,
+            c0=self.center,
+            v1=self.v1,
+            v2=self.v2).T
     #
 
     def cartesian_2D_to_polar(self, pts, sort=True):
@@ -178,8 +199,12 @@ class Boundary(Node):
         """
 
         if pts is None:
-            attribute_checker(self, atts=['points2d_cart'], info=f'No points available to transform in polar coordinates at boundary {self.id}')
-            self.points2D_polar = cart_to_polar(self.points2D_cart.T, sort=sort).T
+            attribute_checker(
+                self,
+                atts=['points2d_cart'],
+                info=f'No points available to transform in polar coordinates at boundary {self.id}')
+            self.points2D_polar = cart_to_polar(
+                self.points2D_cart.T, sort=sort).T
             return self.points2D_polar.copy()
 
         return cart_to_polar(pts.T, sort=sort).T
@@ -228,14 +253,21 @@ class Boundary(Node):
         """
         if self.rho_coef is None:
             if self.points2D_polar is not None:
-                self.rho_coef = compute_rho_spline(polar_points=self.points2D_polar.T, n_knots=self.n_knots_rho, k=self.k)[0][:-self.k-1]
+                self.rho_coef = compute_rho_spline(
+                    polar_points=self.points2D_polar.T, n_knots=self.n_knots_rho, k=self.k)[0][:-self.k - 1]
                 self.compute_area()
             else:
-                print("ERROR: Unable to build rho spline. Both points2D_polar and rho_coeff are None....")
+                print(
+                    'ERROR: Unable to build rho spline. Both points2D_polar and rho_coeff are None....')
 
-        t = get_uniform_knot_vector(0, 2*np.pi, self.n_knots_rho, mode='periodic')
+        t = get_uniform_knot_vector(
+            0, 2 * np.pi, self.n_knots_rho, mode='periodic')
 
-        self.rho_spl = BSpline(t=t, c=self.rho_coef, k=self.k, extrapolate='periodic')
+        self.rho_spl = BSpline(
+            t=t,
+            c=self.rho_coef,
+            k=self.k,
+            extrapolate='periodic')
     #
 
     def compute_area(self, th_ini=0, th_end=None):
@@ -263,12 +295,11 @@ class Boundary(Node):
 
         """
 
-
         if self.rho_spl is None:
             self.build_rho_spline()
 
         if th_end is None:
-            th_end = 2*np.pi
+            th_end = 2 * np.pi
 
         area = self.rho_spl.integrate(th_ini, th_end, extrapolate='periodic')
 
@@ -293,11 +324,12 @@ class Boundary(Node):
         if 'Normals' not in pdt.cell_data:
             pdt = pdt.compute_normals(cell_normals=True, inplace=False)
 
-        self.set_data(center = np.array(pdt.center),
-                      normal = normalize(pdt.get_array('Normals', preference='cell').mean(axis=0)),
-                      points = pdt.points,
-                      faces  = pdt.faces
-                     )
+        self.set_data(
+            center=np.array(
+                pdt.center), normal=normalize(
+                pdt.get_array(
+                    'Normals', preference='cell').mean(
+                    axis=0)), points=pdt.points, faces=pdt.faces)
     #
 
     def to_polydata(self):
@@ -359,7 +391,6 @@ class Boundary(Node):
                 Default True. Whether to rebuild the splines after the transformation.
         """
 
-
         if self.center is not None:
             self.center *= s
 
@@ -390,7 +421,7 @@ class Boundary(Node):
         :py:meth:`Centerline.rotate`
         """
 
-        #ensure normality of the rotation matrix columns
+        # ensure normality of the rotation matrix columns
         r /= np.linalg.norm(r, axis=0)
 
         if self.center is not None:
@@ -409,6 +440,7 @@ class Boundary(Node):
             self.points = (r @ self.points.T).T
     #
 #
+
 
 class Boundaries(Tree):
     """
@@ -450,7 +482,11 @@ class Boundaries(Tree):
         :py:meth:`from_dict`
         """
 
-        outdict = { i : node.to_dict(compact=compact, serialize=serialize) for i, node in self.items()}
+        outdict = {
+            i: node.to_dict(
+                compact=compact,
+                serialize=serialize) for i,
+            node in self.items()}
 
         return outdict
     #
@@ -479,9 +515,9 @@ class Boundaries(Tree):
 
         outdict = self.to_dict(compact=True, serialize=True)
 
-        write_json(f"{fname}.json", outdict, overwrite=True)
+        write_json(f'{fname}.json', outdict, overwrite=True)
 
-        mbfname = f"{fname}.vtm"
+        mbfname = f'{fname}.vtm'
         outmultiblock = self.to_multiblock()
         if outmultiblock.n_blocks:
             outmultiblock.save(filename=mbfname, binary=binary)
@@ -531,7 +567,6 @@ class Boundaries(Tree):
         :py:meth:`to_dict`
         """
 
-
         boundaries = Boundaries(bds_dict)
         for i, nd in boundaries.items():
             if not isinstance(nd, Boundary):
@@ -568,13 +603,13 @@ class Boundaries(Tree):
 
         fname_, ext = os.path.splitext(fname)
         if ext != '.json':
-            error_message(f"Can't read boundaries from {fname}. Only .json files are supported.")
+            error_message(
+                f"Can't read boundaries from {fname}. Only .json files are supported.")
             return None
 
         bds_dict = read_json(fname)
         boundaries = Boundaries.from_dict(bds_dict=bds_dict)
-        mb_name = fname_+'.vtm'
-
+        mb_name = fname_ + '.vtm'
 
         if os.path.exists(mb_name):
 

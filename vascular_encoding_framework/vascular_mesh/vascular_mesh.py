@@ -5,10 +5,13 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from ..messages import *
+from ..utils._code import attribute_setter
+from ..utils.geometry import (approximate_cross_section, extract_section,
+                              triangulate_cross_section)
+from ..utils.spatial import (compose_transformation_matrix,
+                             compute_ref_from_points, normalize)
 from .boundaries import Boundaries, Boundary
-from ..utils.geometry import triangulate_cross_section, approximate_cross_section, extract_section
-from ..utils.spatial  import compute_ref_from_points, normalize, compose_transformation_matrix
-from ..utils._code    import attribute_setter
+
 
 class VascularMesh(pv.PolyData):
 
@@ -21,21 +24,20 @@ class VascularMesh(pv.PolyData):
     Furthermore, it is usually not in the method's signature.
     """
 
-    def __init__(self, p:pv.PolyData=None, compute_boundaries=True) -> None:
+    def __init__(self, p: pv.PolyData = None, compute_boundaries=True) -> None:
 
+        self.boundaries: Boundaries = None
+        self.n_boundaries: int = None
+        self.closed: pv.PolyData = None
 
-        self.boundaries   : Boundaries = None
-        self.n_boundaries : int = None
-        self.closed       : pv.PolyData = None
+        # To query distances
+        self.kdt: KDTree = None
 
-        #To query distances
-        self.kdt : KDTree = None
-
-        #Spatial alignment
-        self.mass_center : np.ndarray = None
-        self.e1 : np.ndarray     = None
-        self.e2 : np.ndarray     = None
-        self.e3 : np.ndarray     = None
+        # Spatial alignment
+        self.mass_center: np.ndarray = None
+        self.e1: np.ndarray = None
+        self.e2: np.ndarray = None
+        self.e3: np.ndarray = None
 
         super().__init__(p)
         if isinstance(p, pv.PolyData):
@@ -72,9 +74,9 @@ class VascularMesh(pv.PolyData):
         """
 
         self.mass_center = center
-        self.e1          = e1
-        self.e2          = e2
-        self.e3          = e3
+        self.e1 = e1
+        self.e2 = e2
+        self.e3 = e3
     #
 
     def set_data(self, **kwargs):
@@ -108,7 +110,7 @@ class VascularMesh(pv.PolyData):
         """
 
         if self.boundaries is None and not self.n_points:
-            error_message("There is no data to be saved....")
+            error_message('There is no data to be saved....')
             return
 
         if self.n_points:
@@ -166,7 +168,6 @@ class VascularMesh(pv.PolyData):
     #
 
     def compute_closed_mesh(self, overwrite=False):
-
         """
         Method to get a polydata with the boundaries closed. It is also set in the closed
         attribute.
@@ -191,16 +192,19 @@ class VascularMesh(pv.PolyData):
             else:
                 if self.boundaries is None:
                     self.compute_open_boundaries()
-                polys=[]
+                polys = []
                 for _, b in self.boundaries.items():
                     p = pv.PolyData(b.points)
                     if hasattr(b, 'faces'):
                         p.faces = b.faces
                     else:
-                        p = triangulate_cross_section(p, method='unconnected', n=b.normal)
+                        p = triangulate_cross_section(
+                            p, method='unconnected', n=b.normal)
                     polys.append(p)
 
-                self.closed = pv.PolyData(self.append_polydata(*polys)).clean().triangulate()
+                self.closed = pv.PolyData(
+                    self.append_polydata(
+                        *polys)).clean().triangulate()
 
         return self.closed
     #
@@ -223,7 +227,11 @@ class VascularMesh(pv.PolyData):
                 The computed boundaries object.
         """
 
-        bnds = self.extract_feature_edges(boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False)
+        bnds = self.extract_feature_edges(
+            boundary_edges=True,
+            non_manifold_edges=False,
+            feature_edges=False,
+            manifold_edges=False)
         bnds = bnds.connectivity(extraction_mode='all', label_regions=True)
         boundaries = Boundaries()
 
@@ -231,7 +239,10 @@ class VascularMesh(pv.PolyData):
         for i in np.unique(rid):
             ii = str(int(i))
 
-            b = bnds.extract_points(rid == i).extract_surface(pass_pointid=False, pass_cellid=False)
+            b = bnds.extract_points(
+                rid == i).extract_surface(
+                pass_pointid=False,
+                pass_cellid=False)
             b = triangulate_cross_section(b)
 
             bd = Boundary()
@@ -241,7 +252,7 @@ class VascularMesh(pv.PolyData):
             boundaries[ii] = bd
 
         if self.boundaries is None or overwrite:
-            self.boundaries   = boundaries
+            self.boundaries = boundaries
             self.n_boundaries = len(self.boundaries)
 
         return boundaries
@@ -269,7 +280,11 @@ class VascularMesh(pv.PolyData):
         self.boundaries.set_data_to_nodes(data=data)
     #
 
-    def plot_boundary_ids(self, print_data=False, edge_color="red", line_width=None):
+    def plot_boundary_ids(
+            self,
+            print_data=False,
+            edge_color='red',
+            line_width=None):
         """
         If boundaries attribute is not None. This method shows a plot of the highlighted boundaries
         with the id at the center.
@@ -286,20 +301,26 @@ class VascularMesh(pv.PolyData):
         """
 
         if self.boundaries is None:
-            error_message(f"can't plot boundary ids, boundaries attribute is {self.boundaries}")
+            error_message(
+                f"can't plot boundary ids, boundaries attribute is {self.boundaries}")
             return
 
         p = pv.Plotter()
         p.add_mesh(self, color='w')
-        p.add_point_labels(np.array([b.center for _, b in self.boundaries.items()]), self.boundaries.enumerate())
+        p.add_point_labels(np.array(
+            [b.center for _, b in self.boundaries.items()]), self.boundaries.enumerate())
 
         for _, b in self.boundaries.items():
             poly = pv.PolyData()
             if hasattr(b, 'points'):
-                poly.points=b.points
+                poly.points = b.points
             if hasattr(b, 'faces'):
-                poly.faces=b.faces
-            p.add_mesh(poly, style='wireframe', color=edge_color, line_width=line_width)
+                poly.faces = b.faces
+            p.add_mesh(
+                poly,
+                style='wireframe',
+                color=edge_color,
+                line_width=line_width)
 
         if print_data:
             print(self.boundaries)
@@ -356,10 +377,16 @@ class VascularMesh(pv.PolyData):
         """
 
         R = compose_transformation_matrix(r=r)
-        self.transform(trans=R, transform_all_input_vectors=transform_all_input_vectors, inplace=True)
+        self.transform(
+            trans=R,
+            transform_all_input_vectors=transform_all_input_vectors,
+            inplace=True)
 
         if self.closed is not None:
-            self.closed.transform(trans=R, transform_all_input_vectors=transform_all_input_vectors, inplace=True)
+            self.closed.transform(
+                trans=R,
+                transform_all_input_vectors=transform_all_input_vectors,
+                inplace=True)
 
         if self.boundaries is not None:
             self.boundaries.rotate(r)
@@ -435,21 +462,22 @@ class VascularMesh(pv.PolyData):
             d = kdt.query(bound.center)[0]
             cs = approximate_cross_section(point=bound.center,
                                            mesh=cmesh,
-                                           max_d=d*1.5,
+                                           max_d=d * 1.5,
                                            min_perim=2 * np.pi * d * 0.75,
                                            debug=debug)
             bound.extract_from_polydata(cs)
             c = cs.center
-            cs.points = (cs.points - c) * 1.1 + c #Scaling from center
+            cs.points = (cs.points - c) * 1.1 + c  # Scaling from center
             cs_bounds += cs
 
         col_mesh, _ = cmesh.collision(cs_bounds)
         colls = np.ones(cmesh.n_cells, dtype=bool)
         colls[col_mesh.field_data['ContactCells']] = False
-        open_vmesh = col_mesh.extract_cells(colls).extract_largest().extract_surface()
+        open_vmesh = col_mesh.extract_cells(
+            colls).extract_largest().extract_surface()
 
-        vmesh            = VascularMesh(p=open_vmesh)
-        vmesh.closed     = cmesh
+        vmesh = VascularMesh(p=open_vmesh)
+        vmesh.closed = cmesh
         vmesh.boundaries = boundaries
 
         if debug:
@@ -495,12 +523,16 @@ class VascularMesh(pv.PolyData):
         def scale_from_center(cs, s=1.1):
             scs = cs.copy(deep=True)
             c = scs.center
-            scs.points = ((scs.points - c) * s) + c #Scaling from center
+            scs.points = ((scs.points - c) * s) + c  # Scaling from center
             return scs
 
         def compute_boundary(p, n):
             b = Boundary()
-            cs = extract_section(mesh=cmesh, normal=n, origin=p, triangulate=True)
+            cs = extract_section(
+                mesh=cmesh,
+                normal=n,
+                origin=p,
+                triangulate=True)
             b.extract_from_polydata(cs)
             return b
 
@@ -508,11 +540,11 @@ class VascularMesh(pv.PolyData):
             cl = cl_net[cid]
             if root:
                 inlet = compute_boundary(p=cl(cl.t0), n=cl.get_tangent(cl.t0))
-                iid = f"root_{len(boundaries.roots)}"
+                iid = f'root_{len(boundaries.roots)}'
                 if cl.parent not in [None, 'None']:
                     iid = cl.parent
-                inlet.set_data(id       = iid,
-                               parent   = None)
+                inlet.set_data(id=iid,
+                               parent=None)
                 boundaries[inlet.id] = inlet
 
             outlet = compute_boundary(p=cl(cl.t1), n=cl.get_tangent(cl.t1))
@@ -524,7 +556,6 @@ class VascularMesh(pv.PolyData):
             for chid in cl.children:
                 add_centerline_boundary(cid=chid)
 
-
         for rid in cl_net.roots:
             add_centerline_boundary(rid, root=True)
 
@@ -535,10 +566,11 @@ class VascularMesh(pv.PolyData):
         col_mesh, _ = cmesh.collision(cs_bounds)
         colls = np.ones(cmesh.n_cells, dtype=bool)
         colls[col_mesh.field_data['ContactCells']] = False
-        open_vmesh = col_mesh.extract_cells(colls).extract_largest().extract_surface()
+        open_vmesh = col_mesh.extract_cells(
+            colls).extract_largest().extract_surface()
 
-        vmesh            = VascularMesh(p=open_vmesh)
-        vmesh.closed     = cmesh
+        vmesh = VascularMesh(p=open_vmesh)
+        vmesh.closed = cmesh
         vmesh.boundaries = boundaries
 
         if debug:

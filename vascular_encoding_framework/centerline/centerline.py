@@ -1,24 +1,23 @@
 
 
-import pyvista as pv
 import numpy as np
-
-from scipy.interpolate import BSpline, make_lsq_spline
-from scipy.spatial import KDTree
-from scipy.optimize import minimize, minimize_scalar
-from scipy.spatial.transform import Rotation
+import pyvista as pv
 from scipy.integrate import quad
+from scipy.interpolate import BSpline, make_lsq_spline
 from scipy.misc import derivative
+from scipy.optimize import minimize, minimize_scalar
+from scipy.spatial import KDTree
+from scipy.spatial.transform import Rotation
 
-
-from .domain_extractors import extract_centerline_domain
-from .path_extractor import extract_centerline_path
 from ..messages import error_message
-from ..utils._code import Tree, Node, attribute_checker, check_specific
-from ..utils.spatial import normalize, compute_ref_from_points, get_theta_coord, radians_to_degrees
 from ..splines.splines import UniSpline, uniform_penalized_spline
+from ..utils._code import Node, Tree, attribute_checker, check_specific
 from ..utils.geometry import polyline_from_points
 from ..utils.misc import split_metadata_and_fv
+from ..utils.spatial import (compute_ref_from_points, get_theta_coord,
+                             normalize, radians_to_degrees)
+from .domain_extractors import extract_centerline_domain
+from .path_extractor import extract_centerline_path
 
 
 class ParallelTransport(UniSpline):
@@ -27,13 +26,12 @@ class ParallelTransport(UniSpline):
 
         super().__init__()
 
-        #The initial vector to be transported.
-        self.v0 : np.ndarray = None
+        # The initial vector to be transported.
+        self.v0: np.ndarray = None
     #
 
     @staticmethod
     def compute_parallel_transport_on_centerline(cl, v0):
-
         """
         This function build the parallel transport of a given vector v0 along a
         centerline object. The parallel transported vector is interpolated
@@ -57,9 +55,15 @@ class ParallelTransport(UniSpline):
 
         """
 
-        #Build the Parallel and inherit spline curve parameters.
+        # Build the Parallel and inherit spline curve parameters.
         pt = ParallelTransport()
-        pt.set_parameters(v0=v0, t0=cl.t0, t1=cl.t1, k=cl.k, knots=cl.knots, n_knots=cl.n_knots)
+        pt.set_parameters(
+            v0=v0,
+            t0=cl.t0,
+            t1=cl.t1,
+            k=cl.k,
+            knots=cl.knots,
+            n_knots=cl.n_knots)
         param_samples = np.linspace(pt.t0, pt.t1, num=cl.n_samples)
 
         tg = cl.get_tangent(cl.t0)
@@ -70,10 +74,15 @@ class ParallelTransport(UniSpline):
             V.append(v0)
             tg = tg_next
 
-        #Build
+        # Build
         V = np.array(V)
-        pt.set_parameters(build=True,
-                          coeffs=make_lsq_spline(x=param_samples, y=V, t=pt.knots, k=pt.k).c)
+        pt.set_parameters(
+            build=True,
+            coeffs=make_lsq_spline(
+                x=param_samples,
+                y=V,
+                t=pt.knots,
+                k=pt.k).c)
 
         return pt
     #
@@ -87,6 +96,7 @@ class ParallelTransport(UniSpline):
     #
 #
 
+
 class Centerline(UniSpline, Node):
     """
     The centerline class contains the main attributes and methods of a Bspline
@@ -96,26 +106,26 @@ class Centerline(UniSpline, Node):
     def __init__(self):
 
         Node.__init__(self=self)
-        self.joint_t : float = None #The parameter of the joint at parent centerline
+        self.joint_t: float = None  # The parameter of the joint at parent centerline
 
         UniSpline.__init__(self=self)
 
-        #Object reference frame
-        self.center : np.array = None
-        self.e1     : np.array = None
-        self.e2     : np.array = None
-        self.e3     : np.array = None
+        # Object reference frame
+        self.center: np.array = None
+        self.e1: np.array = None
+        self.e2: np.array = None
+        self.e3: np.array = None
 
         # Spline
-        self.tangent : BSpline = None
-        self.v1      : ParallelTransport = None
-        self.v2      : ParallelTransport = None
+        self.tangent: BSpline = None
+        self.v1: ParallelTransport = None
+        self.v2: ParallelTransport = None
 
         # k-d tree for distance computation
-        self.kdt               : KDTree     = None
-        self.n_samples         : int        = 100
-        self.samples           : np.ndarray = None
-        self.parameter_samples : np.ndarray = None
+        self.kdt: KDTree = None
+        self.n_samples: int = 100
+        self.samples: np.ndarray = None
+        self.parameter_samples: np.ndarray = None
     #
 
     def __str__(self):
@@ -146,7 +156,7 @@ class Centerline(UniSpline, Node):
                 tg /= np.linalg.norm(tg)
 
             else:
-                tg = (tg.T * 1/np.linalg.norm(tg, axis=1)).T
+                tg = (tg.T * 1 / np.linalg.norm(tg, axis=1)).T
 
         return tg
     #
@@ -167,7 +177,8 @@ class Centerline(UniSpline, Node):
         if n_samples is not None:
             self.n_samples = n_samples
 
-        self.parameter_samples = np.linspace(self.t0, self.t1, num=self.n_samples)
+        self.parameter_samples = np.linspace(
+            self.t0, self.t1, num=self.n_samples)
         self.samples = self.evaluate(t=self.parameter_samples)
 
         self.kdt = KDTree(self.samples)
@@ -229,19 +240,22 @@ class Centerline(UniSpline, Node):
 
             i2p = normalize(p - self.evaluate(self.t0))
             t_0 = self.get_tangent(self.t0)
-            v0 = normalize(i2p - t_0.dot(i2p)*t_0)
+            v0 = normalize(i2p - t_0.dot(i2p) * t_0)
 
         elif mode == 'as_is':
             if p is None:
-                error_message(f"Cannot build parallel transport with mode: {mode} and p: {p}")
+                error_message(
+                    f'Cannot build parallel transport with mode: {mode} and p: {p}')
 
             else:
                 v0 = p
         else:
-            error_message(f"Wrong mode passed: mode = {mode}. Available options are {'project', 'as_is'}.")
+            error_message(
+                f"Wrong mode passed: mode = {mode}. Available options are {'project', 'as_is'}.")
             return False
 
-        v = ParallelTransport.compute_parallel_transport_on_centerline(cl=self, v0=v0)
+        v = ParallelTransport.compute_parallel_transport_on_centerline(
+            cl=self, v0=v0)
         return v
     #
 
@@ -296,9 +310,11 @@ class Centerline(UniSpline, Node):
                 self.v1 = self.compute_parallel_transport(mode=mode, p=p)
             elif isinstance(self.v1, ParallelTransport):
                 if self.v1.v0 is not None:
-                    self.v1 = self.compute_parallel_transport(p=self.v1.v0, mode='as_is')
+                    self.v1 = self.compute_parallel_transport(
+                        p=self.v1.v0, mode='as_is')
                 else:
-                    error_message(f"Wrong ussage of compute_adapted_metod. No p {(p)} has been passed but self.v1 is a ParallelTransport object with v0 == None.")
+                    error_message(
+                        f'Wrong ussage of compute_adapted_metod. No p {(p)} has been passed but self.v1 is a ParallelTransport object with v0 == None.')
         else:
             self.v1 = self.compute_parallel_transport(mode=mode, p=p)
 
@@ -315,7 +331,7 @@ class Centerline(UniSpline, Node):
         super().build()
         self.tangent = self._spl.derivative()
 
-        #Update functions that depend on centerline.
+        # Update functions that depend on centerline.
         self.compute_samples()
         self.compute_local_ref()
         self.compute_adapted_frame(mode='project', p=None)
@@ -363,11 +379,11 @@ class Centerline(UniSpline, Node):
 
         def dist_to_centerline_point(t_):
             c = self.evaluate(t_)
-            return np.linalg.norm(c-p)
+            return np.linalg.norm(c - p)
 
         def deriv(t_):
             c = self.evaluate(t_)
-            d = normalize(c - p.reshape(3,1))
+            d = normalize(c - p.reshape(3, 1))
             return d.T.dot(self.get_tangent(t_)).reshape(1)
 
         if self.kdt is None:
@@ -375,13 +391,26 @@ class Centerline(UniSpline, Node):
 
         d, i = self.kdt.query(p)
         t = self.parameter_samples[i]
-        if method.startswith("vec") or method == 'sample':
+        if method.startswith('vec') or method == 'sample':
             if method == 'vec_jac':
-                res = minimize(dist_to_centerline_point, t, jac=deriv, method='trust-constr', bounds=[(self.t0, self.t1)])
+                res = minimize(
+                    dist_to_centerline_point,
+                    t,
+                    jac=deriv,
+                    method='trust-constr',
+                    bounds=[
+                        (self.t0,
+                         self.t1)])
                 d = float(res.fun)
                 x = float(res.x)
             elif method == 'vec':
-                res = minimize(dist_to_centerline_point, t, method='trust-constr', bounds=[(self.t0, self.t1)])
+                res = minimize(
+                    dist_to_centerline_point,
+                    t,
+                    method='trust-constr',
+                    bounds=[
+                        (self.t0,
+                         self.t1)])
                 d = float(res.fun)
                 x = float(res.x)
             else:
@@ -390,14 +419,19 @@ class Centerline(UniSpline, Node):
             if i == 0:
                 s0 = t
             else:
-                s0 = self.parameter_samples[i-1]
+                s0 = self.parameter_samples[i - 1]
 
-            if i == len(self.parameter_samples)-1:
+            if i == len(self.parameter_samples) - 1:
                 s1 = t
             else:
-                s1 = self.parameter_samples[i+1]
+                s1 = self.parameter_samples[i + 1]
 
-            res = minimize_scalar(dist_to_centerline_point, method='bounded', bounds=[s0, s1])
+            res = minimize_scalar(
+                dist_to_centerline_point,
+                method='bounded',
+                bounds=[
+                    s0,
+                    s1])
             d = float(res.fun)
             x = float(res.x)
 
@@ -448,7 +482,8 @@ class Centerline(UniSpline, Node):
                 The distance from p to the closest point in the centerline.
 
         """
-        t, d = self.get_projection_parameter(p, method=method, full_output=True)
+        t, d = self.get_projection_parameter(
+            p, method=method, full_output=True)
 
         if full_output:
             return self.evaluate(t), t, d
@@ -485,10 +520,11 @@ class Centerline(UniSpline, Node):
 
         """
 
-        if not attribute_checker(self, ['tangent', 'v1', 'v2'], info='Cant compute adapted frame: '):
+        if not attribute_checker(
+                self, ['tangent', 'v1', 'v2'], info='Cant compute adapted frame: '):
             return False
 
-        t_  = self.get_tangent(t)
+        t_ = self.get_tangent(t)
         v1 = self.v1(t)
         v2 = self.v2(t)
 
@@ -518,7 +554,8 @@ class Centerline(UniSpline, Node):
 
         """
 
-        tau, rho = self.get_projection_parameter(p, method=method, full_output=True)
+        tau, rho = self.get_projection_parameter(
+            p, method=method, full_output=True)
         theta = get_theta_coord(p, self(tau), self.v1(tau), self.v2(tau))
         return np.array((tau, theta, rho))
     #
@@ -567,11 +604,12 @@ class Centerline(UniSpline, Node):
 
         if grid:
             gr = np.meshgrid(tau, theta, rho)
-            tau   = gr[0].ravel()
+            tau = gr[0].ravel()
             theta = gr[1].reshape(-1, 1)
-            rho   = gr[2].reshape(-1, 1)
+            rho = gr[2].reshape(-1, 1)
 
-        p = self(tau) + rho * (self.v1(tau)*np.cos(theta) + self.v2(tau)*np.sin(theta))
+        p = self(tau) + rho * (self.v1(tau) *
+                               np.cos(theta) + self.v2(tau) * np.sin(theta))
 
         if full_output:
             return p, tau, theta, rho
@@ -607,7 +645,7 @@ class Centerline(UniSpline, Node):
         b = self.get_frenet_binormal(t)
         t = self.get_tangent(t)
 
-        return np.cross(b,t)
+        return np.cross(b, t)
     #
 
     def get_frenet_binormal(self, t):
@@ -638,7 +676,7 @@ class Centerline(UniSpline, Node):
 
         cp = self.get_tangent(t, normalized=False)
         cpp = self.tangent(t, nu=1)
-        b = np.cross(cp,cpp)
+        b = np.cross(cp, cpp)
 
         return normalize(b)
     #
@@ -660,7 +698,9 @@ class Centerline(UniSpline, Node):
         if isinstance(t, (float, int)):
             velocity = np.linalg.norm(self.get_tangent(t, normalized=False))
         else:
-            velocity = np.linalg.norm(self.get_tangent(t, normalized=False), axis=1)
+            velocity = np.linalg.norm(
+                self.get_tangent(
+                    t, normalized=False), axis=1)
 
         return velocity
     #
@@ -696,10 +736,11 @@ class Centerline(UniSpline, Node):
 
         segments = self.get_knot_segments(a=a, b=b)
 
-        #Compute the length at the segments
+        # Compute the length at the segments
         l = 0
-        for i in range(len(segments)-1):
-            l += quad(self.get_parametrization_velocity, segments[i], segments[i+1])[0]
+        for i in range(len(segments) - 1):
+            l += quad(self.get_parametrization_velocity,
+                      segments[i], segments[i + 1])[0]
 
         return l
     #
@@ -728,7 +769,7 @@ class Centerline(UniSpline, Node):
         """
 
         if a is None:
-            a=self.t0
+            a = self.t0
 
         if d == 0:
             return a
@@ -737,6 +778,7 @@ class Centerline(UniSpline, Node):
             bounds = [a, self.t1]
             if abs(d) > self.get_arc_length(self.t1, a):
                 return self.t1
+
             def f(t):
                 return np.abs(d - self.get_arc_length(b=t, a=a))
 
@@ -804,7 +846,8 @@ class Centerline(UniSpline, Node):
             torsion of the centerline at height point.
         """
 
-        t = - np.linalg.norm(derivative(self.get_frenet_binormal, t, dx=dt, n=1))
+        t = - \
+            np.linalg.norm(derivative(self.get_frenet_binormal, t, dx=dt, n=1))
         return t
     #
 
@@ -838,9 +881,9 @@ class Centerline(UniSpline, Node):
         """
 
         if a is None:
-            a=self.t0
+            a = self.t0
         if b is None:
-            b=self.t1
+            b = self.t1
 
         if a < 0:
             raise ValueError(f'Value of a {a} is lower than 0')
@@ -849,14 +892,13 @@ class Centerline(UniSpline, Node):
         if b < a:
             raise ValueError(f'Value of a:{a} is greater than value of b:{b}')
 
-
-        #Get the segments
+        # Get the segments
         segments = self.get_knot_segments(a=a, b=b)
 
-        #Compute the curvatures at the segments
+        # Compute the curvatures at the segments
         k = 0
-        for i in range(len(segments)-1):
-            k += quad(self.get_curvature, segments[i], segments[i+1])[0]
+        for i in range(len(segments) - 1):
+            k += quad(self.get_curvature, segments[i], segments[i + 1])[0]
 
         k /= self.get_arc_length(b=b, a=a)
         return k
@@ -895,18 +937,25 @@ class Centerline(UniSpline, Node):
         poly['v2'] = self.v2(params)
 
         if add_attributes:
-            #Adding Node atts:
-            poly.add_field_data(np.array([self.id]),            'id',       deep=True)
-            poly.add_field_data(np.array([self.parent]),        'parent',   deep=True)
-            poly.add_field_data(np.array(list(self.children)),  'children', deep=True)
-            poly.add_field_data(np.array([self.joint_t]),       'joint_t',  deep=True)
+            # Adding Node atts:
+            poly.add_field_data(np.array([self.id]), 'id', deep=True)
+            poly.add_field_data(np.array([self.parent]), 'parent', deep=True)
+            poly.add_field_data(
+                np.array(
+                    list(
+                        self.children)),
+                'children',
+                deep=True)
+            poly.add_field_data(np.array([self.joint_t]), 'joint_t', deep=True)
 
-            #Adding Spline atts:
-            poly.add_field_data(np.array([self.t0, self.t1]), 'interval',      deep=True)
-            poly.add_field_data(np.array([self.k]),           'k',             deep=True)
-            poly.add_field_data(np.array([self.n_knots]),     'n_knots',       deep=True)
-            poly.add_field_data(np.array(self.coeffs),        'coeffs',        deep=True)
-            poly.add_field_data(np.array([self.extra]),       'extrapolation', deep=True)
+            # Adding Spline atts:
+            poly.add_field_data(
+                np.array([self.t0, self.t1]), 'interval', deep=True)
+            poly.add_field_data(np.array([self.k]), 'k', deep=True)
+            poly.add_field_data(np.array([self.n_knots]), 'n_knots', deep=True)
+            poly.add_field_data(np.array(self.coeffs), 'coeffs', deep=True)
+            poly.add_field_data(
+                np.array([self.extra]), 'extrapolation', deep=True)
 
         return poly
     #
@@ -953,8 +1002,9 @@ class Centerline(UniSpline, Node):
 
         spl_atts = ['interval', 'k', 'n_knots', 'coeffs', 'extrapolation']
         for att in spl_atts:
-            if not att in poly.field_data:
-                error_message(f"Could not find attribute: {att} in polydata. Wont build centerline object")
+            if att not in poly.field_data:
+                error_message(
+                    f'Could not find attribute: {att} in polydata. Wont build centerline object')
                 return None
 
         for att in spl_atts:
@@ -977,15 +1027,18 @@ class Centerline(UniSpline, Node):
         self.build()
 
         if 'v1' in poly.point_data:
-            self.compute_adapted_frame(p=poly.get_array('v1', preference='point')[0],
-                                       mode='as_is')
+            self.compute_adapted_frame(
+                p=poly.get_array(
+                    'v1',
+                    preference='point')[0],
+                mode='as_is')
 
         node_atts = list(Node().__dict__) + ['joint_t']
         for att in node_atts:
             if att in poly.field_data:
                 value = poly.get_array(att, preference='field')
                 if att == 'id':
-                    self.set_data(**{att:str(value[0])})
+                    self.set_data(**{att: str(value[0])})
 
                 elif att == 'parent':
                     if value in [None, 'None']:
@@ -1021,7 +1074,13 @@ class Centerline(UniSpline, Node):
         return Centerline().from_polydata(poly)
     #
 
-    def trim(self, t0_, t1_=None, trim_knots=False, pass_atts=True, n_samps=100):
+    def trim(
+            self,
+            t0_,
+            t1_=None,
+            trim_knots=False,
+            pass_atts=True,
+            n_samps=100):
         """
         This method trims the centerline from t0_ to t1_ and
         returns the new segment as a centelrine object. If pass_atts is true
@@ -1064,31 +1123,41 @@ class Centerline(UniSpline, Node):
         spl = uniform_penalized_spline(points=self(ts),
                                        n_knots=n_knots,
                                        k=self.k,
-                                       param_values=(ts - t0_)/(t1_ - t0_), #Normalized domain
+                                       # Normalized domain
+                                       param_values=(ts - t0_) / (t1_ - t0_),
                                        force_ini=True,
                                        force_end=True,
                                        curvature_penalty=0.0)
 
         cl = Centerline()
-        cl.set_parameters(build   = True,
-                          t0      = spl.t[0],
-                          t1      = spl.t[-1],
-                          k       = spl.k,
-                          knots   = spl.t,
-                          coeffs  = spl.c,
-                          n_knots = len(spl.t) - 2*(spl.k+1),
-                          extra   = 'linear')
+        cl.set_parameters(build=True,
+                          t0=spl.t[0],
+                          t1=spl.t[-1],
+                          k=spl.k,
+                          knots=spl.t,
+                          coeffs=spl.c,
+                          n_knots=len(spl.t) - 2 * (spl.k + 1),
+                          extra='linear')
 
         if pass_atts:
             cl.set_data_from_other_node(self)
-            cl.set_data(joint_t = self.joint_t )
+            cl.set_data(joint_t=self.joint_t)
             cl.compute_adapted_frame(mode='as_is', p=self.v1(t0_))
 
         return cl
     #
 
     @staticmethod
-    def from_points(points, n_knots, k=3, curvature_penalty=1.0, param_values=None, pt_mode='project', p=None, force_extremes=True, cl=None):
+    def from_points(
+            points,
+            n_knots,
+            k=3,
+            curvature_penalty=1.0,
+            param_values=None,
+            pt_mode='project',
+            p=None,
+            force_extremes=True,
+            cl=None):
         """
         Function to build a Centerline object from a list of points. The amount
         knots to perform the LSQ approximation must be provided. An optional
@@ -1137,26 +1206,31 @@ class Centerline(UniSpline, Node):
                 The centerline object built from the points passed.
         """
 
-        spl = uniform_penalized_spline(points=points,
-                                       n_knots=n_knots,
-                                       k=k,
-                                       param_values=param_values,
-                                       force_ini=force_extremes in [True, 'ini'],
-                                       force_end=force_extremes in [True, 'end'],
-                                       curvature_penalty=curvature_penalty)
+        spl = uniform_penalized_spline(
+            points=points,
+            n_knots=n_knots,
+            k=k,
+            param_values=param_values,
+            force_ini=force_extremes in [
+                True,
+                'ini'],
+            force_end=force_extremes in [
+                True,
+                'end'],
+            curvature_penalty=curvature_penalty)
 
         if cl is None:
             cl = Centerline()
 
         cl.set_parameters(
-            build   = True,
-            t0      = spl.t[0],
-            t1      = spl.t[-1],
-            k       = spl.k,
-            knots   = spl.t,
-            coeffs  = spl.c,
-            n_knots = n_knots,
-            extra   = 'linear')
+            build=True,
+            t0=spl.t[0],
+            t1=spl.t[-1],
+            k=spl.k,
+            knots=spl.t,
+            coeffs=spl.c,
+            n_knots=n_knots,
+            extra='linear')
 
         cl.compute_adapted_frame(mode=pt_mode, p=p)
 
@@ -1226,7 +1300,7 @@ class Centerline(UniSpline, Node):
                 Default True. Whether to rebuild the splines after the transformation.
         """
 
-        #ensure normality of the rotation matrix columns
+        # ensure normality of the rotation matrix columns
         r /= np.linalg.norm(r, axis=0)
 
         if self.coeffs is not None:
@@ -1261,7 +1335,7 @@ class Centerline(UniSpline, Node):
                       v1[0],
                       v1[1],
                       v1[2]
-                      ])
+                       ])
 
         return md
     #
@@ -1292,9 +1366,9 @@ class Centerline(UniSpline, Node):
         """
 
         self.set_parameters(build=False,
-                            k         = round(md[1]),
-                            n_knots   = round(md[2]),
-                            n_samples = round(md[3]),
+                            k=round(md[1]),
+                            n_knots=round(md[2]),
+                            n_samples=round(md[3]),
                             )
 
         self.v1 = ParallelTransport()
@@ -1317,9 +1391,11 @@ class Centerline(UniSpline, Node):
                 The length of the centerline feature vector.
 
         """
-        if not attribute_checker(self, ['n_knots', 'k'], info="Cannot compute the Centerline feature vector length."):
+        if not attribute_checker(
+            self, [
+                'n_knots', 'k'], info='Cannot compute the Centerline feature vector length.'):
             return None
-        l = 3*(self.n_knots + self.k+1)
+        l = 3 * (self.n_knots + self.k + 1)
         return l
     #
 
@@ -1357,7 +1433,6 @@ class Centerline(UniSpline, Node):
         :py:meth:`from_feature_vector`
 
         """
-
 
         fv = self.coeffs.ravel()
 
@@ -1407,13 +1482,14 @@ class Centerline(UniSpline, Node):
 
         l = cl.get_feature_vector_length()
         if len(fv) != l:
-            error_message(f"Cannot build a Centerline object from feature vector. Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided.")
+            error_message(
+                f'Cannot build a Centerline object from feature vector. Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided.')
             return None
 
         cl.set_parameters(
             build=True,
-            coeffs = fv.reshape(-1, 3),
-            extra  = 'linear',
+            coeffs=fv.reshape(-1, 3),
+            extra='linear',
         )
 
         return cl
@@ -1427,21 +1503,24 @@ class CenterlineNetwork(Tree):
     Class for the centerline of branched vascular geometries.
     """
 
-    #No constructor is needed, the super() will be executed.
+    # No constructor is needed, the super() will be executed.
 
     def __setitem__(self, __key, cl: Centerline) -> None:
         """
         Setting items as in dictionaries. However, to belong to a CenterlineNetwork
         requieres consistency in the adapted frames.
         """
-        #Checking it has parent attribute.
+        # Checking it has parent attribute.
         if not hasattr(cl, 'parent'):
-            error_message(f"Aborted insertion of branch with id: {__key}. It has no parent attribute. Not even None.")
+            error_message(
+                f'Aborted insertion of branch with id: {__key}. It has no parent attribute. Not even None.')
             return
 
         if cl.parent is not None:
-            cl.set_data(join_t = self[cl.parent].get_projection_parameter(cl(cl.t0), method='scalar'))
-            v1 = ParallelTransport.parallel_rotation(t0=self[cl.parent].get_tangent(cl.join_t), t1=cl.get_tangent(cl.t0), v=self[cl.parent].v1(cl.join_t))
+            cl.set_data(join_t=self[cl.parent].get_projection_parameter(
+                cl(cl.t0), method='scalar'))
+            v1 = ParallelTransport.parallel_rotation(t0=self[cl.parent].get_tangent(
+                cl.join_t), t1=cl.get_tangent(cl.t0), v=self[cl.parent].v1(cl.join_t))
             cl.compute_adapted_frame(p=v1, mode='as_is')
 
         super().__setitem__(__key, cl)
@@ -1489,11 +1568,12 @@ class CenterlineNetwork(Tree):
 
         ids, dists, angles = [], [], []
         for cid, cl in self.items():
-            q, _, d = cl.get_projection_point(p, method=method, full_output=True)
+            q, _, d = cl.get_projection_point(
+                p, method=method, full_output=True)
             ids.append(cid)
             dists.append(d)
             if n is not None:
-                q2p = normalize(p-q)
+                q2p = normalize(p - q)
                 angles.append((np.arccos(n.dot(q2p))))
 
         min_i = np.argmin(dists)
@@ -1501,7 +1581,6 @@ class CenterlineNetwork(Tree):
 
         if n is None:
             return minid
-
 
         angles = radians_to_degrees(np.array(angles)).tolist()
         while ids:
@@ -1514,7 +1593,14 @@ class CenterlineNetwork(Tree):
         return minid
     #
 
-    def get_projection_parameter(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
+    def get_projection_parameter(
+            self,
+            p,
+            cl_id=None,
+            n=None,
+            method='scalar',
+            thrs=30,
+            full_output=False):
         """
         Get the parameter of the projection onto the centerline tree.
         If centerline id (cl_id) argument is not provided it is computed
@@ -1567,7 +1653,14 @@ class CenterlineNetwork(Tree):
         return t
     #
 
-    def get_projection_point(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
+    def get_projection_point(
+            self,
+            p,
+            cl_id=None,
+            n=None,
+            method='scalar',
+            thrs=30,
+            full_output=False):
         """
         Get the point projection onto the centerline tree.
         If centerline id (cl_id) argument is not provided it is computed
@@ -1615,7 +1708,8 @@ class CenterlineNetwork(Tree):
         if cl_id is None:
             cl_id = self.get_centerline_association(p, n=n, thrs=thrs)
 
-        p, t, d = self[cl_id].get_projection_point(p=p, method=method, full_output=True)
+        p, t, d = self[cl_id].get_projection_point(
+            p=p, method=method, full_output=True)
 
         if full_output:
             return p, t, cl_id, d
@@ -1623,7 +1717,14 @@ class CenterlineNetwork(Tree):
         return p
     #
 
-    def cartesian_to_vcs(self, p, cl_id=None, n=None, method='scalar', thrs=30, full_output=False):
+    def cartesian_to_vcs(
+            self,
+            p,
+            cl_id=None,
+            n=None,
+            method='scalar',
+            thrs=30,
+            full_output=False):
         """
         Given a 3D point p expressed in cartesian coordinates, this method
         computes its expression in the Vessel Coordinate System (VCS) of the
@@ -1661,9 +1762,9 @@ class CenterlineNetwork(Tree):
 
         """
 
-
         if cl_id is None:
-            cl_id = self.get_centerline_association(p=p, n=n, method=method, thrs=thrs)
+            cl_id = self.get_centerline_association(
+                p=p, n=n, method=method, thrs=thrs)
 
         if full_output:
             return self[cl_id].cartesian_to_vcs(p=p), cl_id
@@ -1725,14 +1826,21 @@ class CenterlineNetwork(Tree):
         """
 
         if not mb.is_all_polydata:
-            error_message("Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type.")
+            error_message(
+                "Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type.")
             return None
 
-
-        cl_dict = {cid:Centerline().from_polydata(poly=mb[cid]) for cid in mb.keys()}
-        roots = [cid for cid, cl in cl_dict.items() if cl.parent in [None, 'None']]
+        cl_dict = {
+            cid: Centerline().from_polydata(
+                poly=mb[cid]) for cid in mb.keys()}
+        roots = [
+            cid for cid,
+            cl in cl_dict.items() if cl.parent in [
+                None,
+                'None']]
 
         cl_net = CenterlineNetwork()
+
         def add_to_network(i):
             cl_net[i] = cl_dict[i]
             for chid in cl_dict[i].children:
@@ -1745,7 +1853,13 @@ class CenterlineNetwork(Tree):
     #
 
     @staticmethod
-    def from_multiblock_paths(paths, n_knots=10, curvature_penatly=1, graft_rate=0.5, force_extremes=True, **kwargs):
+    def from_multiblock_paths(
+            paths,
+            n_knots=10,
+            curvature_penatly=1,
+            graft_rate=0.5,
+            force_extremes=True,
+            **kwargs):
         """
         Create a CenterlineNetwork from a pyvista MultiBlock made polydatas with
         points joined by lines, basically like the ouput of CenterlinePathExtractor.
@@ -1790,39 +1904,43 @@ class CenterlineNetwork(Tree):
         """
 
         if not paths.is_all_polydata:
-            error_message("Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
+            error_message(
+                "Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
             return None
-
 
         cl_net = CenterlineNetwork()
 
-        cl_ids  = [s.replace('path_', '') for s in paths.keys()]
-        parents = {i : paths[f"path_{i}"].field_data['parent'][0] for i in cl_ids}
-
+        cl_ids = [s.replace('path_', '') for s in paths.keys()]
+        parents = {i: paths[f'path_{i}'].field_data['parent'][0]
+                   for i in cl_ids}
 
         def add_to_network(nid):
 
             nonlocal n_knots, force_extremes, curvature_penatly, graft_rate
             points = paths[f'path_{nid}'].points
             if parents[nid] != 'None':
-                pcl         = cl_net[parents[nid]]
-                pre_joint   = paths[f'path_{nid}'].points[0]
+                pcl = cl_net[parents[nid]]
+                pre_joint = paths[f'path_{nid}'].points[0]
                 pre_joint_t = pcl.get_projection_parameter(pre_joint)
-                gr = check_specific(kwargs, nid, "graft_rate", graft_rate)
+                gr = check_specific(kwargs, nid, 'graft_rate', graft_rate)
                 if gr:
-                    joint_t     = pcl.travel_distance_parameter(d=-paths[f'path_{nid}']['radius'][0]*gr, a=pre_joint_t)
-                    joint       = pcl(joint_t)
-                    ids         = np.linalg.norm(points - joint, axis=1) > paths[f'path_{nid}']['radius'][0]*gr
-                    points      = np.concatenate([[joint, pcl((joint_t+pre_joint_t)/2)], paths[f'path_{nid}'].points[ids]])
+                    joint_t = pcl.travel_distance_parameter(
+                        d=-paths[f'path_{nid}']['radius'][0] * gr, a=pre_joint_t)
+                    joint = pcl(joint_t)
+                    ids = np.linalg.norm(
+                        points - joint, axis=1) > paths[f'path_{nid}']['radius'][0] * gr
+                    points = np.concatenate(
+                        [[joint, pcl((joint_t + pre_joint_t) / 2)], paths[f'path_{nid}'].points[ids]])
                 else:
                     joint_t = pre_joint_t
 
-            cl = Centerline.from_points(points,
-                                        n_knots=check_specific(kwargs, nid, "n_knots", n_knots),
-                                        force_extremes=check_specific(kwargs, nid, "force_extremes", force_extremes),
-                                        curvature_penalty=check_specific(kwargs, nid, "curvature_penalty", curvature_penatly),
-                                        pt_mode=check_specific(kwargs, nid, "pt_mode", 'project'),
-                                        p=check_specific(kwargs, nid, "p", None))
+            cl = Centerline.from_points(
+                points, n_knots=check_specific(
+                    kwargs, nid, 'n_knots', n_knots), force_extremes=check_specific(
+                    kwargs, nid, 'force_extremes', force_extremes), curvature_penalty=check_specific(
+                    kwargs, nid, 'curvature_penalty', curvature_penatly), pt_mode=check_specific(
+                    kwargs, nid, 'pt_mode', 'project'), p=check_specific(
+                        kwargs, nid, 'p', None))
 
             cl.id = nid
             if parents[nid] != 'None':
@@ -1909,7 +2027,12 @@ class CenterlineNetwork(Tree):
 #
 
 
-def extract_centerline(vmesh, params, params_domain=None, params_path=None, debug=False):
+def extract_centerline(
+        vmesh,
+        params,
+        params_domain=None,
+        params_path=None,
+        debug=False):
     """
     Provided a VascularMesh object with its boundaries propperly defined, this function
     computes the CenterlineNetwork of it.
@@ -1943,10 +2066,13 @@ def extract_centerline(vmesh, params, params_domain=None, params_path=None, debu
             The computed Centerline
     """
 
-    cl_domain = extract_centerline_domain(vmesh=vmesh, params=params_domain, debug=debug)
-    cl_paths  = extract_centerline_path(vmesh=vmesh, cl_domain=cl_domain, params=params_path)
-    cl_net    = CenterlineNetwork.from_multiblock_paths(cl_paths,
-                                                        knots=params['knots'],
-                                                        graft_rate=params['graft_rate'],
-                                                        force_extremes=params['force_extremes'])
+    cl_domain = extract_centerline_domain(
+        vmesh=vmesh, params=params_domain, debug=debug)
+    cl_paths = extract_centerline_path(
+        vmesh=vmesh, cl_domain=cl_domain, params=params_path)
+    cl_net = CenterlineNetwork.from_multiblock_paths(
+        cl_paths,
+        knots=params['knots'],
+        graft_rate=params['graft_rate'],
+        force_extremes=params['force_extremes'])
     return cl_net

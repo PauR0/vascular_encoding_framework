@@ -2,19 +2,18 @@
 
 from copy import deepcopy
 
-import pyvista as pv
 import numpy as np
+import pyvista as pv
 from scipy.optimize import minimize_scalar
 
-
-from ..messages import *
 from ..centerline import Centerline
+from ..messages import *
 from ..utils._code import Node, attribute_checker, is_numeric
-from ..utils.spatial import normalize, radians_to_degrees
 from ..utils.misc import split_metadata_and_fv
-
+from ..utils.spatial import normalize, radians_to_degrees
 from .encoding import Encoding
 from .radius import Radius
+
 
 class VesselEncoding(Node, Encoding):
     """
@@ -26,8 +25,8 @@ class VesselEncoding(Node, Encoding):
         Node.__init__(self=self)
         Encoding.__init__(self=self)
 
-        self.centerline : Centerline = None
-        self.radius     : Radius   = None
+        self.centerline: Centerline = None
+        self.radius: Radius = None
     #
 
     def set_data(self, **kwargs):
@@ -92,19 +91,32 @@ class VesselEncoding(Node, Encoding):
 
         """
 
-        if not attribute_checker(self, atts=['centerline'], info="cant compute VCS."):
+        if not attribute_checker(
+                self,
+                atts=['centerline'],
+                info='cant compute VCS.'):
             return False
 
         tau, theta, rho = self.centerline.cartesian_to_vcs(p=p, method=method)
         if rho_norm:
-            if not attribute_checker(self, atts=['radius'], info="cant compute normalized VCS."):
+            if not attribute_checker(
+                    self,
+                    atts=['radius'],
+                    info='cant compute normalized VCS.'):
                 return False
             rho /= self.radius(tau, theta)
 
         return np.array((tau, theta, rho))
     #
 
-    def vcs_to_cartesian(self, tau, theta, rho, rho_norm=True, grid=False, full_output=False):
+    def vcs_to_cartesian(
+            self,
+            tau,
+            theta,
+            rho,
+            rho_norm=True,
+            grid=False,
+            full_output=False):
         """
         Given a point expressed in Vessel Coordinate System (VCS), this method
         computes its cartesian coordinates.
@@ -144,9 +156,9 @@ class VesselEncoding(Node, Encoding):
 
         if grid:
             gr = np.meshgrid(tau, theta, rho, indexing='ij')
-            tau   = gr[0].ravel()
+            tau = gr[0].ravel()
             theta = gr[1].reshape(-1, 1)
-            rho   = gr[2].reshape(-1, 1)
+            rho = gr[2].reshape(-1, 1)
 
         if rho_norm:
             if is_numeric(rho):
@@ -154,7 +166,8 @@ class VesselEncoding(Node, Encoding):
             rho_norm = deepcopy(rho)
             rho *= self.radius(tau, np.ravel(theta)).reshape(rho.shape)
         else:
-            rho_norm = rho / self.radius(tau, np.ravel(theta)).reshape(rho.shape)
+            rho_norm = rho / self.radius(tau,
+                                         np.ravel(theta)).reshape(rho.shape)
 
         p = self.centerline.vcs_to_cartesian(tau, theta, rho)
         if full_output:
@@ -163,7 +176,14 @@ class VesselEncoding(Node, Encoding):
         return p
     #
 
-    def extract_vessel_from_network(self, vmesh, thrs=5, use_normal=True, normal_thrs=30, cl=None, debug=False):
+    def extract_vessel_from_network(
+            self,
+            vmesh,
+            thrs=5,
+            use_normal=True,
+            normal_thrs=30,
+            cl=None,
+            debug=False):
         """
         This method extracts the vessel mesh from a vascular structure
         based on the centerline. It works similarly to the centerline
@@ -183,7 +203,7 @@ class VesselEncoding(Node, Encoding):
         the vessel of interest.
 
         If use_normal is True, instead of considering the angle between t and q2p,
-        the angle considered is t and the surface normal of p, \hatN(p).
+        the angle considered is t and the surface normal of p, \\hatN(p).
 
         This method requires self.centerline. Warning: If argument cl is passed, the
         centerline object is set as self.centerline.
@@ -211,7 +231,10 @@ class VesselEncoding(Node, Encoding):
         if cl is not None:
             self.set_centerline(cl=cl)
 
-        if not attribute_checker(self, ['centerline'], info="cannot extract Vessel from network."):
+        if not attribute_checker(
+                self,
+                ['centerline'],
+                info='cannot extract Vessel from network.'):
             return False
 
         if 'Normals' not in vmesh.point_data:
@@ -229,31 +252,47 @@ class VesselEncoding(Node, Encoding):
             q, t = self.centerline(p_vcs[0]), p_vcs[0]
             int_pts, _ = vmesh.ray_trace(q, p, first_point=False)
             if int_pts.shape[0] < 2:
-                q2p = normalize(p-q)
+                q2p = normalize(p - q)
                 if q2p.dot(normals[i]) > 0:
                     tg = self.centerline.get_tangent(t)
                     angle = radians_to_degrees(np.arccos(q2p.dot(tg)))
-                    if abs(angle-90) < thrs:
+                    if abs(angle - 90) < thrs:
                         if use_normal:
-                            angle = radians_to_degrees(np.arccos(np.clip(normals[i].dot(q2p), -1, 1)))
+                            angle = radians_to_degrees(
+                                np.arccos(np.clip(normals[i].dot(q2p), -1, 1)))
                             if angle < normal_thrs:
                                 ids[i] = 1
                         else:
                             ids[i] = 1
 
         vmesh['vcs'] = np.array(vcs)
-        vsl_mesh = vmesh.extract_points(ids.astype(bool), adjacent_cells=True, include_cells=True).connectivity(extraction_mode='largest')
+        vsl_mesh = vmesh.extract_points(
+            ids.astype(bool),
+            adjacent_cells=True,
+            include_cells=True).connectivity(
+            extraction_mode='largest')
         if debug:
             p = pv.Plotter()
             p.add_mesh(vmesh, scalars=ids, n_colors=2, opacity=0.4)
             p.add_mesh(vsl_mesh, color='g', opacity=0.7)
-            p.add_mesh(self.centerline.to_polydata(), render_lines_as_tubes=True, color='g', line_width=10)
+            p.add_mesh(
+                self.centerline.to_polydata(),
+                render_lines_as_tubes=True,
+                color='g',
+                line_width=10)
             p.show()
 
         return vsl_mesh
     #
 
-    def encode_vessel_mesh(self, vsl_mesh, tau_knots, theta_knots, laplacian_penalty=1.0, cl=None, debug=False):
+    def encode_vessel_mesh(
+            self,
+            vsl_mesh,
+            tau_knots,
+            theta_knots,
+            laplacian_penalty=1.0,
+            cl=None,
+            debug=False):
         """
         Encode a vessel using the centerline and the anisotropic radius.
         If the centerline have hierarchical data like its parent or joint_t
@@ -290,8 +329,9 @@ class VesselEncoding(Node, Encoding):
         if cl is not None:
             self.set_centerline(cl=cl)
 
-        if not 'vcs' in vsl_mesh.point_data:
-            points_vcs = np.array([self.centerline.cartesian_to_vcs(p) for p in vsl_mesh.points])
+        if 'vcs' not in vsl_mesh.point_data:
+            points_vcs = np.array(
+                [self.centerline.cartesian_to_vcs(p) for p in vsl_mesh.points])
         else:
             points_vcs = vsl_mesh['vcs']
 
@@ -327,9 +367,9 @@ class VesselEncoding(Node, Encoding):
         """
 
         p_vcs = self.cartesian_to_vcs(p, rho_norm=True)
-        res = np.linalg.norm(p - self.vcs_to_cartesian(tau   = p_vcs[0],
-                                                       theta = p_vcs[1],
-                                                       rho   = p_vcs[2],
+        res = np.linalg.norm(p - self.vcs_to_cartesian(tau=p_vcs[0],
+                                                       theta=p_vcs[1],
+                                                       rho=p_vcs[2],
                                                        rho_norm=True))
         return res
     #
@@ -361,13 +401,19 @@ class VesselEncoding(Node, Encoding):
 
         mode_opts = ['point', 'parameter']
         if mode not in mode_opts:
-            error_message(f"Wrong value for mode argument. It must be in {mode_opts} ")
+            error_message(
+                f'Wrong value for mode argument. It must be in {mode_opts} ')
 
         def intersect(t):
-                vcs = self.cartesian_to_vcs(cl(t), rho_norm=True)
-                return abs(1-vcs[2])
+            vcs = self.cartesian_to_vcs(cl(t), rho_norm=True)
+            return abs(1 - vcs[2])
 
-        res = minimize_scalar(intersect, bounds=(cl.t0, cl.t1), method='bounded') #Parameter at intersection
+        res = minimize_scalar(
+            intersect,
+            bounds=(
+                cl.t0,
+                cl.t1),
+            method='bounded')  # Parameter at intersection
 
         if mode == 'parameter':
             return res.x
@@ -375,7 +421,15 @@ class VesselEncoding(Node, Encoding):
         return cl(res.x)
     #
 
-    def make_surface_mesh(self, tau_resolution=None, theta_resolution=None, tau_ini=None, tau_end=None, theta_ini=None, theta_end=None, vcs=True):
+    def make_surface_mesh(
+            self,
+            tau_resolution=None,
+            theta_resolution=None,
+            tau_ini=None,
+            tau_end=None,
+            theta_ini=None,
+            theta_end=None,
+            vcs=True):
         """
         Make a triangle mesh of the encoded vessel.
 
@@ -404,10 +458,10 @@ class VesselEncoding(Node, Encoding):
         """
 
         if tau_resolution is None:
-            tau_resolution=100
+            tau_resolution = 100
 
         if theta_resolution is None:
-            theta_resolution=100
+            theta_resolution = 100
 
         if tau_ini is None:
             tau_ini = self.centerline.t0,
@@ -419,33 +473,46 @@ class VesselEncoding(Node, Encoding):
         if theta_end is None:
             theta_end = self.radius.y1
 
-        close=True
+        close = True
         if theta_end != self.radius.y1:
-            close=False
+            close = False
 
-        taus   = np.linspace(tau_ini, tau_end, tau_resolution)
+        taus = np.linspace(tau_ini, tau_end, tau_resolution)
         thetas = np.linspace(theta_ini, theta_end, theta_resolution)
-        rhos   = [1.0]
+        rhos = [1.0]
 
-        points, tau, theta, rho, rho_n = self.vcs_to_cartesian(tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
+        points, tau, theta, rho, rho_n = self.vcs_to_cartesian(
+            tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
         triangles = []
 
         for i in range(tau_resolution):
             if i > 0:
                 for j in range(theta_resolution):
-                    if j == theta_resolution-1:
+                    if j == theta_resolution - 1:
                         if close:
-                            triangles.append([3, i*theta_resolution + j, (i-1)*theta_resolution + j, (i-1)*theta_resolution ])
-                            triangles.append([3, i*theta_resolution + j,     i*theta_resolution,     (i-1)*theta_resolution ])
+                            triangles.append([3,
+                                              i * theta_resolution + j,
+                                              (i - 1) * theta_resolution + j,
+                                              (i - 1) * theta_resolution])
+                            triangles.append([3,
+                                              i * theta_resolution + j,
+                                              i * theta_resolution,
+                                              (i - 1) * theta_resolution])
                     else:
-                        triangles.append([3, i*theta_resolution + j, (i-1)*theta_resolution + j,   (i-1)*theta_resolution + j+1 ])
-                        triangles.append([3, i*theta_resolution + j,     i*theta_resolution + j+1, (i-1)*theta_resolution + j+1 ])
+                        triangles.append([3,
+                                          i * theta_resolution + j,
+                                          (i - 1) * theta_resolution + j,
+                                          (i - 1) * theta_resolution + j + 1])
+                        triangles.append([3,
+                                          i * theta_resolution + j,
+                                          i * theta_resolution + j + 1,
+                                          (i - 1) * theta_resolution + j + 1])
 
         vsl_mesh = pv.PolyData(points, triangles)
         if vcs:
-            vsl_mesh['tau']   = tau
+            vsl_mesh['tau'] = tau
             vsl_mesh['theta'] = theta
-            vsl_mesh['rho']   = rho
+            vsl_mesh['rho'] = rho
             vsl_mesh['rho_n'] = rho_n
 
         return vsl_mesh
@@ -478,27 +545,43 @@ class VesselEncoding(Node, Encoding):
 
         """
 
-        if not attribute_checker(self, ['centerline', 'radius'], info=f"Cannot convert vessel encoding {self.id} multiblock."):
+        if not attribute_checker(
+            self, [
+                'centerline', 'radius'], info=f'Cannot convert vessel encoding {self.id} multiblock.'):
             return None
 
         vsl_mb = pv.MultiBlock()
-        vsl_mb['centerline'] = self.centerline.to_polydata(add_attributes=add_attributes, t_res=tau_res)
+        vsl_mb['centerline'] = self.centerline.to_polydata(
+            add_attributes=add_attributes, t_res=tau_res)
 
-        wall = self.make_surface_mesh(tau_resolution=tau_res, theta_resolution=theta_res)
+        wall = self.make_surface_mesh(
+            tau_resolution=tau_res,
+            theta_resolution=theta_res)
         if add_attributes:
-            #Adding tau atts
-            wall.add_field_data(np.array([self.radius.x0, self.radius.x1]), 'tau_interval',      deep=True)
-            wall.add_field_data(np.array([self.radius.kx]),                 'tau_k',             deep=True)
-            wall.add_field_data(np.array([self.radius.n_knots_x]),          'n_tau_knots',       deep=True)
-            wall.add_field_data(np.array([self.radius.extra_x]),            'tau_extrapolation', deep=True)
+            # Adding tau atts
+            wall.add_field_data(
+                np.array([self.radius.x0, self.radius.x1]), 'tau_interval', deep=True)
+            wall.add_field_data(np.array([self.radius.kx]), 'tau_k', deep=True)
+            wall.add_field_data(
+                np.array([self.radius.n_knots_x]), 'n_tau_knots', deep=True)
+            wall.add_field_data(
+                np.array([self.radius.extra_x]), 'tau_extrapolation', deep=True)
 
-            #Adding theta atts
-            wall.add_field_data(np.array([self.radius.y0, self.radius.y1]), 'theta_interval',      deep=True)
-            wall.add_field_data(np.array([self.radius.ky]),                 'theta_k',             deep=True)
-            wall.add_field_data(np.array([self.radius.n_knots_y]),          'n_theta_knots',       deep=True)
-            wall.add_field_data(np.array([self.radius.extra_y]),            'theta_extrapolation', deep=True)
+            # Adding theta atts
+            wall.add_field_data(
+                np.array([self.radius.y0, self.radius.y1]), 'theta_interval', deep=True)
+            wall.add_field_data(
+                np.array([self.radius.ky]), 'theta_k', deep=True)
+            wall.add_field_data(
+                np.array([self.radius.n_knots_y]), 'n_theta_knots', deep=True)
+            wall.add_field_data(
+                np.array([self.radius.extra_y]), 'theta_extrapolation', deep=True)
 
-            wall.add_field_data(np.array( self.radius.coeffs), 'coeffs', deep=True)
+            wall.add_field_data(
+                np.array(
+                    self.radius.coeffs),
+                'coeffs',
+                deep=True)
         vsl_mb['wall'] = wall
 
         return vsl_mb
@@ -536,9 +619,9 @@ class VesselEncoding(Node, Encoding):
         block_names = vsl_mb.keys()
         for name in ['centerline', 'wall']:
             if name not in block_names:
-                error_message(info=f"Cannot build vessel encoding from multiblock. {name} is not in {block_names}. ")
+                error_message(
+                    info=f'Cannot build vessel encoding from multiblock. {name} is not in {block_names}. ')
                 return None
-
 
         vsl_enc = VesselEncoding()
 
@@ -547,21 +630,27 @@ class VesselEncoding(Node, Encoding):
 
         radius = Radius()
         wall = vsl_mb['wall']
-        #Setting tau params
-        radius.set_parameters(x0        = wall.get_array('tau_interval',        preference='field')[0],
-                              x1        = wall.get_array('tau_interval',        preference='field')[1],
-                              kx        = wall.get_array('tau_k',               preference='field')[0],
-                              n_knots_x = wall.get_array('n_tau_knots',         preference='field')[0],
-                              extra_x   = wall.get_array('tau_extrapolation',   preference='field')[0])
+        # Setting tau params
+        radius.set_parameters(
+            x0=wall.get_array(
+                'tau_interval', preference='field')[0], x1=wall.get_array(
+                'tau_interval', preference='field')[1], kx=wall.get_array(
+                'tau_k', preference='field')[0], n_knots_x=wall.get_array(
+                    'n_tau_knots', preference='field')[0], extra_x=wall.get_array(
+                        'tau_extrapolation', preference='field')[0])
 
-        #Setting theta params
-        radius.set_parameters(y0        = wall.get_array('theta_interval',      preference='field')[0],
-                              y1        = wall.get_array('theta_interval',      preference='field')[1],
-                              ky        = wall.get_array('theta_k',             preference='field')[0],
-                              n_knots_y = wall.get_array('n_theta_knots',       preference='field')[0],
-                              extra_y   = wall.get_array('theta_extrapolation', preference='field')[0])
+        # Setting theta params
+        radius.set_parameters(
+            y0=wall.get_array(
+                'theta_interval', preference='field')[0], y1=wall.get_array(
+                'theta_interval', preference='field')[1], ky=wall.get_array(
+                'theta_k', preference='field')[0], n_knots_y=wall.get_array(
+                    'n_theta_knots', preference='field')[0], extra_y=wall.get_array(
+                        'theta_extrapolation', preference='field')[0])
 
-        radius.set_parameters(build=True, coeffs = wall.get_array('coeffs', preference='field'))
+        radius.set_parameters(
+            build=True, coeffs=wall.get_array(
+                'coeffs', preference='field'))
 
         vsl_enc.set_data(radius=radius)
 
@@ -593,7 +682,7 @@ class VesselEncoding(Node, Encoding):
 
         cmd = self.centerline.get_metadata()
         rmd = self.radius.get_metadata()
-        md = np.concatenate([[cmd[0]+rmd[0]+1], cmd, rmd])
+        md = np.concatenate([[cmd[0] + rmd[0] + 1], cmd, rmd])
         return md
     #
 
@@ -618,19 +707,19 @@ class VesselEncoding(Node, Encoding):
 
         """
 
-        #Centerline
-        nc  = round(md[1])
+        # Centerline
+        nc = round(md[1])
         ini = 1
-        end = ini+nc
+        end = ini + nc
         cmd = md[ini:end]
         if self.centerline is None:
             self.centerline = Centerline()
         self.centerline.set_metadata(md=cmd)
 
-        #Radius
-        nr  = round(md[end])
+        # Radius
+        nr = round(md[end])
         ini = end
-        end = ini+nr
+        end = ini + nr
         rmd = md[ini:end]
         if self.radius is None:
             self.radius = Radius()
@@ -701,8 +790,9 @@ class VesselEncoding(Node, Encoding):
         md = []
 
         if mode not in {'full', 'centerline', 'radius', 'image'}:
-            error_message("Wrong value for mode argument, cannot make a feature vector." \
-                          +f"Provided is: {mode}, must be in ['full', 'centerline','radius', 'image'].")
+            error_message(
+                'Wrong value for mode argument, cannot make a feature vector.' +
+                f"Provided is: {mode}, must be in ['full', 'centerline','radius', 'image'].")
             return None
 
         if mode == 'centerline':
@@ -719,8 +809,9 @@ class VesselEncoding(Node, Encoding):
             fv = np.concatenate([md, cfv, rfv])
 
         if mode == 'image':
-            #TODO
-            raise NotImplementedError('The implementation is not yet developed, this mode will be available in future versions.')
+            # TODO
+            raise NotImplementedError(
+                'The implementation is not yet developed, this mode will be available in future versions.')
 
         return fv
     #
@@ -758,8 +849,9 @@ class VesselEncoding(Node, Encoding):
 
         l = self.centerline.get_feature_vector_length()
         rk = self.radius.get_feature_vector_length()
-        if len(fv) != l+rk:
-            error_message(f"Cant split feature vector with length {len(fv)} in a centerline fv of length {l} and a radius fv of length {rk}")
+        if len(fv) != l + rk:
+            error_message(
+                f'Cant split feature vector with length {len(fv)} in a centerline fv of length {l} and a radius fv of length {rk}')
             return None, None
 
         cfv, rfv = fv[:l], fv[l:]
@@ -780,10 +872,13 @@ class VesselEncoding(Node, Encoding):
 
         """
 
-        if not attribute_checker(self, ['centerline', 'radius'], info="Cannot compute the VesselEncoding feature vector length."):
+        if not attribute_checker(
+            self, [
+                'centerline', 'radius'], info='Cannot compute the VesselEncoding feature vector length.'):
             return None
 
-        n = self.centerline.get_feature_vector_length() + self.radius.get_feature_vector_length()
+        n = self.centerline.get_feature_vector_length(
+        ) + self.radius.get_feature_vector_length()
         return n
     #
 
@@ -816,7 +911,8 @@ class VesselEncoding(Node, Encoding):
 
         n = self.get_feature_vector_length()
         if len(fv) != n:
-            error_message(f"Cannot extract attributes from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.")
+            error_message(
+                f'Cannot extract attributes from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.')
             return None
 
         cfv, rfv = self.split_feature_vector(fv)
@@ -916,7 +1012,8 @@ class VesselEncoding(Node, Encoding):
         """
 
         if not isinstance(s, (int, float)):
-            error_message(f"Wrong value for radius object scaling. Expected a float|int, provided is {s}.")
+            error_message(
+                f'Wrong value for radius object scaling. Expected a float|int, provided is {s}.')
 
         if self.centerline is not None:
             self.centerline.coeffs *= s
@@ -950,7 +1047,7 @@ class VesselEncoding(Node, Encoding):
         :py:meth:`Centerline.rotate`
         """
 
-        #ensure normality of the rotation matrix columns
+        # ensure normality of the rotation matrix columns
         r /= np.linalg.norm(r, axis=0)
 
         if self.centerline is not None:

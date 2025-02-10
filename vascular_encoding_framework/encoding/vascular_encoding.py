@@ -7,9 +7,9 @@ from scipy.spatial import KDTree
 from ..messages import error_message
 from ..utils._code import Tree, check_specific
 from ..utils.misc import split_metadata_and_fv
-
 from .encoding import Encoding
 from .vessel_encoding import VesselEncoding
+
 
 class VascularEncoding(Tree, Encoding):
 
@@ -19,7 +19,14 @@ class VascularEncoding(Tree, Encoding):
         Encoding.__init__(self=self)
     #
 
-    def encode_vascular_mesh(self, vmesh, cl_net, tau_knots=15, theta_knots=15, laplacian_penalty=1.0, **kwargs):
+    def encode_vascular_mesh(
+            self,
+            vmesh,
+            cl_net,
+            tau_knots=15,
+            theta_knots=15,
+            laplacian_penalty=1.0,
+            **kwargs):
         """
         Encode a VascularMesh using a centerline network.
 
@@ -63,10 +70,11 @@ class VascularEncoding(Tree, Encoding):
             vsl_enc = VesselEncoding()
             vsl_enc.set_centerline(cl=cl_net[bid])
             vsl_mesh = vsl_enc.extract_vessel_from_network(vmesh=vmesh)
-            vsl_enc.encode_vessel_mesh(vsl_mesh          = vsl_mesh,
-                                       tau_knots         = check_specific(kwargs, bid, 'tau_knots', tau_knots),
-                                       theta_knots       = check_specific(kwargs, bid, 'theta_knots', theta_knots),
-                                       laplacian_penalty = check_specific(kwargs, bid, 'laplacian_penalty', laplacian_penalty))
+            vsl_enc.encode_vessel_mesh(
+                vsl_mesh=vsl_mesh, tau_knots=check_specific(
+                    kwargs, bid, 'tau_knots', tau_knots), theta_knots=check_specific(
+                    kwargs, bid, 'theta_knots', theta_knots), laplacian_penalty=check_specific(
+                    kwargs, bid, 'laplacian_penalty', laplacian_penalty))
 
             for cid in vsl_enc.children:
                 encode_and_add_vessel(cid)
@@ -75,7 +83,16 @@ class VascularEncoding(Tree, Encoding):
             encode_and_add_vessel(rid)
     #
 
-    def encode_vascular_mesh_decoupling(self, vmesh, cl_net, tau_knots=15, theta_knots=15, laplacian_penalty=1.0, insertion=1.0, debug=False, **kwargs):
+    def encode_vascular_mesh_decoupling(
+            self,
+            vmesh,
+            cl_net,
+            tau_knots=15,
+            theta_knots=15,
+            laplacian_penalty=1.0,
+            insertion=1.0,
+            debug=False,
+            **kwargs):
         """
         Encode a vascular mesh decoupling each branch as an independent vessel.
 
@@ -125,8 +142,10 @@ class VascularEncoding(Tree, Encoding):
             cl = cl_net[bid]
             pve = self[cl.parent]
             tau = pve.compute_centerline_intersection(cl, mode='parameter')
-            r = vmesh.kdt.query(cl(tau))[0] * check_specific(kwargs, bid, 'insertion', insertion)
-            tau_ = cl.travel_distance_parameter(-1*r, tau) #Traveling a radius distance towards inlet
+            r = vmesh.kdt.query(cl(tau))[
+                0] * check_specific(kwargs, bid, 'insertion', insertion)
+            # Traveling a radius distance towards inlet
+            tau_ = cl.travel_distance_parameter(-1 * r, tau)
             cl = cl.trim(t0_=tau_)
             return cl
 
@@ -139,11 +158,11 @@ class VascularEncoding(Tree, Encoding):
             ve = VesselEncoding()
             ve.set_centerline(cl)
             vsl_mesh = ve.extract_vessel_from_network(vmesh, debug=debug)
-            ve.encode_vessel_mesh(vsl_mesh,
-                                  tau_knots   = check_specific(kwargs, bid, 'tau_knots', tau_knots),
-                                  theta_knots = check_specific(kwargs, bid, 'theta_knots', theta_knots),
-                                  laplacian_penalty = check_specific(kwargs, bid, 'laplacian_penalty', laplacian_penalty),
-                                  debug=debug)
+            ve.encode_vessel_mesh(
+                vsl_mesh, tau_knots=check_specific(
+                    kwargs, bid, 'tau_knots', tau_knots), theta_knots=check_specific(
+                    kwargs, bid, 'theta_knots', theta_knots), laplacian_penalty=check_specific(
+                    kwargs, bid, 'laplacian_penalty', laplacian_penalty), debug=debug)
 
             self[bid] = ve
             for cid in cl.children:
@@ -155,7 +174,12 @@ class VascularEncoding(Tree, Encoding):
         return self
     #
 
-    def make_surface_mesh(self, tau_resolution=100, theta_resolution=50, join_at_surface=False, **kwargs):
+    def make_surface_mesh(
+            self,
+            tau_resolution=100,
+            theta_resolution=50,
+            join_at_surface=False,
+            **kwargs):
         """
         Make a triangle mesh of the encoded vascular network.
 
@@ -194,19 +218,27 @@ class VascularEncoding(Tree, Encoding):
                 pve = self[ve.parent]
                 tau_ini = ve.centerline.t0
                 if join_at_surface:
-                    tau_ini = pve.compute_centerline_intersection(ve.centerline, mode='parameter')
-                vsl = ve.make_surface_mesh(tau_resolution   = check_specific(kwargs, vid, 'tau_knots', tau_resolution),
-                                           theta_resolution = check_specific(kwargs, vid, 'tau_knots', theta_resolution),
-                                           tau_ini=tau_ini)
-                if check_specific(kwargs, vid, 'join_at_surface', join_at_surface):
+                    tau_ini = pve.compute_centerline_intersection(
+                        ve.centerline, mode='parameter')
+                vsl = ve.make_surface_mesh(
+                    tau_resolution=check_specific(
+                        kwargs, vid, 'tau_knots', tau_resolution), theta_resolution=check_specific(
+                        kwargs, vid, 'tau_knots', theta_resolution), tau_ini=tau_ini)
+                if check_specific(
+                    kwargs,
+                    vid,
+                    'join_at_surface',
+                        join_at_surface):
                     kdt = KDTree(vmesh.points)
                     ids = vsl['tau'] == vsl['tau'].min()
                     _, sids = kdt.query(vsl.points[ids])
                     vsl.points[ids] = vmesh.points[sids]
                 vmesh += vsl
             else:
-                vsl = ve.make_surface_mesh(tau_resolution   = check_specific(kwargs, vid, 'tau_knots', tau_resolution),
-                                           theta_resolution = check_specific(kwargs, vid, 'tau_knots', theta_resolution))
+                vsl = ve.make_surface_mesh(
+                    tau_resolution=check_specific(
+                        kwargs, vid, 'tau_knots', tau_resolution), theta_resolution=check_specific(
+                        kwargs, vid, 'tau_knots', theta_resolution))
                 vmesh += vsl
 
             for cid in ve.children:
@@ -250,7 +282,10 @@ class VascularEncoding(Tree, Encoding):
 
         vsc_mb = pv.MultiBlock()
         for vid, vsl_enc in self.items():
-            vsc_mb[vid] = vsl_enc.to_multiblock(add_attributes=add_attributes, tau_res=tau_res, theta_res=theta_res)
+            vsc_mb[vid] = vsl_enc.to_multiblock(
+                add_attributes=add_attributes,
+                tau_res=tau_res,
+                theta_res=theta_res)
 
         return vsc_mb
     #
@@ -288,10 +323,13 @@ class VascularEncoding(Tree, Encoding):
         :py:meth:`Centerline.from_polydata`
         """
 
-        enc_dict = {vid:VesselEncoding.from_multiblock(vsl_mb=vsc_mb[vid]) for vid in vsc_mb.keys()}
-        roots = [vid for vid, enc in enc_dict.items() if enc.parent in [None, 'None']]
+        enc_dict = {vid: VesselEncoding.from_multiblock(
+            vsl_mb=vsc_mb[vid]) for vid in vsc_mb.keys()}
+        roots = [vid for vid, enc in enc_dict.items() if enc.parent in [
+            None, 'None']]
 
         vsc_enc = VascularEncoding()
+
         def add_to_tree(i):
             vsc_enc[i] = enc_dict[i]
             for chid in enc_dict[i].children:
@@ -326,9 +364,10 @@ class VascularEncoding(Tree, Encoding):
         """
 
         if exclude is None:
-            exclude=[]
+            exclude = []
 
         md = []
+
         def append_md(vid):
             if vid not in exclude:
                 md.append(self[vid].get_metadata())
@@ -338,8 +377,8 @@ class VascularEncoding(Tree, Encoding):
         for rid in sorted(self.roots):
             append_md(rid)
 
-        nve = len(md) #Number of VesselEncodings stored
-        n   = (md[0][0])*nve + 2 #Total Amount of metadata elements
+        nve = len(md)  # Number of VesselEncodings stored
+        n = (md[0][0]) * nve + 2  # Total Amount of metadata elements
         md = np.concatenate(md)
         md = np.concatenate([[n, nve], md])
         return md
@@ -365,14 +404,14 @@ class VascularEncoding(Tree, Encoding):
             :py:meth:`from_feature_vector`
         """
 
-        nve = round(md[1]) #Number of VesselEncodings
+        nve = round(md[1])  # Number of VesselEncodings
         ini = 2
 
         for i in range(nve):
             end = ini + round(md[ini])
             ve_md = md[ini:end]
             vsl = VesselEncoding()
-            vsl.id = f"{i}"
+            vsl.id = f'{i}'
             vsl.set_metadata(ve_md)
             self[str(i)] = vsl
             ini = end
@@ -392,13 +431,14 @@ class VascularEncoding(Tree, Encoding):
 
         """
 
-        if len(self)<1:
+        if len(self) < 1:
             return 0
 
         if exclude is None:
             exclude = []
 
         n = 0
+
         def add_length(vid):
             nonlocal n
             if vid not in exclude:
@@ -454,9 +494,12 @@ class VascularEncoding(Tree, Encoding):
             exclude = []
 
         fv = []
+
         def append_fv(vid):
             if vid not in exclude:
-                fv.append(self[vid].to_feature_vector(mode=mode, add_metadata=False))
+                fv.append(
+                    self[vid].to_feature_vector(
+                        mode=mode, add_metadata=False))
                 for cid in sorted(self[vid].children):
                     append_fv(cid)
 
@@ -513,7 +556,8 @@ class VascularEncoding(Tree, Encoding):
         vsc_enc.set_metadata(md)
         n = vsc_enc.get_feature_vector_length()
         if len(fv) != n:
-            error_message(f"Cannot build a VascularEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.")
+            error_message(
+                f'Cannot build a VascularEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.')
             return None
 
         ini = 0
@@ -592,6 +636,7 @@ class VascularEncoding(Tree, Encoding):
     #
 #
 
+
 def encode_vascular_mesh(vmesh, cl_net, params, debug):
     """
     Encode a vascular mesh using the provided parameters.
@@ -619,12 +664,14 @@ def encode_vascular_mesh(vmesh, cl_net, params, debug):
     vsc_enc = VascularEncoding()
 
     if params['method'] == 'decoupling':
-        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_net, debug=debug, **params)
+        vsc_enc.encode_vascular_mesh_decoupling(
+            vmesh, cl_net, debug=debug, **params)
 
     elif params['method'] == 'at_joint':
         vsc_enc.encode_vascular_mesh(vmesh, cl_net, **params)
 
     else:
-        error_message(f"Wrong value for encoding method argument. Available options are {{ 'decouplin', 'at_joint' }} and given is {params['method']}")
+        error_message(
+            f"Wrong value for encoding method argument. Available options are {{ 'decouplin', 'at_joint' }} and given is {params['method']}")
 
     return vsc_enc

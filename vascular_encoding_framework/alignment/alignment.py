@@ -6,10 +6,11 @@ from copy import deepcopy
 import numpy as np
 import pyvista as pv
 
-from ..messages import *
 from ..encoding.encoding import Encoding
-from ..utils.spatial import decompose_transformation_matrix, transform_point_array
+from ..messages import *
 from ..utils._code import attribute_checker, attribute_setter
+from ..utils.spatial import (decompose_transformation_matrix,
+                             transform_point_array)
 
 
 def OrthogonalProcrustes(A, B):
@@ -50,15 +51,15 @@ def OrthogonalProcrustes(A, B):
 
     """
 
-    assert A.shape == B.shape, f"Shape mismatch A: {A.shape}, B: {B.shape}"
+    assert A.shape == B.shape, f'Shape mismatch A: {A.shape}, B: {B.shape}'
 
     num_rows, num_cols = A.shape
     if num_rows != 3:
-        raise Exception(f"matrix A is not 3xN, it is {num_rows}x{num_cols}")
+        raise Exception(f'matrix A is not 3xN, it is {num_rows}x{num_cols}')
 
     num_rows, num_cols = B.shape
     if num_rows != 3:
-        raise Exception(f"matrix B is not 3xN, it is {num_rows}x{num_cols}")
+        raise Exception(f'matrix B is not 3xN, it is {num_rows}x{num_cols}')
 
     # find mean column wise
     centroid_A = np.mean(A, axis=1)
@@ -79,7 +80,7 @@ def OrthogonalProcrustes(A, B):
 
     # special reflection case
     if np.linalg.det(R) < 0:
-        Vt[2,:] *= -1
+        Vt[2, :] *= -1
         R = Vt.T @ U.T
 
     t = -R @ centroid_A + centroid_B
@@ -109,22 +110,27 @@ def as_an_array(obj):
     """
 
     if not isinstance(obj, (np.ndarray, pv.DataObject, Encoding)):
-        error_message("Wrong type passed. Available typer are {np.ndarray, pv.DataObject, Encoding}.")
+        error_message(
+            'Wrong type passed. Available typer are {np.ndarray, pv.DataObject, Encoding}.')
         return None
 
     if isinstance(obj, np.ndarray):
         if len(obj.shape) != 2:
-            error_message(f"Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})")
+            error_message(
+                f'Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})')
         elif obj.shape[1] != 3:
-            error_message(f"Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})")
+            error_message(
+                f'Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})')
         return obj
 
     if isinstance(obj, pv.DataObject):
         return obj.points
 
     if isinstance(obj, Encoding):
-        return obj.to_feature_vector(mode='centerline', add_metadata=False).reshape(-1, 3)
+        return obj.to_feature_vector(
+            mode='centerline', add_metadata=False).reshape(-1, 3)
 #
+
 
 def as_a_polydata(obj):
     """
@@ -147,7 +153,8 @@ def as_a_polydata(obj):
     """
 
     if not isinstance(obj, (np.ndarray, pv.DataObject, Encoding)):
-        error_message("Wrong type passed. Available types are {np.ndarray, pv.DataObject, Encoding}.")
+        error_message(
+            'Wrong type passed. Available types are {np.ndarray, pv.DataObject, Encoding}.')
         return None
 
     if isinstance(obj, np.ndarray):
@@ -157,8 +164,10 @@ def as_a_polydata(obj):
         return obj
 
     if isinstance(obj, Encoding):
-        return pv.PolyData(obj.to_feature_vector(mode='centerline', add_metadata=False).reshape(-1, 3))
+        return pv.PolyData(obj.to_feature_vector(
+            mode='centerline', add_metadata=False).reshape(-1, 3))
 #
+
 
 class Alignment(ABC):
     """
@@ -167,12 +176,12 @@ class Alignment(ABC):
 
     def __init__(self):
 
-        self.source : np.ndarray | pv.DataObject | Encoding = None
-        self.target : np.ndarray | pv.DataObject | Encoding = None
+        self.source: np.ndarray | pv.DataObject | Encoding = None
+        self.target: np.ndarray | pv.DataObject | Encoding = None
 
-        self.translation : np.ndarray = None
-        self.scale       : np.ndarray = None
-        self.rotation    : np.ndarray = None
+        self.translation: np.ndarray = None
+        self.scale: np.ndarray = None
+        self.rotation: np.ndarray = None
     #
 
     def set_parameters(self, **kwargs):
@@ -180,12 +189,12 @@ class Alignment(ABC):
         Method to set parameters as attributes of the object.
         """
         clss = self.__class__()
-        params = {k:v for k,v in kwargs.items() if k in clss.__dict__}
+        params = {k: v for k, v in kwargs.items() if k in clss.__dict__}
         attribute_setter(self, **params)
     #
 
     @abstractmethod
-    def run(self, apply:bool=False):
+    def run(self, apply: bool = False):
         """
         If apply is True, this method should return self.transform_source()
         """
@@ -218,7 +227,8 @@ class Alignment(ABC):
         return trans_source
     #
 
-    def apply_transformation(self, points : np.ndarray | pv.DataObject | Encoding):
+    def apply_transformation(self, points: np.ndarray |
+                             pv.DataObject | Encoding):
         """
         Apply the alignment transformation to a given set of points.
 
@@ -238,18 +248,22 @@ class Alignment(ABC):
         """
 
         if not isinstance(points, (np.ndarray, pv.DataObject, Encoding)):
-            error_message(f"Wrong type for points argument. Available types are {np.ndarray, pv.DataObjects, Encoding} and passed was: {type(points)}")
+            error_message(
+                f'Wrong type for points argument. Available types are {np.ndarray, pv.DataObjects, Encoding} and passed was: {type(points)}')
             return None
 
         if isinstance(points, np.ndarray) and points.shape[1] != 3:
-            error_message("Wrong shape passed can't apply transformation. Point arrays muy be in shape (N, 3).")
+            error_message(
+                "Wrong shape passed can't apply transformation. Point arrays muy be in shape (N, 3).")
             return None
 
         if isinstance(points, np.ndarray):
-            points = transform_point_array(points, t=self.translation, s=self.scale, r=self.rotation)
+            points = transform_point_array(
+                points, t=self.translation, s=self.scale, r=self.rotation)
 
         if isinstance(points, pv.DataObject):
-            points.points = transform_point_array(points.points, t=self.translation, s=self.scale, r=self.rotation)
+            points.points = transform_point_array(
+                points.points, t=self.translation, s=self.scale, r=self.rotation)
 
         if isinstance(points, Encoding):
             if self.scale is not None:
@@ -263,6 +277,7 @@ class Alignment(ABC):
     #
 #
 
+
 class IterativeClosestPoint(Alignment):
     """
     Class to perform iterative closest point algorithm between two PolyData meshes.
@@ -275,9 +290,9 @@ class IterativeClosestPoint(Alignment):
 
         super().__init__()
 
-        self.max_iterations : int = 100
-        self.max_landmarks  : int = 100
-        self.rigid          : bool = True
+        self.max_iterations: int = 100
+        self.max_landmarks: int = 100
+        self.rigid: bool = True
     #
 
     def run(self, apply=True):
@@ -301,23 +316,30 @@ class IterativeClosestPoint(Alignment):
 
         """
 
-        if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute ICP alignment..."):
+        if not attribute_checker(
+                obj=self,
+                atts=[
+                    'source',
+                    'target'],
+                info="Can't compute ICP alignment..."):
             return
 
         _source = as_a_polydata(self.source)
         _target = as_a_polydata(self.target)
 
         _, trans_matrix = _source.align(target=_target,
-                                                   max_landmarks=self.max_landmarks,
-                                                   max_iterations=self.max_iterations,
-                                                   return_matrix=True)
+                                        max_landmarks=self.max_landmarks,
+                                        max_iterations=self.max_iterations,
+                                        return_matrix=True)
 
-        self.translation, _, self.rotation = decompose_transformation_matrix(matrix=trans_matrix)
+        self.translation, _, self.rotation = decompose_transformation_matrix(
+            matrix=trans_matrix)
 
         if apply:
             return self.apply_transformation(self.source)
     #
 #
+
 
 class RigidProcrustesAlignment(Alignment):
     """
@@ -344,7 +366,12 @@ class RigidProcrustesAlignment(Alignment):
 
         """
 
-        if not attribute_checker(obj=self, atts=['source', 'target'], info="Can't compute RigidProcrustes alignment..."):
+        if not attribute_checker(
+                obj=self,
+                atts=[
+                    'source',
+                    'target'],
+                info="Can't compute RigidProcrustes alignment..."):
             return
 
         _source = as_an_array(self.source)
@@ -354,7 +381,7 @@ class RigidProcrustesAlignment(Alignment):
                                     B=_target.T)
 
         self.translation = t.flatten()
-        self.rotation    = r
+        self.rotation = r
 
         if apply:
             return self.transform_source()

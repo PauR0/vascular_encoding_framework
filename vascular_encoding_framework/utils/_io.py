@@ -1,8 +1,9 @@
 
-import os
 import json
+import os
 
 from ..messages import error_message
+
 
 def is_writable(fname, overwrite=True, message=None):
     """
@@ -39,6 +40,7 @@ def is_writable(fname, overwrite=True, message=None):
     return out
 #
 
+
 def write_json(fname, data, indent=4, overwrite=True):
     """
     Write a dictionary to a json file. Before saving, this function checks if there exist a file
@@ -62,11 +64,11 @@ def write_json(fname, data, indent=4, overwrite=True):
 
     """
 
-
     if is_writable(fname, overwrite=overwrite):
-        with open(fname, 'w', encoding="utf-8") as f:
+        with open(fname, 'w', encoding='utf-8') as f:
             f.write(json.dumps(data, indent=indent))
 #
+
 
 def read_json(file):
     """

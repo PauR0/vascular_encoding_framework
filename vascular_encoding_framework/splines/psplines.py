@@ -1,9 +1,8 @@
 
 
 import numpy as np
-
-from scipy.ndimage import laplace, convolve1d
-from scipy.interpolate import BSpline, BivariateSpline
+from scipy.interpolate import BivariateSpline, BSpline
+from scipy.ndimage import convolve1d, laplace
 
 
 def univariate_optimization_loss(c, x, y, t, k, l):
@@ -46,9 +45,10 @@ def univariate_optimization_loss(c, x, y, t, k, l):
     err = (np.linalg.norm(y - spl(x), axis=1)**2).sum()
 
     if l:
-        err += l*(convolve1d(c, [1, -2, 1], axis=0, mode='mirror')**2).sum()
+        err += l * (convolve1d(c, [1, -2, 1], axis=0, mode='mirror')**2).sum()
     return err
 #
+
 
 def bivariate_optimization_loss(c, x, y, z, tx, ty, kx, ky, l):
     """
@@ -81,15 +81,16 @@ def bivariate_optimization_loss(c, x, y, z, tx, ty, kx, ky, l):
     """
 
     bspl = BivariateSpline()
-    bspl.tck     = tx, ty, c
+    bspl.tck = tx, ty, c
     bspl.degrees = kx, ky
 
     err = ((z - bspl(x, y, grid=False))**2).sum()
     if l:
-        err += l*(laplace(c)**2).sum()
+        err += l * (laplace(c)**2).sum()
 
     return err
 #
+
 
 def get_unispline_constraint(t, k, a, v, nu=0):
     """
@@ -129,8 +130,10 @@ def get_unispline_constraint(t, k, a, v, nu=0):
     """
 
     d = len(v)
-    return {'type':'eq', 'fun': lambda c: np.linalg.norm(BSpline.construct_fast(t, c.reshape(-1, d), k)(a, nu=nu) - v)}
+    return {'type': 'eq', 'fun': lambda c: np.linalg.norm(
+        BSpline.construct_fast(t, c.reshape(-1, d), k)(a, nu=nu) - v)}
 #
+
 
 def get_bivariate_semiperiodic_constraint(nx, ny, kx, ky):
     """
@@ -158,7 +161,8 @@ def get_bivariate_semiperiodic_constraint(nx, ny, kx, ky):
             The list of dictionary constraints.
     """
 
-    as_matrix = lambda c: c.reshape(nx+kx+1, ny+ky+1)
-    cons = [{'type':'eq', 'fun': lambda c: np.linalg.norm(as_matrix(c)[:,:ky] - as_matrix(c)[:, -ky:])}]
+    def as_matrix(c): return c.reshape(nx + kx + 1, ny + ky + 1)
+    cons = [{'type': 'eq', 'fun': lambda c: np.linalg.norm(
+        as_matrix(c)[:, :ky] - as_matrix(c)[:, -ky:])}]
     return cons
 #

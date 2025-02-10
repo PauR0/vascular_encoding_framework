@@ -7,8 +7,8 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from ..messages import *
-from ..vascular_mesh import VascularMesh, Boundaries
 from ..utils._code import attribute_checker, attribute_setter
+from ..vascular_mesh import Boundaries, VascularMesh
 
 
 def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
@@ -41,22 +41,22 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
             If the algorithm fails, it returns an empty list
 
     """
-    g = {} # Cummulative distance from the origin
-    f = {} # Cost of each node
+    g = {}  # Cummulative distance from the origin
+    f = {}  # Cost of each node
     h = heuristic
 
     # Step 1: Algorithm start
     g[initial] = 0
-    f[initial] = g[initial]+h(initial)
+    f[initial] = g[initial] + h(initial)
 
-    OpenList = [ (f[initial], initial) ]
+    OpenList = [(f[initial], initial)]
     OpenSet = set([initial])
 
     Closed = set([])
 
     current_node = initial
 
-    pointers={}
+    pointers = {}
     pointers[initial] = None
     n_expl = 0
     while OpenList:
@@ -114,6 +114,7 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
     return []
 #
 
+
 def build_path(current_node, pointers, reverse_path=False):
     path = []
     previous = current_node
@@ -127,6 +128,7 @@ def build_path(current_node, pointers, reverse_path=False):
     return path
 #
 
+
 class CenterlinePathExtractor:
     """
     The class to compute the centerline paths in the centerline domain of a
@@ -136,23 +138,21 @@ class CenterlinePathExtractor:
 
     def __init__(self):
 
-        self.vmesh              : VascularMesh = None
-        self.centerline_domain  : np.ndarray   = None
-        self.domain_kdt         : KDTree       = None
-        self.radius             : np.ndarray   = None
-        self.inverse_radius     : np.ndarray   = None
-        self.boundaries         : Boundaries   = None
+        self.vmesh: VascularMesh = None
+        self.centerline_domain: np.ndarray = None
+        self.domain_kdt: KDTree = None
+        self.radius: np.ndarray = None
+        self.inverse_radius: np.ndarray = None
+        self.boundaries: Boundaries = None
 
+        self.mode: str = 'j2o'
+        self.reverse: bool = False
+        self.adjacency_factor: float = 0.33
+        self.pass_pointid: bool = True
+        self.debug: bool = False
 
-        self.mode             : str   = 'j2o'
-        self.reverse          : bool  = False
-        self.adjacency_factor : float = 0.33
-        self.pass_pointid     : bool  = True
-        self.debug            : bool = False
-
-
-        self.id_paths : list[list[int]] = None
-        self.paths    : pv.MultiBlock   = None
+        self.id_paths: list[list[int]] = None
+        self.paths: pv.MultiBlock = None
     #
 
     def set_parameters(self, **kwargs):
@@ -160,7 +160,7 @@ class CenterlinePathExtractor:
         Method to set parameters of the path extractor.
         """
         cl = self.__class__()
-        params = {k:v for k,v in kwargs.items() if k in cl.__dict__}
+        params = {k: v for k, v in kwargs.items() if k in cl.__dict__}
         attribute_setter(self, **params)
     #
 
@@ -191,7 +191,11 @@ class CenterlinePathExtractor:
             self.boundaries_from_vascular_mesh()
     #
 
-    def set_centerline_domain(self, cntrln_dmn, check_fields=True, check_radius=True):
+    def set_centerline_domain(
+            self,
+            cntrln_dmn,
+            check_fields=True,
+            check_radius=True):
         """
         Set the centerline domain. If cd is a pv.PolyData, the radius field
         if searched in the fields defined on the point_data.
@@ -216,8 +220,9 @@ class CenterlinePathExtractor:
 
         if isinstance(cntrln_dmn, np.ndarray):
             if cntrln_dmn.shape[0] != 3:
-                error_message(f"Unable to set an array with shape {cntrln_dmn.shape} as centerline domain. " +\
-                                  " Centerline domain must be a list of points wiht shape must be (3, N)")
+                error_message(
+                    f'Unable to set an array with shape {cntrln_dmn.shape} as centerline domain. ' +
+                    ' Centerline domain must be a list of points wiht shape must be (3, N)')
                 return False
             self.centerline_domain = cntrln_dmn
 
@@ -225,12 +230,14 @@ class CenterlinePathExtractor:
             self.centerline_domain = cntrln_dmn.points
             if check_fields:
                 if 'radius' in cntrln_dmn.point_data:
-                    self.set_radius(cntrln_dmn.get_array('radius', preference='point'))
+                    self.set_radius(
+                        cntrln_dmn.get_array(
+                            'radius', preference='point'))
 
         if check_radius and self.radius is None and self.vmesh is not None:
             self.compute_radius_fields()
 
-        #Computing centerline_domain_kdt
+        # Computing centerline_domain_kdt
         self.compute_kdt()
 
         return True
@@ -242,14 +249,20 @@ class CenterlinePathExtractor:
         field.
         """
 
-        if not attribute_checker(self, ['vmesh'], info='Cant compute radius field.'):
+        if not attribute_checker(
+                self,
+                ['vmesh'],
+                info='Cant compute radius field.'):
             return False
 
-        if not attribute_checker(self.vmesh, ['kdt'], info='Cant compute radius field. The vascular mesh provided has no kdt'):
+        if not attribute_checker(
+                self.vmesh,
+                ['kdt'],
+                info='Cant compute radius field. The vascular mesh provided has no kdt'):
             return False
 
         self.radius = self.vmesh.kdt.query(self.centerline_domain)[0]
-        self.inverse_radius = 1/self.radius
+        self.inverse_radius = 1 / self.radius
 
         return self.radius
     #
@@ -323,42 +336,48 @@ class CenterlinePathExtractor:
                 A list with point indices
         """
 
-        if (p.ndim == 1 and p.shape == (3,)) or (p.ndim == 2 and p.shape[1] == 3):
+        if (p.ndim == 1 and p.shape == (3,)) or (
+                p.ndim == 2 and p.shape[1] == 3):
 
             if where == 'ini':
-                stack_p = lambda x, y : [x.reshape(-1,3), y]
-                stack_r = lambda x, y : [x, y]
+                def stack_p(x, y): return [x.reshape(-1, 3), y]
+                def stack_r(x, y): return [x, y]
                 if p.ndim == 1:
                     ind = 0
                 else:
                     ind = range(len(p))
 
             elif where == 'end':
-                stack_p = lambda x, y : [y, x.reshape(-1,3)]
-                stack_r = lambda x, y : [y, x]
+                def stack_p(x, y): return [y, x.reshape(-1, 3)]
+                def stack_r(x, y): return [y, x]
                 n_old = self.centerline_domain.shape[0]
                 if p.ndim == 1:
                     ind = n_old
                 else:
-                    ind = list(range(n_old, n_old+len(p)))
+                    ind = list(range(n_old, n_old + len(p)))
             else:
-                error_message("Wrong argument for where in add_point_to_centerline_domain method. Available options are {'ini', 'end'}.")
+                error_message(
+                    "Wrong argument for where in add_point_to_centerline_domain method. Available options are {'ini', 'end'}.")
                 return False
 
-            #We update the centerline domain list and the ones in correspondence (radius and inverse_radius)
-            self.centerline_domain = np.vstack(stack_p(p, self.centerline_domain))
+            # We update the centerline domain list and the ones in
+            # correspondence (radius and inverse_radius)
+            self.centerline_domain = np.vstack(
+                stack_p(p, self.centerline_domain))
 
             r = self.vmesh.kdt.query(p)[0]
-            self.radius         = np.hstack(stack_r(r, self.radius))
-            self.inverse_radius = np.hstack(stack_r(1/r, self.inverse_radius))
+            self.radius = np.hstack(stack_r(r, self.radius))
+            self.inverse_radius = np.hstack(
+                stack_r(1 / r, self.inverse_radius))
 
             if update_kdt:
                 self.compute_kdt()
 
             return ind
 
-        error_message("Trying to insert a point into centerline's domain with bad shape." + \
-                              "Accepted shapes are (3,) or (N,3)")
+        error_message(
+            "Trying to insert a point into centerline's domain with bad shape." +
+            'Accepted shapes are (3,) or (N,3)')
         return False
     #
 
@@ -369,7 +388,8 @@ class CenterlinePathExtractor:
         self.domain_kdt = KDTree(self.centerline_domain)
     #
 
-    def boundaries_from_vascular_mesh(self, vm=None, force_tangent=True, copy=True):
+    def boundaries_from_vascular_mesh(
+            self, vm=None, force_tangent=True, copy=True):
         """
         Assume the hierarchy defined by the boundaries of a vascular mesh.
 
@@ -395,14 +415,23 @@ class CenterlinePathExtractor:
         """
 
         if vm is None:
-            if not attribute_checker(self, ['vmesh'], info="no VascularMesh has been passed and..."):
+            if not attribute_checker(
+                    self,
+                    ['vmesh'],
+                    info='no VascularMesh has been passed and...'):
                 return
             vm = self.vmesh
 
-        if not attribute_checker(vm, ['boundaries'], info="can't compute hirarchy from vmesh."):
+        if not attribute_checker(
+                vm,
+                ['boundaries'],
+                info="can't compute hirarchy from vmesh."):
             return
 
-        self.set_boundaries(bndrs=vm.boundaries, force_tangent=force_tangent, copy=copy)
+        self.set_boundaries(
+            bndrs=vm.boundaries,
+            force_tangent=force_tangent,
+            copy=copy)
     #
 
     def set_boundaries(self, bndrs, force_tangent=False, copy=True):
@@ -455,15 +484,28 @@ class CenterlinePathExtractor:
 
         if force_tangent:
             def ensure_boundary_normal(bid):
-                c, n = self.boundaries[bid].center.reshape(-1, 1), self.boundaries[bid].normal.reshape(-1, 1)
-                r    = self.vmesh.kdt.query(c.T)[0] * self.adjacency_factor * 1.5
+                c, n = self.boundaries[bid].center.reshape(
+                    -1, 1), self.boundaries[bid].normal.reshape(-1, 1)
+                r = self.vmesh.kdt.query(c.T)[0] * self.adjacency_factor * 1.5
                 ids = self.domain_kdt.query_ball_point(x=c.ravel(), r=r)
                 self.remove_from_centerline_domain_by_id(ids=ids)
 
-                points = (c + n*r*np.linspace(-0.75, 0, round(2/self.adjacency_factor), endpoint=False)).T
-                self.add_point_to_centerline_domain(p=points, where='end', update_kdt=False)
+                points = (c + n * r * np.linspace(-0.75, 0,
+                          round(2 / self.adjacency_factor), endpoint=False)).T
+                self.add_point_to_centerline_domain(
+                    p=points, where='end', update_kdt=False)
 
-                points = (c + n*r*np.linspace(0.75, 0, round(2/self.adjacency_factor), endpoint=False)).T
+                points = (
+                    c +
+                    n *
+                    r *
+                    np.linspace(
+                        0.75,
+                        0,
+                        round(
+                            2 /
+                            self.adjacency_factor),
+                        endpoint=False)).T
                 self.add_point_to_centerline_domain(p=points, where='end')
 
                 for cid in self.boundaries[bid].children:
@@ -473,7 +515,9 @@ class CenterlinePathExtractor:
                 ensure_boundary_normal(bid=rid)
 
         def add_bound_point(bid):
-            self.boundaries[bid].set_data(cl_domain_id=self.add_point_to_centerline_domain(p=self.boundaries[bid].center, where='end', update_kdt=False))
+            self.boundaries[bid].set_data(
+                cl_domain_id=self.add_point_to_centerline_domain(
+                    p=self.boundaries[bid].center, where='end', update_kdt=False))
             for cid in self.boundaries[bid].children:
                 add_bound_point(bid=cid)
 
@@ -483,7 +527,7 @@ class CenterlinePathExtractor:
         self.compute_kdt()
     #
 
-    def _check_boundary_hierarchy(self)->bool:
+    def _check_boundary_hierarchy(self) -> bool:
         """
         Check that the boundaries tree is consistent and has at least one non-roote node.
 
@@ -505,7 +549,14 @@ class CenterlinePathExtractor:
         mode attribute.
         """
 
-        if not attribute_checker(self, ['mode'], info="wrong mode chosen to extract centerline paths...", opts=[['i2o', 'j2o']]):
+        if not attribute_checker(
+            self,
+            ['mode'],
+            info='wrong mode chosen to extract centerline paths...',
+            opts=[
+                [
+                    'i2o',
+                'j2o']]):
             return False
 
         def arrange_path(bid):
@@ -513,14 +564,17 @@ class CenterlinePathExtractor:
             if self.boundaries[bid].parent is not None:
 
                 pid = self.boundaries[bid].parent
-                joint = self.boundaries[bid].id_path[0] #Junction id in cl_domain
+                # Junction id in cl_domain
+                joint = self.boundaries[bid].id_path[0]
                 if joint not in self.boundaries[pid].id_path:
-                    error_message(f"At node {bid} cant find joint id in parent's path (parent id {pid}). Something has crashed during path extraction...")
+                    error_message(
+                        f"At node {bid} cant find joint id in parent's path (parent id {pid}). Something has crashed during path extraction...")
                     return
                 jid = self.boundaries[pid].id_path.index(joint)
 
                 if self.mode == 'i2o':
-                        self.boundaries[bid].id_path = self.boundaries[pid].id_path[:jid] + self.boundaries[bid].id_path
+                    self.boundaries[bid].id_path = self.boundaries[pid].id_path[:jid] + \
+                        self.boundaries[bid].id_path
                 if self.reverse:
                     self.boundaries[bid].id_path.reverse()
 
@@ -544,29 +598,45 @@ class CenterlinePathExtractor:
         if self.debug:
             p = pv.Plotter()
             p.add_mesh(self.vmesh, opacity=0.4)
-            p.add_mesh(self.centerline_domain, scalars=self.radius, render_points_as_spheres=True)
-            p.add_point_labels(points=np.array([b.center for _, b in self.boundaries.items()]),
-                               labels=self.boundaries.enumerate(), font_size=20, point_color='red',
-                               point_size=20, render_points_as_spheres=True, always_visible=True)
+            p.add_mesh(
+                self.centerline_domain,
+                scalars=self.radius,
+                render_points_as_spheres=True)
+            p.add_point_labels(
+                points=np.array(
+                    [
+                        b.center for _,
+                        b in self.boundaries.items()]),
+                labels=self.boundaries.enumerate(),
+                font_size=20,
+                point_color='red',
+                point_size=20,
+                render_points_as_spheres=True,
+                always_visible=True)
             p.show()
 
         if not self._check_boundary_hierarchy():
-            error_message("Can't compute paths between boundaries. All the boundaries are roots and none have children. At least there must be a parent-children boundary.")
+            error_message(
+                "Can't compute paths between boundaries. All the boundaries are roots and none have children. At least there must be a parent-children boundary.")
             return
 
         def path_to_parent(bid):
             if self.boundaries[bid].parent is None:
-                self.boundaries[bid].set_data(to_numpy=False, id_path=[self.boundaries[bid].cl_domain_id])
+                self.boundaries[bid].set_data(
+                    to_numpy=False, id_path=[
+                        self.boundaries[bid].cl_domain_id])
             else:
                 pid = self.boundaries[bid].parent
                 parent_path = self.boundaries[pid].id_path
-                id_path=minimum_cost_path(heuristic = self._heuristic,
-                                        cost      = self._cost,
-                                        adjacency = self._adjacency,
-                                        initial=self.boundaries[bid].cl_domain_id,
-                                        ends=parent_path)
+                id_path = minimum_cost_path(
+                    heuristic=self._heuristic,
+                    cost=self._cost,
+                    adjacency=self._adjacency,
+                    initial=self.boundaries[bid].cl_domain_id,
+                    ends=parent_path)
                 if not id_path:
-                    error_message(f"Could not found path between boundaries {bid} and {pid}. This may happen due to a too tiny adjacency_ratio or a too sparse centerline domain...")
+                    error_message(
+                        f'Could not found path between boundaries {bid} and {pid}. This may happen due to a too tiny adjacency_ratio or a too sparse centerline domain...')
                 self.boundaries[bid].set_data(to_numpy=False, id_path=id_path)
             for cid in self.boundaries[bid].children:
                 path_to_parent(cid)
@@ -596,13 +666,15 @@ class CenterlinePathExtractor:
             if self.boundaries[bid].id_path is not None:
                 pdt = pv.PolyData()
                 pdt.points = self.centerline_domain[self.boundaries[bid].id_path]
-                pdt.lines  = np.array([[2, j, j+1] for j in range(len(self.boundaries[bid].id_path)-1)], dtype=int)
-                pdt['cl_domain_id'] = np.array(self.boundaries[bid].id_path, dtype=int)
-                pdt['radius']       = self.radius[self.boundaries[bid].id_path]
+                pdt.lines = np.array(
+                    [[2, j, j + 1] for j in range(len(self.boundaries[bid].id_path) - 1)], dtype=int)
+                pdt['cl_domain_id'] = np.array(
+                    self.boundaries[bid].id_path, dtype=int)
+                pdt['radius'] = self.radius[self.boundaries[bid].id_path]
                 pdt.field_data['parent'] = [self.boundaries[bid].parent]
                 if self.boundaries[bid].parent in self.boundaries.roots:
                     pdt.field_data['parent'] = ['None']
-                self.paths.append(pdt, name=f"path_{bid}")
+                self.paths.append(pdt, name=f'path_{bid}')
             for cid in self.boundaries[bid].children:
                 make_polydata_path(bid=cid)
 
@@ -628,7 +700,9 @@ class CenterlinePathExtractor:
         The neighbours are points at a certain distance proportional to the radius of the point.
         As long as the adjacency factor is below 1, it preserves the topology of the vascular segment.
         """
-        return self.domain_kdt.query_ball_point(self.centerline_domain[n], r=self.radius[n]*self.adjacency_factor)
+        return self.domain_kdt.query_ball_point(
+            self.centerline_domain[n],
+            r=self.radius[n] * self.adjacency_factor)
     #
 #
 
