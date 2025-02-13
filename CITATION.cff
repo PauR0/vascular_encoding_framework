@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below. Check README for other citation methods."
+authors:
+- family-names: "Romero"
+  given-names: "Pau"
+  orcid: "https://orcid.org/0000-0002-4740-2651"
+title: "Vascular Encoding Framework"
+version: 0.0.1
+date-released: 2024-07-27
+url: "https://github.com/PauR0/vascular_encoding_framework"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Romero"
+    given-names: "Pau"
+    orcid: "https://orcid.org/0000-0002-4740-2651"
+  - family-names: "Pedrós"
+    given-names: "Abel"
+  - family-names: "Sebastián"
+    given-names: "Rafael"
+    orcid: "https://orcid.org/0000-0001-6746-5740"
+  - family-names: "Lozano"
+    given-names: "Miguel"
+    orcid: "https://orcid.org/0000-0002-2532-0321"
+  - family-names: "García-Fernández"
+    given-names: "Ignacio"
+    orcid: "https://orcid.org/0000-0001-6901-0790"
+  doi: "10.1016/j.amc.2024.129078"
+  journal: "Applied Mathematics and Computation"
+  month: 92
+  title: "A robust shape model for blood vessels analysis"
+  volume: 487
+  year: 2025
