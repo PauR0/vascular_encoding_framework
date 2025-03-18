@@ -1,6 +1,6 @@
 [project]
 name = "vascular-encoding-framework"
-version = "0.0.0"
+version = "0.0.1"
 description = "Python package with the Vascular Encoding Framework implementation"
 authors = [
     {name = "Pau Romero",email = "paurodea@gmail.com"}
