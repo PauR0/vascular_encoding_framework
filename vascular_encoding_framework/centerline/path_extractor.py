@@ -700,9 +700,23 @@ class CenterlinePathExtractor:
         The neighbours are points at a certain distance proportional to the radius of the point.
         As long as the adjacency factor is below 1, it preserves the topology of the vascular segment.
         """
-        return self.domain_kdt.query_ball_point(
+
+        neighs = self.domain_kdt.query_ball_point(
             self.centerline_domain[n],
-            r=self.radius[n] * self.adjacency_factor)
+            r=self.radius[n] * self.adjacency_factor
+        )
+
+        if self.debug == 2:
+            p = pv.Plotter()
+            p.add_mesh(self.vmesh, opacity=0.1)
+            p.add_mesh(self.centerline_domain, point_size=4, color='w')
+            p.add_mesh(self.centerline_domain[neighs], point_size=5, color='g')
+            p.add_mesh(self.centerline_domain[n], point_size=10, color='r')
+            p.add_mesh(pv.Sphere(center=self.centerline_domain[n], radius=(
+                self.radius[n]*self.adjacency_factor)), opacity=0.3, color='r')
+            p.show()
+
+        return neighs
     #
 #
 
