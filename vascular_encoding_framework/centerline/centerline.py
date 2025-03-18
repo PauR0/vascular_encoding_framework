@@ -4,7 +4,6 @@ import numpy as np
 import pyvista as pv
 from scipy.integrate import quad
 from scipy.interpolate import BSpline, make_lsq_spline
-from scipy.misc import derivative
 from scipy.optimize import minimize, minimize_scalar
 from scipy.spatial import KDTree
 from scipy.spatial.transform import Rotation
@@ -846,9 +845,20 @@ class Centerline(UniSpline, Node):
             torsion of the centerline at height point.
         """
 
-        t = - \
-            np.linalg.norm(derivative(self.get_frenet_binormal, t, dx=dt, n=1))
-        return t
+        assert dt > 0, f"Wrong value for differentail step. It must be greater than 0."
+
+        if t == self.t0:
+            b_der = (self.get_frenet_binormal(self.t0+dt) -
+                     self.get_frenet_binormal(self.t0))/dt
+        elif t == self.t1:
+            b_der = (self.get_frenet_binormal(self.t0+dt) -
+                     self.get_frenet_binormal(self.t0))/dt
+        else:
+            dt = min(dt, abs(self.t0-dt), abs(self.t1-dt))
+            b_der = (self.get_frenet_binormal(t+dt) -
+                     self.get_frenet_binormal(t-dt))/dt
+        torsion = - np.linalg.norm(b_der)
+        return torsion
     #
 
     def get_mean_curvature(self, a=None, b=None):
