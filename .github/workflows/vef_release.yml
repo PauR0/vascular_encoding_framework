@@ -6,6 +6,9 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+b[0-9]+"
       - "[0-9]+.[0-9]+.[0-9]+rc[0-9]+"
 
+env:
+  PACKAGE_NAME: "vascular-encoding-framework"
+  OWNER: "PauR0"
 jobs:
   details:
     runs-on: ubuntu-latest
