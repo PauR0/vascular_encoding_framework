@@ -1,28 +1,22 @@
-[build-system]
-requires      = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name    = "vascular_encoding_framework"
-authors = [{name="Pau Romero", email="pau.romero@uv.es"}]
-version = "0.0.1"
-dynamic = ["dependencies", "readme"]#, "version"]
-description = "A python implementation of the vascular encoding framework and vessel coordinate system."
-#license = {text = ""}
-#requires-python = ">=3.8"
+name = "vascular-encoding-framework"
+version = "0.0.0"
+description = "Python package with the Vascular Encoding Framework implementation"
+authors = [
+    {name = "Pau Romero",email = "paurodea@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyvista (>=0.44.2,<0.45.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+]
 
-classifiers = ['Topic :: Scientific/Engineering :: Medical Science Apps.',
-               'Development Status :: 1 - Planning']
+[tool.poetry]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-readme       = {file = ["README.md"]}
-#version      = {attr = "vascular_encoding_framework.__version__"}
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.1.0"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["vascular_encoding_framework*"]
-namespaces = false
-
-[project.urls]
-homepage = "https://github.com/PauR0/vascular_encoding_framework"
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
