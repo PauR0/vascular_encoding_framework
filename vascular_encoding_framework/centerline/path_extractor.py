@@ -636,7 +636,7 @@ class CenterlinePathExtractor:
                     ends=parent_path)
                 if not id_path:
                     error_message(
-                        f'Could not found path between boundaries {bid} and {pid}. This may happen due to a too tiny adjacency_ratio or a too sparse centerline domain...')
+                        f'Could not found path between boundaries {bid} and {pid}. This may happen due to a too small adjacency_ratio or a too sparse centerline domain...')
                 self.boundaries[bid].set_data(to_numpy=False, id_path=id_path)
             for cid in self.boundaries[bid].children:
                 path_to_parent(cid)
