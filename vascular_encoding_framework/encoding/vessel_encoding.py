@@ -184,7 +184,7 @@ class VesselEncoding(Node, Encoding):
             normal_thrs=30,
             cl=None,
             debug=False):
-        """
+        r"""
         This method extracts the vessel mesh from a vascular structure
         based on the centerline. It works similarly to the centerline
         association method of the CenterlineNetwork class, however, in
@@ -203,7 +203,7 @@ class VesselEncoding(Node, Encoding):
         the vessel of interest.
 
         If use_normal is True, instead of considering the angle between t and q2p,
-        the angle considered is t and the surface normal of p, $\hatN(p)$.
+        the angle considered is t and the surface normal of p, :math:`\hatN(p)`.
 
         This method requires self.centerline. Warning: If argument cl is passed, the
         centerline object is set as self.centerline.
