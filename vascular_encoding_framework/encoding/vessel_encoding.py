@@ -203,7 +203,7 @@ class VesselEncoding(Node, Encoding):
         the vessel of interest.
 
         If use_normal is True, instead of considering the angle between t and q2p,
-        the angle considered is t and the surface normal of p, \\hatN(p).
+        the angle considered is t and the surface normal of p, $\hatN(p)$.
 
         This method requires self.centerline. Warning: If argument cl is passed, the
         centerline object is set as self.centerline.
