@@ -204,7 +204,7 @@ class VascularEncoding(Tree, Encoding):
 
             vmesh : VascularMesh
                 The reconstructed wall meshes for each encoded vessel. Note that at current
-                state, meshes are not "sewed" toghether.
+                state, meshes are not "sewed" together.
         """
 
         vmesh = pv.PolyData()
@@ -519,7 +519,7 @@ class VascularEncoding(Tree, Encoding):
         """
         Build a VascularEncoding object from a feature vector.
 
-        Warning: This method only works if the feature vector has the metadata at the beggining or it
+        Warning: This method only works if the feature vector has the metadata at the beginning or it
         is passed using the md argument.
 
         Warning: Due to the lack of hierarchical data of the feature vector mode the returned
@@ -531,10 +531,10 @@ class VascularEncoding(Tree, Encoding):
         ---------
 
             fv : np.ndarray or array-like (N,)
-                The feature vector with the metadata array at the begining.
+                The feature vector with the metadata array at the beginning.
 
             md : np.ndarray, optional
-                Default None. If fv does not contain the metadata array at the beggining it can be
+                Default None. If fv does not contain the metadata array at the beginning it can be
                 passed through this argument.
 
         Returns
@@ -672,6 +672,6 @@ def encode_vascular_mesh(vmesh, cl_net, params, debug):
 
     else:
         error_message(
-            f"Wrong value for encoding method argument. Available options are {{ 'decouplin', 'at_joint' }} and given is {params['method']}")
+            f"Wrong value for encoding method argument. Available options are {{ 'decoupling', 'at_joint' }} and given is {params['method']}")
 
     return vsc_enc

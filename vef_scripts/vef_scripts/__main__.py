@@ -88,7 +88,7 @@ parser.add_argument(
     '--ascii',
     dest='binary',
     action='store_false',
-    help="""Whether to write ouput files in ascii. Default is binary mode.""")
+    help="""Whether to write output files in ascii. Default is binary mode.""")
 
 parser.add_argument(
     '--show-boundaries',
@@ -101,7 +101,7 @@ parser.add_argument(
     '--show-adapted-frame',
     dest='show_adapted',
     action='store_true',
-    help="""Display the parallel transport of the adapte frame along centerline network.""")
+    help="""Display the parallel transport of the adapted frame along centerline network.""")
 
 parser.add_argument(
     '-e',
@@ -117,13 +117,13 @@ parser.add_argument(
     dest='centerline',
     action='store_true',
     help="""Run vascular centerline computation. Requires mesh_input, boundaries_input
-                    to exist and to have a propper hierarchy.""")
+                    to exist and to have a proper hierarchy.""")
 
 parser.add_argument(
     '--make',
     dest='make',
     action='store_true',
-    help="""Make the case directory using the arugments provided.""")
+    help="""Make the case directory using the arguments provided.""")
 
 parser.add_argument(
     '--mesh',
@@ -147,7 +147,7 @@ parser.add_argument(
     dest='n_proc',
     type=int,
     default=1,
-    help="""Default is 1. Number of parallel procesess to use in cohort mode routines.""")
+    help="""Default is 1. Number of parallel processes to use in cohort mode routines.""")
 
 parser.add_argument(
     '--path',
@@ -168,8 +168,8 @@ parser.add_argument(
     action='store',
     default=None,
     help=f"""The mode to run. It must be in [{MODES}]. If mode is case, the command
-                    order is: make -> upadte_ids -> show_boundaries -> centerline comp -> encoding.
-                    If mode is cohort, then the order is: upadte_ids -> centerline comp -> encoding
+                    order is: make -> update_ids -> show_boundaries -> centerline comp -> encoding.
+                    If mode is cohort, then the order is: update_ids -> centerline comp -> encoding
                      -> alignment -> SSM""")
 
 args = parser.parse_args()

@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
@@ -90,11 +90,11 @@ class Encoding(ABC):
     #
 
     @staticmethod
-    def from_feature_vector(fv, md=None):
+    def from_feature_vector(fv, md=None) -> Encoding:
         """
         Build an Encoding object from a feature vector.
 
-        Warning: This method only works if the feature vector has the metadata at the beggining or it
+        Warning: This method only works if the feature vector has the metadata at the beginning or it
         is passed using the md argument.
 
         Warning: Due to the lack of hierarchical data of the feature vector mode the returned
@@ -106,10 +106,10 @@ class Encoding(ABC):
         ---------
 
             fv : np.ndarray or array-like (N,)
-                The feature vector with the metadata array at the begining.
+                The feature vector with the metadata array at the beginning.
 
             md : np.ndarray, optional
-                Default None. If fv does not contain the metadata array at the beggining it can be
+                Default None. If fv does not contain the metadata array at the beginning it can be
                 passed through this argument.
 
         See Also
@@ -118,25 +118,7 @@ class Encoding(ABC):
         :py:meth:`set_metadata`
         :py:meth:`to_feature_vector`
         """
-
-        if md is None:
-            md, fv = split_metadata_and_fv(fv)
-
-        vsc_enc = VascularEncoding()
-        vsc_enc.set_metadata(md)
-        n = vsc_enc.get_feature_vector_length()
-        if len(fv) != n:
-            error_message(
-                f'Cannot build a VascularEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.')
-            return None
-
-        ini = 0
-        for _, vsl in vsc_enc.items():
-            end = ini + vsl.get_feature_vector_length()
-            vsl.extract_from_feature_vector(fv[ini:end])
-            ini = end
-
-        return vsc_enc
+        ...
     #
 
     @abstractmethod

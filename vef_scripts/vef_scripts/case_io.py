@@ -144,7 +144,7 @@ def save_vascular_mesh(
             means mesh_input.vtk
 
         binary : bool, opt.
-            Default True. Wheteher to save vtk files in binary format.
+            Default True. Whether to save vtk files in binary format.
 
         ext : str opt,
             Default vtk. File extension compatible with pyvista.read.
@@ -154,7 +154,7 @@ def save_vascular_mesh(
             the vascular mesh or to a case directory.
 
         overwrite : bool, opt
-            Default False. Whether to overwirte existing files.
+            Default False. Whether to overwrite existing files.
     """
 
     if not abs_path:
@@ -181,7 +181,8 @@ def save_vascular_mesh(
 
     else:
         msg.warning_message(
-            f'Overwritting is set to false, and {mesh_fname} or {bounds_fname} already exists. Nothig will be written.')
+            f'Overwriting is set to false, and {mesh_fname} or {bounds_fname} already exists. \
+            Nothing will be written.')
 #
 
 
@@ -249,7 +250,7 @@ def save_centerline_domain(
             means domain_input.vtk
 
         binary : bool, opt.
-            Default True. Wheteher to save vtk files in binary format.
+            Default True. Whether to save vtk files in binary format.
 
         overwrite : bool, opt
             Default False. Whether to overwrite existing files.
@@ -260,7 +261,7 @@ def save_centerline_domain(
         obj='cl_domain',
         suffix=suffix,
         case_dir=case_dir)
-    message = f'{fname} exists and overwritting is set to False.'
+    message = f'{fname} exists and overwriting is set to False.'
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_domain.save(fname, binary=binary)
 #
@@ -339,7 +340,7 @@ def save_centerline_path(
             means domain_input.vtk
 
         binary : bool, opt.
-            Default True. Wheteher to save vtk files in binary format.
+            Default True. Whether to save vtk files in binary format.
 
         overwrite : bool, opt
             Default False. Whether to overwrite existing files.
@@ -350,7 +351,7 @@ def save_centerline_path(
         obj='cl_path',
         suffix=suffix,
         case_dir=case_dir)
-    message = f'{fname} exists and overwritting is set to False.'
+    message = f'{fname} exists and overwriting is set to False.'
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_path.save(fname, binary=binary)
 #
@@ -365,7 +366,7 @@ def load_centerline(case_dir, suffix=''):
 
         case_dir/Centerline/centerline.vtm
 
-    Due to the MultiBlock save format of vtk, a directory called centerline is also expecterd to be
+    Due to the MultiBlock save format of vtk, a directory called centerline is also expected to be
     at Centerline subdir containing the centerline data.
 
     Arguments
@@ -426,7 +427,7 @@ def save_centerline(case_dir, cl_net, suffix='', binary=True, overwrite=False):
             Default an empty string. A suffix to be added before the extension.
 
         binary : bool, opt.
-            Default True. Wheteher to save vtk files in binary format.
+            Default True. Whether to save vtk files in binary format.
 
         overwrite : bool, opt
             Default False. Whether to overwrite existing files.
@@ -437,7 +438,7 @@ def save_centerline(case_dir, cl_net, suffix='', binary=True, overwrite=False):
         obj='centerline',
         suffix=suffix,
         case_dir=case_dir)
-    message = f'{fname} exists and overwritting is set to False.'
+    message = f'{fname} exists and overwriting is set to False.'
     cl_mb = cl_net.to_multiblock(add_attributes=True)
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         cl_mb.save(fname, binary)
@@ -513,7 +514,7 @@ def save_vascular_encoding(
             The computed vascular encoding.
 
         binary : bool, opt.
-            Default True. Wheteher to save vtk files in binary format.
+            Default True. Whether to save vtk files in binary format.
 
         overwrite : bool, opt
             Default False. Whether to overwrite existing files.
@@ -524,7 +525,7 @@ def save_vascular_encoding(
         obj='encoding',
         suffix=suffix,
         case_dir=case_dir)
-    message = f'{fname} exists and overwritting is set to False.'
+    message = f'{fname} exists and overwriting is set to False.'
     enc_mb = vsc_enc.to_multiblock()
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         enc_mb.save(fname, binary)

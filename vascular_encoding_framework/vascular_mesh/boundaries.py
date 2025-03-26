@@ -36,7 +36,7 @@ class Boundary(Node):
         self.points2D_polar: np.ndarray = None  # Shape = (N,2)
 
         # To cast into a polydata
-        # Recomended shape is (N, 4) being the first column == 3. (Triangular
+        # Recommended shape is (N, 4) being the first column == 3. (Triangular
         # faces)
         self.faces: np.ndarray = None
 
@@ -53,7 +53,7 @@ class Boundary(Node):
 
     def to_dict(self, compact=True, serialize=True):
         """
-        Make a dictionary with the Boundary object atributes. If compact == True, only main Node
+        Make a dictionary with the Boundary object attributes. If compact == True, only main Node
         attributes with the main Boundary attributes are added to the dictionary, otherwise, each
         one is added.
 
@@ -61,7 +61,7 @@ class Boundary(Node):
         ----------
 
             compact : bool, opt
-                Default True. Whether to exclude non essential attributes in the outdict..
+                Default True. Whether to exclude non essential attributes in the outdict.
 
             serialize : bool, opt
                 Default True. Whether to serialize objects such as numpy array, to be
@@ -130,7 +130,7 @@ class Boundary(Node):
 
     def from_3D_to_2D(self, pts=None):
         """
-        Tansform 3D Cartesian points to local plannar coordinates
+        Transform 3D Cartesian points to local planar coordinates
         of the local reference system and return them.
 
         I pts argument is None, the attribute points will be used and
@@ -158,7 +158,7 @@ class Boundary(Node):
                 'center',
                 'v1',
                 'v2'],
-            info='Cannot compute plannar coordinates.' +
+            info='Cannot compute planar coordinates.' +
             f'Boundary with id {self.id} has no v1 and v2....')
 
         if pts is None:
@@ -175,7 +175,7 @@ class Boundary(Node):
 
     def cartesian_2D_to_polar(self, pts, sort=True):
         """
-        Tansform 2D Cartesian points to polar coordinates
+        Transform 2D Cartesian points to polar coordinates
         and return them.
 
         I pts argument is None, the attribute points2D_cart will be used and
@@ -212,7 +212,7 @@ class Boundary(Node):
 
     def from_3D_to_polar(self, pts=None, sort=False):
         """
-        Tansform 3D Cartesian points to plannar polar coordinates
+        Transform 3D Cartesian points to planar polar coordinates
         and return them.
 
         I pts argument is None, the attribute points will be used and
@@ -280,7 +280,7 @@ class Boundary(Node):
         -----------
 
             th_ini : float [0, 2pi]
-                The begining of the interval to compute the area.
+                The beginning of the interval to compute the area.
 
             th_end : float [0, 2pi]
                 The end of the interval to compute the area.
@@ -472,10 +472,10 @@ class Boundaries(Tree):
             serialize : bool, opt
                 Default True. Whether to turn numpy arrays to lists.
 
-        Reutrns
+        Returns
         -------
             outdict : dict
-                The ouput python dictionary.
+                The output python dictionary.
 
         See Also
         --------
@@ -525,7 +525,7 @@ class Boundaries(Tree):
 
     def to_multiblock(self):
         """
-        Method to convert Boundaries object in a pyvsita MultiBlock object.
+        Method to convert Boundaries object in a pyvista MultiBlock object.
 
         All the Boundary objects stored in it will be converted to polydata objects.
 
@@ -558,9 +558,9 @@ class Boundaries(Tree):
         Arguments
         -----------
 
-                bdict : dict
-                    A python dictionary composed with Boundary dicts as
-                    "k" : boundary_dict.
+            bds_dict : dict
+                A python dictionary composed with Boundary dicts as
+                "k" : boundary_dict.
 
         See Also
         ---------

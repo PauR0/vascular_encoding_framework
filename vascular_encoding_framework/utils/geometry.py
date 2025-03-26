@@ -24,7 +24,7 @@ def approximate_cross_section(
     """
     Given a point in the lumen of a vascular mesh, this function approximates the cross section it belongs to.
     This function computes the cross section as the plane-mesh intersection whose perimeter/area is minimal.
-    The intersection optimization is approxiated using a discrete amount of posible planes, the resolution can
+    The intersection optimization is approximated using a discrete amount of possible planes, the resolution can
     be controlled by means of the theta_res and phi_res arguments.
 
 
@@ -118,7 +118,7 @@ def approximate_cross_section(
 
 def extract_section(mesh, normal, origin, min_perim=None, triangulate=False):
     """
-    Given a vascular mesh, a normal and an origin this method extracts the clossest component of
+    Given a vascular mesh, a normal and an origin this method extracts the closest component of
     the intersection of the mesh and the plane with provided normal and origin. A minimum perimeter can be
     provided to discard spurious small intersections.
 
@@ -181,7 +181,7 @@ def extract_section(mesh, normal, origin, min_perim=None, triangulate=False):
 
 def triangulate_cross_section(cross_section, method='connected', n=None):
     """
-    This function triangulare a cross section list of points.
+    This function triangulate a cross section list of points.
 
     Arguments:
     -----------
@@ -225,7 +225,7 @@ def triangulate_unconnected_cross_section(cs, n=None):
     Arguments:
     -----------
 
-        cs : pv.PolyData (or simmilar)
+        cs : pv.PolyData (or similar)
             The object containing the attributes points and n_points of the
             cross section to be triangulated.
 

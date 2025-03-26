@@ -41,7 +41,7 @@ class Node:
     def set_data(self, to_numpy=True, **kwargs):
         """
         Method to set attributes by means of kwargs.
-        If to_numpy lists containig floats or lists of floats
+        If to_numpy lists containing floats or lists of floats
         will be tried to turn into numpy arrays.
 
         E.g.
@@ -148,7 +148,7 @@ class Tree(dict):
     def __setitem__(self, __key, nd: Node) -> None:
 
         # Checking it has parent and children attributes. Since Nones are
-        # admited, attribute_checker is not well suited.
+        # admitted, attribute_checker is not well suited.
         for att in ['parent', 'children']:
             if not hasattr(nd, att):
                 error_message(
@@ -287,7 +287,7 @@ class Tree(dict):
 
     def is_consistent(self):
         """
-        Check if the parent - children attributes of the nodes are consisten among them.
+        Check if the parent - children attributes of the nodes are consistent among them.
         If not, report unconsistencies.
 
         Returns
@@ -365,10 +365,10 @@ class Tree(dict):
     @staticmethod
     def from_hierarchy_dict(hierarchy):
         """
-        Build a tree object infering the hierarchy from a dictionary.
+        Build a tree object inferring the hierarchy from a dictionary.
         The dictionary must contain the tree nodes as dictionaries themselves.
         Each node-dict must have the pairs 'id': id, 'parent' : parent_id,
-        children : [child_id1, child_id2,....], the following dict is an exemple
+        children : [child_id1, child_id2,....], the following dict is an example
         node-dict. Note that children must be an iterable of 'ids' that will be
         turned into a set, duplications of ids are disregarded.
 
@@ -379,7 +379,7 @@ class Tree(dict):
                   }
         }
 
-        In the following exemple, a Boundaries object is created with a root node
+        In the following example, a Boundaries object is created with a root node
         whose id is '1', with a child node '2', and whose center is at (x1,y1,z1). The
         node '2', has a child '0', its parent is '1', and its center is (x2,y2,z2).
         Finally, node '0', has no children, its parent is '2' and its center is (x0,y0,z0).
@@ -452,7 +452,7 @@ def check_specific(params, nid, arg, default):
             The Node specific parameter dict.
 
         arg : str
-            The agument name to check for.
+            The argument name to check for.
 
         nid : str
             The node id to check for.

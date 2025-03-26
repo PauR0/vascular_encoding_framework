@@ -312,7 +312,7 @@ class BiSpline(Spline):
 
             grid : bool, opt
                 Default False. Whether to evaluate the spline at the
-                grid built by the carthesian product of x and y.
+                grid built by the Cartesian product of x and y.
 
         Returns
         -------
@@ -355,10 +355,10 @@ def get_uniform_knot_vector(xb, xe, n, mode='complete', k=3, ext=None):
 
     Given the interval [xb, xe], this function returns the even partition in n internal k-nots.
     The mode argument allows the knot vector to account for the different boundary conditions.
-    In 'internal' mode only internal knots are returned, leaving the boundarys undefined.
+    In 'internal' mode only internal knots are returned, leaving the boundaries undefined.
     In 'complete', the extreme of the interval are repeated k+1 times to make the spline interpolate
     the last control point/coefficient. In 'periodic', the extrema of the interval is extended k+1
-    times, preserving the spacing between knots. Additionally, an extra 'extended' metod allows to
+    times, preserving the spacing between knots. Additionally, an extra 'extended' method allows to
     perform a similar extension, but the amount extensions is controlled by the ext argument, that
     is ignored in any other mode.
 
@@ -462,7 +462,7 @@ def get_coefficients_lenght(n_internal_knots, k):
 
 def compute_normalized_params(points):
     """
-    Compute the parametrization parameter as a normalized cummulative distance.
+    Compute the parametrization parameter as a normalized cumulative distance.
 
     Arguments
     ---------
@@ -507,7 +507,7 @@ def uniform_penalized_spline(points,
     approximation is performed.
 
     Additionally, the argument force_ini and force_end allow to force the optimization to
-    force a specific behaviour at curve extremes. These arguments force the interpolation of
+    force a specific behavior at curve extremes. These arguments force the interpolation of
     the first and last point provided and its tangents. The tangents are approximated by finite
     differences and added as optimization constraints as well.
 
@@ -528,7 +528,7 @@ def uniform_penalized_spline(points,
             computed as the normalized distance traveled.
 
         force_ini : bool, optional
-            Default False. Whether to impose interpolation and tangent at the begginnig of the
+            Default False. Whether to impose interpolation and tangent at the beginning of the
             curve.
 
         force_end : bool, optional
@@ -583,7 +583,7 @@ def fix_discontinuity(
         degree=3,
         logger=None):
     """
-    This function expects a 2D point cloud expressed in polar coortinates
+    This function expects a 2D point cloud expressed in polar coordinates
     contained in an array of shape (2,N). This point cloud have to be sorted
     in theta wise order from 0 to 2pi. If these conditions are fulfilled this method
     returns a list of points, where the points close to 0 or 2pi have been smoothed by means
@@ -610,7 +610,7 @@ def fix_discontinuity(
 
     Explanation
     -----------
-    The last n_last points are placed before the firsr n_first points. Then,
+    The last n_last points are placed before the first n_first points. Then,
     a polynomial of degree n is used to approximate a point at theta = 0.
     This value is added at the beginning and at the end of the vector.
 
@@ -728,7 +728,7 @@ def uniform_penalized_bivariate_spline(
             The interval extrema of the parameters domain in the form
             (xmin, xmax, ymin, ymax).
 
-        degbug : bool, opt
+        debug : bool, opt
             Display a plot with the extension of the data and the fitting result.
 
     Returns

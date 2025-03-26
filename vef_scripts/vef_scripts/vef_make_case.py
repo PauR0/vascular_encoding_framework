@@ -11,7 +11,7 @@ from .config.writers import write_centerline_config, write_encoding_config
 
 def handle_case_and_mesh_name(case, mesh, ow=False):
     """
-    Auxiliar function to handle paths as stated in script description.
+    Auxiliary function to handle paths as stated in script description.
 
     Arguments:
     -------------
@@ -41,7 +41,7 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
 
     if os.path.exists(case_dir) and not ow:
         msg.warning_message(
-            f'The case: {case_dir} already exists and overwritting is set to False. Nothing will be created.')
+            f'The case: {case_dir} already exists and overwriting is set to False. Nothing will be created.')
         return None, None
 
     return case_dir, mesh

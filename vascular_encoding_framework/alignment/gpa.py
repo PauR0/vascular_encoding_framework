@@ -55,7 +55,8 @@ class GeneralizedProcrustesAlignment:
 
     def build_alignment(self):
         """
-        Set the alignment attribute and its parameters using alignment_method and alignment_params atts.
+        Set the alignment attribute and its parameters using alignment_method and alignment_params
+        attributes.
 
         Warning: This method overwrites the existing alignment attribute and its current parameter.
         """

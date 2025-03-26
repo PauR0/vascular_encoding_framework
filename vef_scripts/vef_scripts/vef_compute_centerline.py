@@ -55,10 +55,10 @@ def compute_centerline(
     Given a vef case directory with an existing mesh with the '_input' suffix, this function-script
     allows the computation of the centerline and its storing at the Centerline subdir.
 
-    By default this function wont overwrite any file, however overwritting can be handled with the
+    By default this function wont overwrite any file, however overwriting can be handled with the
     overwrite and force arguments. If a preexisting centerline exists, the overwrite argument allow
     to overwrite the centerline file. However, if domain and path files already exists, to force
-    the recomputaion the argument force must be used.
+    the recomputation the argument force must be used.
 
 
     Arguments
@@ -73,7 +73,7 @@ def compute_centerline(
             are assumed.
 
         binary : bool, opt
-            Default True. Whether to write vtk files in binary mode. Binary is recomended to save
+            Default True. Whether to write vtk files in binary mode. Binary is recommended to save
             disk space.
 
         overwrite : bool, opt
@@ -81,7 +81,7 @@ def compute_centerline(
 
         force : bool, opt
             Default False. Whether to force recomputation even if files exist at case_dir.
-            WARNING: Forcing recomputation does not imply overwritting!
+            WARNING: Forcing recomputation does not imply overwriting!
 
         debug : bool, opt
             Default False. Whether to run the script in debug mode.
@@ -103,10 +103,10 @@ def compute_centerline(
 
     cl_domain = load_centerline_domain(case_dir)
     if cl_domain is None or force:
-        msg.computing_message('cenerline domain')
+        msg.computing_message('centerline domain')
         cl_domain = vef.centerline.extract_centerline_domain(
             vmesh=vmesh, params=params['params_domain'], debug=debug)
-        msg.done_message('cenerline domain')
+        msg.done_message('centerline domain')
         save_centerline_domain(
             case_dir=case_dir,
             cl_domain=cl_domain,

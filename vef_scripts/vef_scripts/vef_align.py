@@ -26,7 +26,7 @@ def align_encodings(cohort_dir, params=None, exclude=None, overwrite=False):
     Returns
     -------
 
-        gpa : vef.GeneralziedProcrustesAlignment
+        gpa : vef.GeneralizedProcrustesAlignment
             The gpa object used.
 
     """
