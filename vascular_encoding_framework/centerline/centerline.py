@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 
 import numpy as np
 import pyvista as pv
@@ -30,7 +30,7 @@ class ParallelTransport(UniSpline):
     #
 
     @staticmethod
-    def compute_parallel_transport_on_centerline(cl, v0):
+    def compute_parallel_transport_on_centerline(cl, v0) -> ParallelTransport:
         """
         This function build the parallel transport of a given vector v0 along a
         centerline object. The parallel transported vector is interpolated
@@ -87,7 +87,7 @@ class ParallelTransport(UniSpline):
     #
 
     @staticmethod
-    def parallel_rotation(t0, t1, v):
+    def parallel_rotation(t0, t1, v) -> np.ndarray:
         t0dott1 = np.clip(t0.dot(t1), -1.0, 1.0)
         rot_vec = normalize(np.cross(t0, t1)) * np.arccos(t0dott1)
         R = Rotation.from_rotvec(rot_vec)
@@ -994,7 +994,7 @@ class Centerline(UniSpline, Node):
         Build a centerline object from a pyvista PolyData object that contains the required
         attributes as field_data. The minimum required data are the parameters involving the spline
         creation, namely, {'interval' 'k' 'knots' 'coeffs' 'extrapolation'}. Additionally, if the
-        centerline belong to a network, it is required to provide the attributes {'id', 'parent',
+        centerline belong to a tree, it is required to provide the attributes {'id', 'parent',
         'children', 'joint_t'}.
 
         TODO: Think a bit more about turning if-elif into match-case
@@ -1069,7 +1069,7 @@ class Centerline(UniSpline, Node):
     #
 
     @staticmethod
-    def read(fname):
+    def read(fname) -> Centerline:
         """
         Read centerline object from a vtk file.
 
@@ -1090,7 +1090,7 @@ class Centerline(UniSpline, Node):
             t1_=None,
             trim_knots=False,
             pass_atts=True,
-            n_samps=100):
+            n_samps=100) -> Centerline:
         """
         This method trims the centerline from t0_ to t1_ and
         returns the new segment as a centerline object. If pass_atts is true
@@ -1167,7 +1167,7 @@ class Centerline(UniSpline, Node):
             pt_mode='project',
             p=None,
             force_extremes=True,
-            cl=None):
+            cl=None) -> Centerline:
         """
         Function to build a Centerline object from a list of points. The amount
         knots to perform the LSQ approximation must be provided. An optional
@@ -1319,7 +1319,7 @@ class Centerline(UniSpline, Node):
                 self.build()
     #
 
-    def get_metadata(self):
+    def get_metadata(self) -> np.ndarray:
         """
         This method returns a copy of the metadata array.
 
@@ -1385,7 +1385,7 @@ class Centerline(UniSpline, Node):
         self.v1.v0 = md[4:]
     #
 
-    def get_feature_vector_length(self):
+    def get_feature_vector_length(self) -> int:
         """
         This method returns the length of the feature vector considering the spline parameters.
 
@@ -1409,7 +1409,7 @@ class Centerline(UniSpline, Node):
         return l
     #
 
-    def to_feature_vector(self, add_metadata=True):
+    def to_feature_vector(self, add_metadata=True) -> np.ndarray:
         """
         Convert the Centerline object to its feature vector representation.
 
@@ -1454,7 +1454,7 @@ class Centerline(UniSpline, Node):
     #
 
     @staticmethod
-    def from_feature_vector(fv, md=None):
+    def from_feature_vector(fv, md=None) -> Centerline:
         """
         Build a Centerline object from a feature vector.
 
@@ -1505,11 +1505,10 @@ class Centerline(UniSpline, Node):
 
         return cl
     #
-
 #
 
 
-class CenterlineNetwork(Tree):
+class CenterlineTree(Tree):
     """
     Class for the centerline of branched vascular geometries.
     """
@@ -1518,7 +1517,7 @@ class CenterlineNetwork(Tree):
 
     def __setitem__(self, __key, cl: Centerline) -> None:
         """
-        Setting items as in dictionaries. However, to belong to a CenterlineNetwork
+        Setting items as in dictionaries. However, to belong to a CenterlineTree
         requires consistency in the adapted frames.
         """
         # Checking it has parent attribute.
@@ -1624,8 +1623,8 @@ class CenterlineNetwork(Tree):
                 The 3D point.
 
             cl_id : str, opt
-                Default None. The id of the centerline of the network to project
-                the point. If None, it is computed using get_centerline_membership
+                Default None. The id of the centerline of the tree to project
+                the point. If None, it is computed using get_centerline_association
                 method.
 
             n : np.ndarray, opt
@@ -1675,32 +1674,31 @@ class CenterlineNetwork(Tree):
         """
         Get the point projection onto the centerline tree.
         If centerline id (cl_id) argument is not provided it is computed
-        using get_centerline_membership.
+        using get_centerline_association.
 
-        Arguments:
-        -----------
+        Arguments
+        ---------
 
             p : np.ndarray (3,)
                 The 3D point.
 
             cl_id : str, opt
-                Default None. The id of the centerline of the network to project
-                the point. If None, it is computed using get_centerline_membership
-                method.
+                Default None. The id of the centerline in the tree to project the point.  If None,
+                it is computed using get_centerline_association method.
 
             n : np.ndarray, opt
-                Default None. A normal direction at the point, useful if the point
-                belongs to the surface of the vascular domain, its normal can be used.
+                Default None. A normal direction at the point, useful if the point belongs to the
+                surface of the vascular domain, its normal can be used.
 
             method : Literal {'scalar', 'vec', 'jac-vec', 'sample'}
                 The method use to compute the projection.
 
             full_output : bool
-                Whether to return the parameter value, distance and the centerline association
-                or not. Default is False.
+                Whether to return the parameter value, distance and the centerline association or
+                not. Default is False.
 
-        Returns:
-        --------
+        Returns
+        -------
 
             p : np.ndarray (3,)
                 The projection of the point in the centerline
@@ -1748,8 +1746,8 @@ class CenterlineNetwork(Tree):
                 The 3D point.
 
             cl_id : str, opt
-                Default None. The id of the centerline of the network to project
-                the point. If None, it is computed using get_centerline_membership
+                Default None. The id of the centerline in the tree to project
+                the point. If None, it is computed using get_centerline_association
                 method.
 
             n : np.ndarray, opt
@@ -1792,7 +1790,7 @@ class CenterlineNetwork(Tree):
 
             add_attributes : bool, opt
                 Default False. Whether to add all the required attributes to built the
-                CenterlineNetwork back.
+                CenterlineTree back.
 
 
         Returns
@@ -1816,10 +1814,10 @@ class CenterlineNetwork(Tree):
     @staticmethod
     def from_multiblock(mb):
         """
-        Make a CenterlineNetwork object from a pyvista MultiBlock made polydatas.
+        Make a CenterlineTree object from a pyvista MultiBlock made polydatas.
 
         As the counterpart of :py:meth:`to_multiblock`, this static method is meant for building
-        CenterlineNetwork objects from a pyvista MultiBlock, where each element of the MultiBlock
+        CenterlineTree objects from a pyvista MultiBlock, where each element of the MultiBlock
         is a PolyData with the information required to build the Tree structure and the Spline
         information.
 
@@ -1832,13 +1830,13 @@ class CenterlineNetwork(Tree):
         Returns
         -------
 
-            cl_net : CenterlineNetwork
-                The centerline network extracted from the passed MultiBlock.
+            cl_tree : CenterlineTree
+                The centerline tree extracted from the passed MultiBlock.
         """
 
         if not mb.is_all_polydata:
             error_message(
-                "Can't make CenterlineNetwork. Some elements of the MultiBlock are not PolyData type.")
+                "Can't make CenterlineTree. Some elements of the MultiBlock are not PolyData type.")
             return None
 
         cl_dict = {
@@ -1850,17 +1848,17 @@ class CenterlineNetwork(Tree):
                 None,
                 'None']]
 
-        cl_net = CenterlineNetwork()
+        cl_tree = CenterlineTree()
 
-        def add_to_network(i):
-            cl_net[i] = cl_dict[i]
+        def add_to_tree(i):
+            cl_tree[i] = cl_dict[i]
             for chid in cl_dict[i].children:
-                add_to_network(chid)
+                add_to_tree(chid)
 
         for rid in roots:
-            add_to_network(rid)
+            add_to_tree(rid)
 
-        return cl_net
+        return cl_tree
     #
 
     @staticmethod
@@ -1870,9 +1868,9 @@ class CenterlineNetwork(Tree):
             curvature_penatly=1,
             graft_rate=0.5,
             force_extremes=True,
-            **kwargs):
+            **kwargs) -> CenterlineTree:
         """
-        Create a CenterlineNetwork from a pyvista MultiBlock made polydatas with
+        Create a CenterlineTree from a pyvista MultiBlock made polydatas with
         points joined by lines, basically like the output of CenterlinePathExtractor.
         Each polydata must have a field_data called 'parent' and has to be a list with
         a single id (present in the multiblock names).
@@ -1910,27 +1908,27 @@ class CenterlineNetwork(Tree):
         Returns
         -------
 
-            cl_net : CenterlineNetwork
-                The centerline network extracted from the passed MultiBlock.
+            cl_tree : CenterlineTree
+                The centerline tree extracted from the passed MultiBlock.
         """
 
         if not paths.is_all_polydata:
             error_message(
-                "Can't make CenterlineNetwork. Some elements of the MultiBlock are not PolyData type ")
+                "Can't make CenterlineTree. Some elements of the MultiBlock are not PolyData type ")
             return None
 
-        cl_net = CenterlineNetwork()
+        cl_tree = CenterlineTree()
 
         cl_ids = [s.replace('path_', '') for s in paths.keys()]
         parents = {i: paths[f'path_{i}'].field_data['parent'][0]
                    for i in cl_ids}
 
-        def add_to_network(nid):
+        def add_to_tree(nid):
 
             nonlocal n_knots, force_extremes, curvature_penatly, graft_rate
             points = paths[f'path_{nid}'].points
             if parents[nid] != 'None':
-                pcl = cl_net[parents[nid]]
+                pcl = cl_tree[parents[nid]]
                 pre_joint = paths[f'path_{nid}'].points[0]
                 pre_joint_t = pcl.get_projection_parameter(pre_joint)
                 gr = check_specific(kwargs, nid, 'graft_rate', graft_rate)
@@ -1957,22 +1955,22 @@ class CenterlineNetwork(Tree):
             if parents[nid] != 'None':
                 cl.parent = parents[nid]
                 cl.joint_t = joint_t
-            cl_net[nid] = cl
+            cl_tree[nid] = cl
 
             for cid in cl_ids:
                 if parents[cid] == nid:
-                    add_to_network(cid)
+                    add_to_tree(cid)
 
         for rid in cl_ids:
             if parents[rid] == 'None':
-                add_to_network(rid)
+                add_to_tree(rid)
 
-        return cl_net
+        return cl_tree
     #
 
     def translate(self, t, update=True):
         """
-        Translate the CenterlineNetwork object, translating all the Centerline objects, with the translation vector t.
+        Translate the CenterlineTree object, translating all the Centerline objects, with the translation vector t.
 
         Arguments
         ---------
@@ -1994,7 +1992,7 @@ class CenterlineNetwork(Tree):
 
     def scale(self, s, update=True):
         """
-        Scale the CenterlineNetwork object, scaling all the Centerline objects, by a scalar factor s.
+        Scale the CenterlineTree object, scaling all the Centerline objects, by a scalar factor s.
 
         Arguments
         ---------
@@ -2016,7 +2014,7 @@ class CenterlineNetwork(Tree):
 
     def rotate(self, r, update=True):
         """
-        Rotate the CenterlineNetwork, rotating all the Centerline objects, with the provided rotation matrix r.
+        Rotate the CenterlineTree, rotating all the Centerline objects, with the provided rotation matrix r.
 
         Arguments
         ---------
@@ -2043,10 +2041,10 @@ def extract_centerline(
         params,
         params_domain=None,
         params_path=None,
-        debug=False):
+        debug=False) -> CenterlineTree:
     """
     Provided a VascularMesh object with its boundaries properly defined, this function
-    computes the CenterlineNetwork of it.
+    computes the CenterlineTree of it.
 
     Arguments
     ---------
@@ -2073,7 +2071,7 @@ def extract_centerline(
     Returns
     -------
 
-        cl_net : CenterlineNetwork
+        cl_tree : CenterlineTree
             The computed Centerline
     """
 
@@ -2081,9 +2079,9 @@ def extract_centerline(
         vmesh=vmesh, params=params_domain, debug=debug)
     cl_paths = extract_centerline_path(
         vmesh=vmesh, cl_domain=cl_domain, params=params_path)
-    cl_net = CenterlineNetwork.from_multiblock_paths(
+    cl_tree = CenterlineTree.from_multiblock_paths(
         cl_paths,
         knots=params['knots'],
         graft_rate=params['graft_rate'],
         force_extremes=params['force_extremes'])
-    return cl_net
+    return cl_tree

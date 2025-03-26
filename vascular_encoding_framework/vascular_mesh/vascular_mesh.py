@@ -491,9 +491,9 @@ class VascularMesh(pv.PolyData):
     #
 
     @staticmethod
-    def from_closed_mesh_and_centerline(cmesh, cl_net, debug=False):
+    def from_closed_mesh_and_centerline(cmesh, cl_tree, debug=False):
         """
-        Given a closed vascular mesh, and a CenterlineNetwork object. This function approximate
+        Given a closed vascular mesh, and a CenterlineTree object. This function approximate
         the cross section of each boundary using the tangent of the centerline at the extrema.
 
         Arguments:
@@ -502,8 +502,8 @@ class VascularMesh(pv.PolyData):
             vmesh : pv.PolyData
                 The vascular mesh.
 
-            cl_net : CenterlineNetwork
-                The centerline network of the vascular mesh already computed.
+            cl_tree : CenterlineTree
+                The centerline tree of the vascular mesh already computed.
 
             debug : bool, opt
                 Default False. Show some plots of the process.
@@ -537,7 +537,7 @@ class VascularMesh(pv.PolyData):
             return b
 
         def add_centerline_boundary(cid, root=False):
-            cl = cl_net[cid]
+            cl = cl_tree[cid]
             if root:
                 inlet = compute_boundary(p=cl(cl.t0), n=cl.get_tangent(cl.t0))
                 iid = f'root_{len(boundaries.roots)}'
@@ -556,7 +556,7 @@ class VascularMesh(pv.PolyData):
             for chid in cl.children:
                 add_centerline_boundary(cid=chid)
 
-        for rid in cl_net.roots:
+        for rid in cl_tree.roots:
             add_centerline_boundary(rid, root=True)
 
         cs_bounds = pv.PolyData()

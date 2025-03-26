@@ -75,8 +75,8 @@ def show_adapted_frame(case_dir, suffix=''):
 
     """
 
-    cl_net = load_centerline(case_dir=case_dir, suffix=suffix)
+    cl_tree = load_centerline(case_dir=case_dir, suffix=suffix)
     suffix = suffix if suffix else '_input'
     vmesh = load_vascular_mesh(case_dir, suffix=suffix)
-    plot_adapted_frame(cntrln=cl_net, vmesh=vmesh, show=True)
+    plot_adapted_frame(cntrln=cl_tree, vmesh=vmesh, show=True)
 #

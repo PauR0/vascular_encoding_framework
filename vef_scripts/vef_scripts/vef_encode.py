@@ -39,7 +39,7 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
 
     Return
     ------
-        cl_net : vef.VascularEncoding
+        cl_tree : vef.VascularEncoding
             The computed vascular encoding.
     """
 
@@ -47,15 +47,15 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     if vmesh is None:
         return None
 
-    cl_net = load_centerline(case_dir=case_dir)
-    if cl_net is None:
+    cl_tree = load_centerline(case_dir=case_dir)
+    if cl_tree is None:
         return None
 
     if params is None:
         params = read_encoding_config(case_dir)
 
     vsc_enc = vef.encode_vascular_mesh(
-        vmesh=vmesh, cl_net=cl_net, params=params, debug=debug)
+        vmesh=vmesh, cl_tree=cl_tree, params=params, debug=debug)
 
     write_encoding_config(path=case_dir, data=params)
     save_vascular_encoding(

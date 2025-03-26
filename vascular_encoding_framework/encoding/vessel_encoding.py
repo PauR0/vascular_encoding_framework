@@ -187,7 +187,7 @@ class VesselEncoding(Node, Encoding):
         r"""
         This method extracts the vessel mesh from a vascular structure
         based on the centerline. It works similarly to the centerline
-        association method of the CenterlineNetwork class, however, in
+        association method of the CenterlineTree class, however, in
         this other method each point is associated to a single branch,
         and this method does not care for other branches, allowing points
         to belong to different vessels.
@@ -212,7 +212,7 @@ class VesselEncoding(Node, Encoding):
         ---------
 
             vmesh : pv.PolyData
-                The vascular network surface mesh.
+                The vascular surface mesh.
 
             thrs : list[float],opt
                 Defaulting to 10. The angle allowed between the tangent and q2p, can be seen
@@ -234,7 +234,7 @@ class VesselEncoding(Node, Encoding):
         if not attribute_checker(
                 self,
                 ['centerline'],
-                info='cannot extract Vessel from network.'):
+                info='cannot extract Vessel from tree.'):
             return False
 
         if 'Normals' not in vmesh.point_data:

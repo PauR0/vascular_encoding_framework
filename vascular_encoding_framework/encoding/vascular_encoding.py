@@ -22,13 +22,13 @@ class VascularEncoding(Tree, Encoding):
     def encode_vascular_mesh(
             self,
             vmesh,
-            cl_net,
+            cl_tree,
             tau_knots=15,
             theta_knots=15,
             laplacian_penalty=1.0,
             **kwargs):
         """
-        Encode a VascularMesh using a centerline network.
+        Encode a VascularMesh using a centerline tree.
 
         This method encodes the vascular mesh as it currently is. This may lead to redundance in
         the encoding coefficients if centerline children branches are born at the centerline father
@@ -38,10 +38,10 @@ class VascularEncoding(Tree, Encoding):
         ---------
 
             vmesh : VascularMesh
-                The vascular network to encode.
+                The vascular surface to encode.
 
-            cl_net : CenterlineNetwork
-                The centerlines of the vascular network.
+            cl_tree : CenterlineTree
+                The centerlines of the vascular surface.
 
             tau_knots, theta_knots : int, optional
                 Default value is 15 for both. The amount of internal knots in for each component of the radius function.
@@ -68,7 +68,7 @@ class VascularEncoding(Tree, Encoding):
         def encode_and_add_vessel(bid):
             nonlocal tau_knots, theta_knots, laplacian_penalty
             vsl_enc = VesselEncoding()
-            vsl_enc.set_centerline(cl=cl_net[bid])
+            vsl_enc.set_centerline(cl=cl_tree[bid])
             vsl_mesh = vsl_enc.extract_vessel_from_network(vmesh=vmesh)
             vsl_enc.encode_vessel_mesh(
                 vsl_mesh=vsl_mesh, tau_knots=check_specific(
@@ -79,14 +79,14 @@ class VascularEncoding(Tree, Encoding):
             for cid in vsl_enc.children:
                 encode_and_add_vessel(cid)
 
-        for rid in cl_net.roots:
+        for rid in cl_tree.roots:
             encode_and_add_vessel(rid)
     #
 
     def encode_vascular_mesh_decoupling(
             self,
             vmesh,
-            cl_net,
+            cl_tree,
             tau_knots=15,
             theta_knots=15,
             laplacian_penalty=1.0,
@@ -103,10 +103,10 @@ class VascularEncoding(Tree, Encoding):
         Arguments
         ---------
             vmesh : VascularMesh
-                The vascular network to encode.
+                The vascular surface to encode.
 
-            cl_net : CenterlineNetwork
-                The centerlines of the vascular network.
+            cl_tree : CenterlineTree
+                The centerlines of the vascular surface.
 
             tau_knots, theta_knots : int
                 The amount of internal knots in for each component of the radius function.
@@ -139,7 +139,7 @@ class VascularEncoding(Tree, Encoding):
 
         def remove_centerline_graft(bid):
             nonlocal insertion
-            cl = cl_net[bid]
+            cl = cl_tree[bid]
             pve = self[cl.parent]
             tau = pve.compute_centerline_intersection(cl, mode='parameter')
             r = vmesh.kdt.query(cl(tau))[
@@ -151,7 +151,7 @@ class VascularEncoding(Tree, Encoding):
 
         def decouple_and_encode_vessel(bid):
             nonlocal tau_knots, theta_knots, laplacian_penalty
-            cl = cl_net[bid]
+            cl = cl_tree[bid]
             if cl.parent is not None:
                 cl = remove_centerline_graft(bid)
 
@@ -168,7 +168,7 @@ class VascularEncoding(Tree, Encoding):
             for cid in cl.children:
                 decouple_and_encode_vessel(bid=cid)
 
-        for rid in cl_net.roots:
+        for rid in cl_tree.roots:
             decouple_and_encode_vessel(bid=rid)
 
         return self
@@ -637,7 +637,7 @@ class VascularEncoding(Tree, Encoding):
 #
 
 
-def encode_vascular_mesh(vmesh, cl_net, params, debug):
+def encode_vascular_mesh(vmesh, cl_tree, params, debug):
     """
     Encode a vascular mesh using the provided parameters.
 
@@ -647,8 +647,8 @@ def encode_vascular_mesh(vmesh, cl_net, params, debug):
         vmesh : VascularMesh
             The vascular mesh to be encoded.
 
-        cl_net : CenterlineNetwork
-            The centerline network of the vascular mesh.
+        cl_tree : CenterlineTree
+            The centerline tree of the vascular mesh.
 
         params : dict
             A dictionary containing all the parameters to compute the vascular encoding.
@@ -665,10 +665,10 @@ def encode_vascular_mesh(vmesh, cl_net, params, debug):
 
     if params['method'] == 'decoupling':
         vsc_enc.encode_vascular_mesh_decoupling(
-            vmesh, cl_net, debug=debug, **params)
+            vmesh, cl_tree, debug=debug, **params)
 
     elif params['method'] == 'at_joint':
-        vsc_enc.encode_vascular_mesh(vmesh, cl_net, **params)
+        vsc_enc.encode_vascular_mesh(vmesh, cl_tree, **params)
 
     else:
         error_message(

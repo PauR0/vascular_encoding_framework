@@ -359,9 +359,9 @@ def save_centerline_path(
 
 def load_centerline(case_dir, suffix=''):
     """
-    Load the centerline network under the case directory convention.
+    Load the centerline tree under the case directory convention.
 
-    Using UNIX path format, the centerline network is expected to be at subdir Centerline with name
+    Using UNIX path format, the centerline tree is expected to be at subdir Centerline with name
     centerline.vtm, i.e.:
 
         case_dir/Centerline/centerline.vtm
@@ -381,7 +381,7 @@ def load_centerline(case_dir, suffix=''):
     Returns
     -------
 
-        cl_net : vef.CenterlineNetwork
+        cl_tree : vef.CenterlineTree
             The loaded centerline
     """
 
@@ -390,23 +390,23 @@ def load_centerline(case_dir, suffix=''):
         suffix=suffix,
         case_dir=case_dir)
 
-    cl_net = None
+    cl_tree = None
     if os.path.exists(fname):
         cl_mb = pv.read(fname)
-        cl_net = vef.CenterlineNetwork().from_multiblock(mb=cl_mb)
+        cl_tree = vef.CenterlineTree().from_multiblock(mb=cl_mb)
     else:
         msg.warning_message(
             f"No centerline was found in the case at '{case_dir}' .")
 
-    return cl_net
+    return cl_tree
 #
 
 
-def save_centerline(case_dir, cl_net, suffix='', binary=True, overwrite=False):
+def save_centerline(case_dir, cl_tree, suffix='', binary=True, overwrite=False):
     """
-    Save the centerline network under the case directory convention.
+    Save the centerline tree under the case directory convention.
 
-    Using UNIX path format, the centerline network is expected to be at subdir Centerline, with name,
+    Using UNIX path format, the centerline tree is expected to be at subdir Centerline, with name,
     centerline.vtm, i.e.:
 
         case_dir/Centerline/centerline.vtm
@@ -420,8 +420,8 @@ def save_centerline(case_dir, cl_net, suffix='', binary=True, overwrite=False):
         case_dir : str
             The path to the case directory.
 
-        cl_net : vef.CenterlineNetwork
-            The computed centerline network.
+        cl_tree : vef.CenterlineTree
+            The computed centerline tree.
 
         suffix : str, opt
             Default an empty string. A suffix to be added before the extension.
@@ -439,7 +439,7 @@ def save_centerline(case_dir, cl_net, suffix='', binary=True, overwrite=False):
         suffix=suffix,
         case_dir=case_dir)
     message = f'{fname} exists and overwriting is set to False.'
-    cl_mb = cl_net.to_multiblock(add_attributes=True)
+    cl_mb = cl_tree.to_multiblock(add_attributes=True)
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         cl_mb.save(fname, binary)
 #

@@ -177,7 +177,7 @@ def save_cohort_object(
         cohort : dict[obj]
             A dictionary containing the name of the case directories as keys (relative to cohort_dir)
             and as value the object selected. Currently supported classes for the objects are
-            {VascularEncoding, CenterlineNetwork, VascularMesh}.
+            {VascularEncoding, CenterlineTree, VascularMesh}.
 
         suffix : str, optional
             Default an empty string. The suffix used when saving the object.
@@ -200,16 +200,16 @@ def save_cohort_object(
         if not isinstance(
             obj,
             (vef.VascularEncoding,
-             vef.CenterlineNetwork,
+             vef.CenterlineTree,
              vef.VascularMesh)):
             error_message(
-                'Only VascularEncoding, CenterlineNetwork adn VascularMesh objects are supported for cohort saving.')
+                'Only VascularEncoding, CenterlineTree adn VascularMesh objects are supported for cohort saving.')
             return
 
-        if isinstance(obj, vef.CenterlineNetwork):
+        if isinstance(obj, vef.CenterlineTree):
             save_centerline(
                 case_dir=case_dir,
-                cl_net=obj,
+                cl_tree=obj,
                 suffix=suffix,
                 binary=binary,
                 overwrite=overwrite)
@@ -232,7 +232,7 @@ def save_cohort_object(
 
         else:
             error_message(
-                f'Wrong object type {type(obj)}. Only {{VascularEncoding, CenterlineNetwork, VascularMesh}} are supported.')
+                f'Wrong object type {type(obj)}. Only {{VascularEncoding, CenterlineTree, VascularMesh}} are supported.')
 #
 
 

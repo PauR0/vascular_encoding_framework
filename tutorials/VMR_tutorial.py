@@ -78,8 +78,8 @@ knot_params = {
     '2': {'cl_knots': 15,   'tau_knots': 10,   'theta_knots': 10},
 }
 
-# We are in conditions of defining the centerline network.
-cl_net = vef.CenterlineNetwork.from_multiblock_paths(
+# We are in conditions of defining the centerline tree.
+cl_tree = vef.CenterlineTree.from_multiblock_paths(
     cp_xtractor.paths,
     knots={k: v['cl_knots'] for k, v in knot_params.items()}
 )
@@ -87,17 +87,17 @@ cl_net = vef.CenterlineNetwork.from_multiblock_paths(
 # The centerline on its own allows us to compute some useful fields like the Vessel Coordinates, but
 # first, let's check that centerline has been well computed and let us inspect how the adapted frame
 # looks like.
-plot_adapted_frame(cl_net, vmesh, scale=.5)
+plot_adapted_frame(cl_tree, vmesh, scale=.5)
 
 # The computation of centerline association and the vessel coordinates usually takes a while.
 bid = [
-    cl_net.get_centerline_association(
+    cl_tree.get_centerline_association(
         p=vmesh.points[i],
         n=vmesh.get_array(name='Normals', preference='point')[i], method='scalars', thrs=60
     )
     for i in range(vmesh.n_points)
 ]
-vcs = np.array([cl_net.cartesian_to_vcs(p=vmesh.points[i], cl_id=bid[i])
+vcs = np.array([cl_tree.cartesian_to_vcs(p=vmesh.points[i], cl_id=bid[i])
                for i in range(vmesh.n_points)])
 vmesh['cl_association'] = bid
 vmesh['tau'] = vcs[:, 0]

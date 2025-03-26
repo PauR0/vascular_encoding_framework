@@ -101,7 +101,7 @@ parser.add_argument(
     '--show-adapted-frame',
     dest='show_adapted',
     action='store_true',
-    help="""Display the parallel transport of the adapted frame along centerline network.""")
+    help="""Display the parallel transport of the adapted frame along centerline tree.""")
 
 parser.add_argument(
     '-e',
