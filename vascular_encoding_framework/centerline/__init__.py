@@ -1,6 +1,6 @@
 
 __all__ = ['Centerline',
-           'CenterlineNetwork',
+           'CenterlineTree',
            'ParallelTransport',
            'extract_centerline',
            'Seekers',
@@ -10,7 +10,9 @@ __all__ = ['Centerline',
            'extract_centerline_path']
 
 
-from .centerline import Centerline, CenterlineNetwork, ParallelTransport, extract_centerline
-from .domain_extractors import Seekers, Flux, extract_centerline_domain
+from .centerline import (Centerline, CenterlineTree, ParallelTransport,
+                         extract_centerline)
+from .domain_extractors import Flux, Seekers, extract_centerline_domain
 from .path_extractor import CenterlinePathExtractor, extract_centerline_path
+
 #

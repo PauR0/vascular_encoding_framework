@@ -72,7 +72,7 @@ class Seekers(CenterlineDomainExtractor):
         self.mesh: pv.PolyData = None
         self.output_domain: pv.PolyData = None
 
-        self.seekers: pv.Polydata = None
+        self.seekers: pv.PolyData = None
 
         # Parameters
         self.reduction_rate: float = 0.75
@@ -92,7 +92,7 @@ class Seekers(CenterlineDomainExtractor):
             self.compute_seekers_initial_positions()
     #
 
-    def compute_seekers_initial_positions(self):
+    def compute_seekers_initial_positions(self) -> pv.PolyData:
         """
         Compute the initial position of the seekers by computing a decimation of the original mesh.
         The mesh is then smoothed to enhance the normal direction. This method requires mesh and
@@ -170,7 +170,7 @@ class Seekers(CenterlineDomainExtractor):
         intersection = np.vstack(intersection)
 
         pts = pv.PolyData((start + intersection) / 2)
-        pts = pts.select_enclosed_points(self.mesh)
+        pts = pts.select_enclosed_points(self.mesh, check_surface=False)
 
         if self.debug:
             p = pv.Plotter()
@@ -205,7 +205,7 @@ class Seekers(CenterlineDomainExtractor):
             self.flip_seekers_directions()
     #
 
-    def run(self):
+    def run(self) -> pv.PolyData:
         """
         Run the algorithm and move seekers positions to its sought position.
 
@@ -274,7 +274,7 @@ class Seekers(CenterlineDomainExtractor):
 
         if self.check_inside:
             self.output_domain = self.output_domain.select_enclosed_points(
-                self.mesh).threshold(
+                self.mesh, check_surface=False).threshold(
                 value=0.5,
                 scalars='SelectedPoints',
                 all_scalars=False,
@@ -373,7 +373,7 @@ class Flux(CenterlineDomainExtractor):
         computing_message('KDTree')
     #
 
-    def compute_voxelization(self, update=True):
+    def compute_voxelization(self, update=True) -> pv.UnstructuredGrid:
         """
         Compute the discretization of the inner volume of a closed surface by
         sampling the bounding box with sx, sy and sz spacing and rejecting outside points.
@@ -483,7 +483,7 @@ class Flux(CenterlineDomainExtractor):
 #
 
 
-def extract_centerline_domain(vmesh, params=None, debug=False):
+def extract_centerline_domain(vmesh, params=None, debug=False) -> pv.DataSet:
     """
     Function to extract the centerline domain. The centerline domain extraction is the
     first step to compute the centerline. Here an unordered discrete representation of

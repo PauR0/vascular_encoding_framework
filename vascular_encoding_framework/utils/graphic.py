@@ -3,7 +3,7 @@
 import numpy as np
 import pyvista as pv
 
-from ..centerline import Centerline, CenterlineNetwork
+from ..centerline import Centerline, CenterlineTree
 from ..messages import *
 
 
@@ -14,7 +14,7 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
     Arguments:
     -----------
 
-        cl : Centerline or CenterlineNetwork
+        cl : Centerline or CenterlineTree
             The centerline to plot
 
         vmesh : VascularMesh or pv.PolyData
@@ -59,20 +59,20 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
         v2 = pdt.glyph(orient='v2', factor=scale)
         plotter.add_mesh(v2, color='b')
 
-        if isinstance(cntrln, CenterlineNetwork) and hasattr(cl, 'children'):
+        if isinstance(cntrln, CenterlineTree) and hasattr(cl, 'children'):
             for cid in cl.children:
                 plot_cl_pl(cntrln[cid])
 
     if isinstance(cntrln, Centerline):
         plot_cl_pl(cl=cntrln)
 
-    elif isinstance(cntrln, CenterlineNetwork):
+    elif isinstance(cntrln, CenterlineTree):
         for rid in cntrln.roots:
             plot_cl_pl(cntrln[rid])
 
     else:
         error_message(
-            'The argument cntrln must be an instance of Centerline or CenterlineNetwork.')
+            'The argument cntrln must be an instance of Centerline or CenterlineTree.')
         return
 
     if vmesh is not None:

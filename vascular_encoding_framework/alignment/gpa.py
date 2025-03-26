@@ -17,7 +17,7 @@ class GeneralizedProcrustesAlignment:
     """
     Class with the GPA algorithm.
 
-    TODO: The implementation aligns the centerline network as a whole using the same transformation
+    TODO: The implementation aligns the centerline tree as a whole using the same transformation
     for all the branches. Since the objective of the GPA is to remove spatial artifacts, it would
     be interesting to implement a decoupled version of the GPA. This version could compute a
     per-branch alignment storing previously the actual origin and tangent of the centerline using

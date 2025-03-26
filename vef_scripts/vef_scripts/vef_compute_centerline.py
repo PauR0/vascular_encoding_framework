@@ -88,7 +88,7 @@ def compute_centerline(
 
     Return
     ------
-        cl_net : CenterlineNetwork
+        cl_tree : CenterlineTree
             The computed centerline.
     """
 
@@ -125,15 +125,15 @@ def compute_centerline(
             binary=binary,
             overwrite=overwrite)
 
-    cl_net = vef.CenterlineNetwork.from_multiblock_paths(cl_path,
-                                                         **params)
+    cl_tree = vef.CenterlineTree.from_multiblock_paths(cl_path,
+                                                       **params)
 
     write_centerline_config(path=case_dir, data=params)
     save_centerline(
         case_dir=case_dir,
-        cl_net=cl_net,
+        cl_tree=cl_tree,
         binary=binary,
         overwrite=overwrite)
 
-    return cl_net
+    return cl_tree
 #
