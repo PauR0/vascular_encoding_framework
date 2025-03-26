@@ -97,7 +97,7 @@ def plot_open_boundary_ids(poly, plotter=None, show=True):
             A plotter object to add the plots on. Otherwise it is created.
 
         show : bool, opt
-            Wheter to plot or not at the end of the function.
+            Whether to plot or not at the end of the function.
 
     Returns:
     ----------

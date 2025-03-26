@@ -124,10 +124,10 @@ class Radius(BiSpline):
 
     def to_feature_vector(self, add_metadata=True):
         """
-        Convert the Radius object to its feature vector repressentation.
+        Convert the Radius object to its feature vector representation.
 
         The feature vector version of a Radius object consist in the raveled radius coefficients.
-        If add_metada is True (which is the default), a metadata array is appended at the beggining
+        If add_metadata is True (which is the default), a metadata array is appended at the beginning
         of the feature vector. The first entry of the metadata vector is the total number of
         metadata, making it look like [n, md0, ..., mdn], read more about it in get.
 
@@ -135,13 +135,14 @@ class Radius(BiSpline):
         ---------
 
             add_metadata: bool, optional
-                Default True. Wether to append metadata at the beggining of the feature vector.
+                Default True. Wether to append metadata at the beginning of the feature vector.
 
         Return
         ------
 
             fv : np.ndarray
-                The feature vector according to mode. The shape of each feature vector changes acoordingly.
+                The feature vector according to mode. The shape of each feature vector changes
+                accordingly.
 
 
         See Also
@@ -172,11 +173,11 @@ class Radius(BiSpline):
         ---------
 
             fv : np.ndarray (N,)
-                The feature vector with the metadata at the beggining.
+                The feature vector with the metadata at the beginning.
 
             md : np.ndarray (M,)
                 The metadata array to use. If passed, it will be assumed that fv does not
-                cointain it at the beginning.
+                contain it at the beginning.
 
         Return
         ------
@@ -220,7 +221,7 @@ class Radius(BiSpline):
             debug=False):
         """
         Function to build a Radius object from an array of points in the Vessel Coordinate System.
-        Radius object are a specialized Bivarate Splines. This function allow to build such objects
+        Radius object are a specialized Bivariate Splines. This function allow to build such objects
         by performing a least squares approximation using the longitudinal and angular coordinates
         to model the radius.
 

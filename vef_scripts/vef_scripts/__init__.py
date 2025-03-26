@@ -21,18 +21,18 @@ case_dir/
 Not all the scripts require the existence of all the files and directories, for instance,
 vef_compute_centerline does not require the Encoding directory to exist or to contain anything.
 
-TODO: Study the option of emedding this package onto vef __main__.py at top level.
+TODO: Study the option of embedding this package onto vef __main__.py at top level.
 PEP-338: https://peps.python.org/pep-0338/
 """
 
 __all__ = [
-    "make_case",
-    "compute_centerline",
-    "encode",
-    "align_encodings"
+    'make_case',
+    'compute_centerline',
+    'encode',
+    'align_encodings'
 ]
 
-from .vef_make_case import make_case
+from .vef_align import align_encodings
 from .vef_compute_centerline import compute_centerline
 from .vef_encode import encode
-from .vef_align import align_encodings
+from .vef_make_case import make_case

@@ -9,7 +9,8 @@ def univariate_optimization_loss(c, x, y, t, k, l):
     """
     Function to compute the expression to be optimized for univariate spline approximation.
 
-    Parameter l allows to penalize the curvature of the approximation by adding the 2 order finite diference of the coefficients.
+    Parameter l allows to penalize the curvature of the approximation by adding the 2 order finite
+    difference of the coefficients.
 
     Arguments
     ---------
@@ -54,7 +55,8 @@ def bivariate_optimization_loss(c, x, y, z, tx, ty, kx, ky, l):
     """
     Function to compute the expression to be optimized for bivariate spline approximation.
 
-    Parameter l allows to penalize the curvature of the approximation by adding the 2 order finite diference of the coefficients.
+    Parameter l allows to penalize the curvature of the approximation by adding the 2 order finite
+    difference of the coefficients.
 
     Arguments
     ---------
@@ -97,7 +99,7 @@ def get_unispline_constraint(t, k, a, v, nu=0):
     Function to get a constrain for univariate spline approximation. The constrained is expressed
     by means of a dictionary as SLSQP optimization algorithm expects.
 
-    The function can be used to fastly build equation-like constrains to impose the spline fulfill
+    The function can be used to rapidly build equation-like constrains to impose the spline fulfill
     equations such as: spl^{nu}(a) = v.
     Where a is a value in the definition domain, v a certain real value and nu the derivative order.
     Recall that nu is at most k (the degree of the polynomial).

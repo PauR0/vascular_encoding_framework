@@ -232,8 +232,8 @@ class Alignment(ABC):
         """
         Apply the alignment transformation to a given set of points.
 
-        If any of the transform attributes is None, that aspect of the tranform will be ignored.
-        For instance if sacle is None, the transformation wont include scaling.
+        If any of the transform attributes is None, that aspect of the transform will be ignored.
+        For instance if scale is None, the transformation wont include scaling.
 
         Arguments
         ---------
@@ -299,7 +299,7 @@ class IterativeClosestPoint(Alignment):
         """
         Compute the transformation to align source to target.
 
-        The decomposed transformation matrix is stored as atributes.
+        The decomposed transformation matrix is stored as attributes.
 
         Arguments
         ---------

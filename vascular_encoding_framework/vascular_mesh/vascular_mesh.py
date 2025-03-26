@@ -81,7 +81,7 @@ class VascularMesh(pv.PolyData):
 
     def set_data(self, **kwargs):
         """
-        Set the data of the vascular mesh. Usefull to set a bunch at once.
+        Set the data of the vascular mesh. Useful to set a bunch at once.
 
         Parameters
         ----------
@@ -176,7 +176,7 @@ class VascularMesh(pv.PolyData):
         -------------
 
             w : bool, opt
-                Default False. Whether to rewritte existing self.closed attribute.
+                Default False. Whether to rewrite existing self.closed attribute.
 
         Returns:
         -----------
@@ -347,7 +347,7 @@ class VascularMesh(pv.PolyData):
 
         See Also
         --------
-        :py:meth:`Bondaries.translate`
+        :py:meth:`Boundaries.translate`
 
         """
 
@@ -503,7 +503,7 @@ class VascularMesh(pv.PolyData):
                 The vascular mesh.
 
             cl_net : CenterlineNetwork
-                The centerline network of the vasculare mesh already computed.
+                The centerline network of the vascular mesh already computed.
 
             debug : bool, opt
                 Default False. Show some plots of the process.

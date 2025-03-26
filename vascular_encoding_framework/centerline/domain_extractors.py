@@ -26,7 +26,7 @@ class CenterlineDomainExtractor(ABC):
 
     def set_mesh(self, m):
         """
-        Method to be overwritten, but must accept a mesh of surface definig de
+        Method to be overwritten, but must accept a mesh of surface defining de
         boundary.
         """
         self.mesh = m
@@ -145,7 +145,7 @@ class Seekers(CenterlineDomainExtractor):
         """
         Ensure the seekers directions point inwards. This method requires mesh to
         be a closed surface to work properly. It works by performing a step of the
-        seekers algorithm with a reduced number of points (controled by n_tests).
+        seekers algorithm with a reduced number of points (controlled by n_tests).
         Then if the number of points falling outside the mesh surface is greater than
         those inside, the normals are flipped.
         """
@@ -207,13 +207,13 @@ class Seekers(CenterlineDomainExtractor):
 
     def run(self):
         """
-        Run the algorithm and move seekers positions to its seeked position.
+        Run the algorithm and move seekers positions to its sought position.
 
         Arguments:
         ------------
 
             check_normals : bool, optional
-                Default False. Whether to check for seekers direction before runnig the algorithm.
+                Default False. Whether to check for seekers direction before running the algorithm.
                 Caveats: for this check to work well, the mesh must be a closed surface.
 
             check_inside : bool, optional
@@ -410,17 +410,19 @@ class Flux(CenterlineDomainExtractor):
         computing_message('volume KDTree')
     #
 
-    def run(self):
+    def run(self) -> pv.UnstructuredGrid:
         """
+        Extract the centerline domain with flux method.
+
         This method runs the centerline domain extraction based on a threshold over
         the flux (http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf) computed
         over a voxelization of the vascular volume.
 
-        Arguments:
-        ------------
-            thrs : float, optional.
-                Default 0.0. The higher bound for the flux thresholding.
+        Returns
+        -------
 
+        self.output_domain : pv.UnstructuredGrid
+            The extracted domain.
         """
 
         computing_message('centerline domain extraction using the flux...')
@@ -485,8 +487,8 @@ def extract_centerline_domain(vmesh, params=None, debug=False):
     """
     Function to extract the centerline domain. The centerline domain extraction is the
     first step to compute the centerline. Here an unordered discrete representation of
-    the centerline locus is computed. It can be tougher or finner, the optimum path
-    is computed by means of the centerline path extactor.
+    the centerline locus is computed. It can be tougher or finer, the optimum path
+    is computed by means of the centerline path extractor.
 
     Arguments:
     -----------

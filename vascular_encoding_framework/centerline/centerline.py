@@ -204,11 +204,11 @@ class Centerline(UniSpline, Node):
 
         If mode == 'project':
             - If a point is passed, the vector p-c(t0) is projected onto the normal plane
-              at t0 and used as initial contition for parallel transport.
+              at t0 and used as initial condition for parallel transport.
             - If no point is passed, the mass center of the centerline is used as p.
 
         if mode == 'as_is':
-            - The argument p must be the vector to be parallely transported.
+            - The argument p must be the vector to be parallel transported.
 
         Arguments
         ---------
@@ -223,7 +223,7 @@ class Centerline(UniSpline, Node):
         -------
 
             v : ParallelTransport
-                The ParllelTransport object representing the transport of the vector along the
+                The ParallelTransport object representing the transport of the vector along the
                 centerline.
 
         See Also
@@ -261,7 +261,7 @@ class Centerline(UniSpline, Node):
     def compute_adapted_frame(self, p=None, mode='project'):
         """
         Compute a parallel transported adapted frame. This frame {t, v1, v2} is
-        an estable alternative to Frenet frame and has multiple purposes. The
+        an stable alternative to Frenet frame and has multiple purposes. The
         argument p can be used to provide a preferred direction for v1. In turn,
         v2 is the cross product of t and v1 for orientation and orthonormality
         reasons. This method uses compute_parallel_transport method, you may be
@@ -276,7 +276,7 @@ class Centerline(UniSpline, Node):
 
                 If no initial vector is passed (p=None), the argument mode is ignored and two options are available:
 
-                    - If the attibute self.v1 is None:
+                    - If the attribute self.v1 is None:
                         Then an initial v1 is computed as the cross product of the tangent of the
                         centerline and the axis of least variability on the centerline,
                         i.e. v1_0 = normalize(t(0), e3)
@@ -286,7 +286,7 @@ class Centerline(UniSpline, Node):
                     self.v1.v0 is not None. And this vector is used to build the parallel transport.
 
                 If an initial vector is passed p = (p0, p1, p2) the two options available are described
-                in compute_parallel_transport method and are controled by the mode argument.
+                in compute_parallel_transport method and are controlled by the mode argument.
 
             mode : {'project', 'as_is'}, optional
                 The mode used to built the adapted frame if p is passed. Check compute_parallel_transport.
@@ -313,7 +313,7 @@ class Centerline(UniSpline, Node):
                         p=self.v1.v0, mode='as_is')
                 else:
                     error_message(
-                        f'Wrong ussage of compute_adapted_metod. No p {(p)} has been passed but self.v1 is a ParallelTransport object with v0 == None.')
+                        f'Wrong usage of compute_adapted_frame. No p {(p)} has been passed but self.v1 is a ParallelTransport object with v0 == None.')
         else:
             self.v1 = self.compute_parallel_transport(mode=mode, p=p)
 
@@ -494,7 +494,7 @@ class Centerline(UniSpline, Node):
         """
         Get the adapted frame at a centerline point of parameter t
 
-        The apted frame is defined as:
+        The adapted frame is defined as:
 
                     {t, v1, v2}
 
@@ -543,7 +543,7 @@ class Centerline(UniSpline, Node):
 
             method : Literal{'scalar', 'vec', 'vec_jac'}, opt
                 The minimization method to use. See get_projection_parameter
-                for more infor.
+                for more info.
 
         Returns:
         ---------
@@ -564,19 +564,19 @@ class Centerline(UniSpline, Node):
         Given a point expressed in Vessel Coordinate System (VCS), this method
         computes its cartesian coordinates.
 
-        Using numpy broadcasting this metho allows working with arrays of vessel
+        Using numpy broadcasting this method allows working with arrays of vessel
         coordinates.
 
         Arguments:
         ----------
 
-            tau : float or arraylike (N,)
+            tau : float or array-like (N,)
                 The longitudinal coordinate of the point
 
-            theta : float or arraylike (N,)
+            theta : float or array-like (N,)
                 Angular coordinate of the point
 
-            rho : float or arraylike (N,)
+            rho : float or array-like (N,)
                 The radial coordinate of the point
 
             grid : bool
@@ -706,7 +706,7 @@ class Centerline(UniSpline, Node):
 
     def get_arc_length(self, b=None, a=None):
         """
-        Compute the arclength of the centerline, with the formula:
+        Compute the arc length of the centerline, with the formula:
 
                     L_c(a,b) = int_a^b ||c'(t)|| dt.
 
@@ -845,7 +845,7 @@ class Centerline(UniSpline, Node):
             torsion of the centerline at height point.
         """
 
-        assert dt > 0, f"Wrong value for differentail step. It must be greater than 0."
+        assert dt > 0, f"Wrong value for differential step. It must be greater than 0."
 
         if t == self.t0:
             b_der = (self.get_frenet_binormal(self.t0+dt) -
@@ -863,7 +863,7 @@ class Centerline(UniSpline, Node):
 
     def get_mean_curvature(self, a=None, b=None):
         """
-        Get the mean curavture of the centerline in the segment
+        Get the mean curvature of the centerline in the segment
         defined from a to b. The mean curvature is computed as the
         defined integral of the curvature from a to b, divided by the
         arc length of the centerline from a to b.
@@ -925,7 +925,7 @@ class Centerline(UniSpline, Node):
                 The number of points in which to discretize the curve.
 
             add_attributes : bool, opt
-                Default False. If true, all the attributes necessary to buil the
+                Default False. If true, all the attributes necessary to build the
                 splines and its hierarchical relations are added as field data.
 
         Returns
@@ -1093,7 +1093,7 @@ class Centerline(UniSpline, Node):
             n_samps=100):
         """
         This method trims the centerline from t0_ to t1_ and
-        returns the new segment as a centelrine object. If pass_atts is true
+        returns the new segment as a centerline object. If pass_atts is true
         all the centerline attributes such as the v1, v2 and others are kept.
         The amount of knots for the trimmed centerline will be computed taking
         into account the amount of knot_segments in the interval [t0_, t1_].
@@ -1186,12 +1186,12 @@ class Centerline(UniSpline, Node):
                 Default 3. The polynomial degree of the splines.
 
             curvature_penalty : float, optional
-                Default 1.0. A penaltization factor for the spline approximation.
+                Default 1.0. A penalization factor for the spline approximation.
 
             param_values : array-like (N,), optional
                 Default None. The parameter values of the points provided so the parametrization
                 of the centerline is approximated assuming cl(param_values) = points. If None
-                provided the nomalized cumulative distance among the points is used.
+                provided the normalized cumulative distance among the points is used.
 
             pt_mode : str
                 The mode option to build the adapted frame by parallel transport.
@@ -1202,7 +1202,7 @@ class Centerline(UniSpline, Node):
                 The initial v1. If pt_mode == 'project' it is projected onto inlet plane.
 
             force_extremes : {False, True, 'ini', 'end'}
-                Default True. Whether to force the centerline to interpolate the boundary behaviour
+                Default True. Whether to force the centerline to interpolate the boundary behavior
                 of the approximation. If True the first and last point are interpolated and its
                 tangent is approximated by finite differences using the surrounding points. If
                 'ini', respectively 'end', only one of both extremes is forced.
@@ -1411,24 +1411,25 @@ class Centerline(UniSpline, Node):
 
     def to_feature_vector(self, add_metadata=True):
         """
-        Convert the Centerline object to its feature vector repressentation.
+        Convert the Centerline object to its feature vector representation.
 
         The feature vector version of a Centerline consist in appending the raveled centerline
-        coefficients. If add_metada is True (which is the default), a metadata vector is appended
-        at the beggining of the feature vector. The first entry of the metadata vector is the amount
+        coefficients. If add_metadata is True (which is the default), a metadata vector is appended
+        at the beginning of the feature vector. The first entry of the metadata vector is the amount
         of metadata in total, making it look like [n, md0, ..., mdn], read more about it in get.
 
         Arguments
         ---------
 
             add_metadata: bool, optional
-                Default True. Wether to append metadata at the beggining of the feature vector.
+                Default True. Wether to append metadata at the beginning of the feature vector.
 
         Return
         ------
 
             fv : np.ndarray
-                The feature vector according to mode. The shape of each feature vector changes acoordingly.
+                The feature vector according to mode. The shape of each feature vector changes
+                accordingly.
 
         Note
         ----
@@ -1466,11 +1467,11 @@ class Centerline(UniSpline, Node):
         ---------
 
             fv : np.ndarray (N,)
-                The feature vector with the metadata at the beggining.
+                The feature vector with the metadata at the beginning.
 
             md : np.ndarray (M,)
                 The metadata array to use. If passed, it will be assumed that fv does not
-                cointain it at the beginning.
+                contain it at the beginning.
 
         Return
         ------
@@ -1518,7 +1519,7 @@ class CenterlineNetwork(Tree):
     def __setitem__(self, __key, cl: Centerline) -> None:
         """
         Setting items as in dictionaries. However, to belong to a CenterlineNetwork
-        requieres consistency in the adapted frames.
+        requires consistency in the adapted frames.
         """
         # Checking it has parent attribute.
         if not hasattr(cl, 'parent'):
@@ -1543,12 +1544,12 @@ class CenterlineNetwork(Tree):
         is decided based on the distance to a rough approximation on the point
         projection. If n is provided, let q the projection of p onto the nearest
         centerline branch, if the angles between vectors q2p and n are greater
-        than thrs, the next nearest branch will be tested. If non satisfy the
-        criteria, a warnin message will be outputed and the point will be assigned
+        than _thrs_, the next nearest branch will be tested. If non satisfy the
+        criteria, a warning message will be output and the point will be assigned
         to the nearest branch.
 
         Warning: normal is expected to be used as the surface normal of a point.
-        However, normales are sensible to high frequency noise in the mesh, try
+        However, normals are sensible to high frequency noise in the mesh, try
         smoothing it before using the normals in the computation of the centerline
         association.
 
@@ -1802,7 +1803,7 @@ class CenterlineNetwork(Tree):
 
         See Also
         --------
-        :py:meth:`Centerline.to_polyadta`
+        :py:meth:`Centerline.to_polydata`
 
         """
 
@@ -1837,7 +1838,7 @@ class CenterlineNetwork(Tree):
 
         if not mb.is_all_polydata:
             error_message(
-                "Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type.")
+                "Can't make CenterlineNetwork. Some elements of the MultiBlock are not PolyData type.")
             return None
 
         cl_dict = {
@@ -1872,7 +1873,7 @@ class CenterlineNetwork(Tree):
             **kwargs):
         """
         Create a CenterlineNetwork from a pyvista MultiBlock made polydatas with
-        points joined by lines, basically like the ouput of CenterlinePathExtractor.
+        points joined by lines, basically like the output of CenterlinePathExtractor.
         Each polydata must have a field_data called 'parent' and has to be a list with
         a single id (present in the multiblock names).
 
@@ -1895,13 +1896,13 @@ class CenterlineNetwork(Tree):
                 traveled towards the parent branch inlet along the centerline at the junction.
 
             force_extremes : {False, True, 'ini', 'end'}
-                Default True. Whether to force the centerline to interpolate the boundary behaviour
+                Default True. Whether to force the centerline to interpolate the boundary behavior
                 of the approximation. If True the first and last point are interpolated and its
                 tangent is approximated by finite differences using the surrounding points. If
                 'ini', respectively 'end', only one of both extremes is forced.
 
             **kwargs : dict
-                The above described argugments can be provided per branch using the kwargs. Say there exist a
+                The above described arguments can be provided per branch using the kwargs. Say there exist a
                 path_AUX in the passed multiblock, to set specific parameters for the branch AUX, one can pass
                 the dictionary AUX={n_knots:20}, setting the number of knots to 20 and assuming the default
                 values for the rest of the parameters.
@@ -1915,7 +1916,7 @@ class CenterlineNetwork(Tree):
 
         if not paths.is_all_polydata:
             error_message(
-                "Can't make CenterlineNetwork. Some elements of the MulitBlock are not PolyData type ")
+                "Can't make CenterlineNetwork. Some elements of the MultiBlock are not PolyData type ")
             return None
 
         cl_net = CenterlineNetwork()
@@ -2044,7 +2045,7 @@ def extract_centerline(
         params_path=None,
         debug=False):
     """
-    Provided a VascularMesh object with its boundaries propperly defined, this function
+    Provided a VascularMesh object with its boundaries properly defined, this function
     computes the CenterlineNetwork of it.
 
     Arguments

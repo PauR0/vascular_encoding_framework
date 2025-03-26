@@ -81,7 +81,7 @@ class VesselEncoding(Node, Encoding):
 
             method : Literal{'scalar', 'vec', 'vec_jac'}, opt
                 The minimization method to use. See get_projection_parameter
-                for more infor.
+                for more info.
 
         Returns
         -------
@@ -121,19 +121,19 @@ class VesselEncoding(Node, Encoding):
         Given a point expressed in Vessel Coordinate System (VCS), this method
         computes its cartesian coordinates.
 
-        Using numpy broadcasting this metho allows working with arrays of vessel
+        Using numpy broadcasting this method allows working with arrays of vessel
         coordinates.
 
         Arguments
         ---------
 
-            tau : float or arraylike (N,)
+            tau : float or array-like (N,)
                 The longitudinal coordinate of the point
 
-            theta : float or arraylike (N,)
+            theta : float or array-like (N,)
                 Angular coordinate of the point
 
-            rho : float or arraylike (N,)
+            rho : float or array-like (N,)
                 The radial coordinate of the point
 
             rho_norm : bool, opt
@@ -188,7 +188,7 @@ class VesselEncoding(Node, Encoding):
         This method extracts the vessel mesh from a vascular structure
         based on the centerline. It works similarly to the centerline
         association method of the CenterlineNetwork class, however, in
-        thiss other method each point is associated to a single branch,
+        this other method each point is associated to a single branch,
         and this method does not care for other branches, allowing points
         to belong to different vessels.
 
@@ -199,7 +199,7 @@ class VesselEncoding(Node, Encoding):
         the angle that makes the tangent t, with vector q2p. If a points belong to a cross
         section, the angle between t and q2p should be 90. Then, points whose deviation
         is over thrs argument are rejected. Once points have been identified, they are
-        extracted from the mesh and the largest connected component is consiedered as
+        extracted from the mesh and the largest connected component is considered as
         the vessel of interest.
 
         If use_normal is True, instead of considering the angle between t and q2p,
@@ -593,7 +593,7 @@ class VesselEncoding(Node, Encoding):
         Make a VesselEncoding object from a multiblock containing two PolyData objects, one for
         the centerline and another for the radius.
 
-        This static method is the counterpart of to_multiblock. To propperly work, this method
+        This static method is the counterpart of to_multiblock. To properly work, this method
         requires the passed MultiBlock entries to contain the essential attributes as though
         returned by to_multiblock with add_attributes argument set to True.
 
@@ -764,14 +764,15 @@ class VesselEncoding(Node, Encoding):
                     NOT IMPLEMENTED YET
 
             add_metadata : bool, optional
-                Default True. If True, a metadata array is append at the beggining of the feature vector.
+                Default True. If True, a metadata array is append at the beginning of the feature vector.
                 The first element of it corresponds with the number of metadata elements.
                     md = (nmd, md_0,...,m_nmd-1)
 
         Return
         ------
             fv : np.ndarray
-                The feature vector according to mode. The shape of each feature vector changes acoordingly.
+                The feature vector according to mode. The shape of each feature vector changes
+                accordingly.
 
         Note
         ----
@@ -893,10 +894,10 @@ class VesselEncoding(Node, Encoding):
         ---------
 
             fv : np.ndarray or array-like (N,)
-                The feature vector with the metadata array at the begining.
+                The feature vector with the metadata array at the beginning.
 
             md : np.ndarray, optional
-                Default None. If fv does not contain the metadata array at the beggining it can be
+                Default None. If fv does not contain the metadata array at the beginning it can be
                 passed through this argument.
 
 
@@ -925,10 +926,10 @@ class VesselEncoding(Node, Encoding):
         """
         Build a VesselEncoding object from a full feature vector.
 
-        Warning: This method only works if the feature vector has the metadata at the beggining or it
+        Warning: This method only works if the feature vector has the metadata at the beginning or it
         is passed using the md argument.
 
-        Warning: The returned VesselEncoding wont have any hierarchycal properties nor id since that
+        Warning: The returned VesselEncoding wont have any hierarchical properties nor id since that
         information is not stored on the feature vector.
 
 
@@ -936,10 +937,10 @@ class VesselEncoding(Node, Encoding):
         ---------
 
             fv : np.ndarray or array-like (N,)
-                The feature vector with the metadata array at the begining.
+                The feature vector with the metadata array at the beginning.
 
             md : np.ndarray, optional
-                Default None. If fv does not contain the metadata array at the beggining it can be
+                Default None. If fv does not contain the metadata array at the beginning it can be
                 passed through this argument.
 
         Returns
@@ -995,7 +996,7 @@ class VesselEncoding(Node, Encoding):
         Scale the Vessel Encoding.
 
         The scale is applied to both centerline and radius coefficients. No anisotropic scaling is
-        allowed, and a sigle scalar is required.
+        allowed, and a single scalar is required.
 
         Arguments
         ---------

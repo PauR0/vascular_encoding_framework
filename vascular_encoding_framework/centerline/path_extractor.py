@@ -26,7 +26,7 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
             numeric cost of the edge between two connected nodes.
 
         adjacency : callable,
-            A one arg callable object that returns the neighbours of a node.
+            A one arg callable object that returns the neighbors of a node.
 
         initial : int
             The id of the initial node
@@ -41,7 +41,7 @@ def minimum_cost_path(heuristic, cost, adjacency, initial, ends):
             If the algorithm fails, it returns an empty list
 
     """
-    g = {}  # Cummulative distance from the origin
+    g = {}  # Cumulative distance from the origin
     f = {}  # Cost of each node
     h = heuristic
 
@@ -176,7 +176,7 @@ class CenterlinePathExtractor:
                 The input vascular mesh
 
             check_radius : bool, opt
-                Whether to check for radius existence and comput it if required.
+                Whether to check for radius existence and compute it if required.
 
             update_boundaries : bool, opt
                 Whether to update the boundaries dict with the ones in vm.
@@ -214,7 +214,7 @@ class CenterlinePathExtractor:
                 radius field.
 
             check_radius : bool
-                Whether to check for radius existence and comput it if required.
+                Whether to check for radius existence and compute it if required.
 
         """
 
@@ -222,7 +222,7 @@ class CenterlinePathExtractor:
             if cntrln_dmn.shape[0] != 3:
                 error_message(
                     f'Unable to set an array with shape {cntrln_dmn.shape} as centerline domain. ' +
-                    ' Centerline domain must be a list of points wiht shape must be (3, N)')
+                    ' Centerline domain must be a list of points. Its shape must be (3, N)')
                 return False
             self.centerline_domain = cntrln_dmn
 
@@ -269,7 +269,7 @@ class CenterlinePathExtractor:
 
     def set_radius(self, r, update_inv=True):
         """
-        Set the radius attribute and if update_inv is True, update the inverse_radi
+        Set the radius attribute and if update_inv is True, update the inverse_radius
         """
 
         self.radius = r
@@ -308,7 +308,7 @@ class CenterlinePathExtractor:
         """
         Append a point to the centerline domain updating the radius and inverse radius arrays.
         If an array with dimensions (N, 3), the N points are appended. The argument where can
-        be used to decide if inserting the point(s) in the beggining of the lists (ini) or at
+        be used to decide if inserting the point(s) in the beginning of the lists (ini) or at
         the end (end).
 
         WARNING: Using this method changes the indices of inlets and outlets in the arrays.
@@ -328,7 +328,7 @@ class CenterlinePathExtractor:
             update_kdt : bool
                 Default True. Whether to recompute kdt or not. This should only
                 be set to False if multiple calls are going to be made, and the
-                last call shoult let it to True.
+                last call should let it to True.
 
         Returns:
         ---------
@@ -393,7 +393,7 @@ class CenterlinePathExtractor:
         """
         Assume the hierarchy defined by the boundaries of a vascular mesh.
 
-        If force_tangent is true, and "node" key/atribute is present,
+        If force_tangent is true, and "node" key/attribute is present,
         points at distance radius from center are removed, and eight points
         are inserted as center +t*radius*normal with t in linspace(-1,1,8).
 
@@ -425,7 +425,7 @@ class CenterlinePathExtractor:
         if not attribute_checker(
                 vm,
                 ['boundaries'],
-                info="can't compute hirarchy from vmesh."):
+                info="can't compute hierarchy from vmesh."):
             return
 
         self.set_boundaries(
@@ -456,7 +456,7 @@ class CenterlinePathExtractor:
         "1" - "2"
                |
               "0"
-        And then rearrange them according to self.mode and self.reverse to set directions propperly.
+        And then rearrange them according to self.mode and self.reverse to set directions properly.
 
         Arguments:
         ------------
@@ -529,7 +529,7 @@ class CenterlinePathExtractor:
 
     def _check_boundary_hierarchy(self) -> bool:
         """
-        Check that the boundaries tree is consistent and has at least one non-roote node.
+        Check that the boundaries tree is consistent and has at least one non-root node.
 
         Returns
         -------
@@ -590,7 +590,7 @@ class CenterlinePathExtractor:
         """
         Compute the paths from each outlet to the inlet. The path computation
         is based on an implementation of the minimum cost path A* algorithm,
-        however, since the heuristic is set to 0 the algorithm is efectively
+        however, since the heuristic is set to 0 the algorithm is effectively
         Dijkstra's. The stopping criteria is the reach of the inlet, or a
         previously transited path.
         """
@@ -657,7 +657,7 @@ class CenterlinePathExtractor:
         Returns:
         ----------
             self.paths : pyvista.MultiBlock
-                The MutliBlock with the centerline paths
+                The MultiBlock with the centerline paths
         """
 
         self.paths = pv.MultiBlock()
@@ -697,7 +697,7 @@ class CenterlinePathExtractor:
 
     def _adjacency(self, n):
         """
-        The neighbours are points at a certain distance proportional to the radius of the point.
+        The neighbors are points at a certain distance proportional to the radius of the point.
         As long as the adjacency factor is below 1, it preserves the topology of the vascular segment.
         """
 
@@ -724,14 +724,14 @@ class CenterlinePathExtractor:
 def extract_centerline_path(vmesh, cl_domain, params, debug=False):
     """
     Compute the discrete centerline path of a vascular mesh based on a discretization of the lumen.
-    It is computed as the polylines definig the minimum cost path between the boundary centers of a
+    It is computed as the polylines defining the minimum cost path between the boundary centers of a
     vascular mesh. If the boundary normal is provided, extra points are added to the domain to
     ensure appropriate boundary conditions.
 
     Warning: The minimum cost path is computed using A* algorithm without heuristic function (what
     makes it Dikjsta's algorithm), for which the adjacency (neighborhood) is built using the radius
-    field scalated by an adjacency_factor (default .33). If this function fails to extract the path
-    try providing a more dense discretizatión of the lumen or increasing the adjacency_factor.
+    field scaled by an adjacency_factor (default .33). If this function fails to extract the path
+    try providing a more dense discretization of the lumen or increasing the adjacency_factor.
 
     Arguments:
     ----------

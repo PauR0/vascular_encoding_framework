@@ -44,7 +44,7 @@ def is_writable(fname, overwrite=True, message=None):
 def write_json(fname, data, indent=4, overwrite=True):
     """
     Write a dictionary to a json file. Before saving, this function checks if there exist a file
-    with the same name, and overwritting can be prevented using the overwrite argument. All the
+    with the same name, and overwriting can be prevented using the overwrite argument. All the
     dictionary entries have to be json-serializable.
 
     Arguments:
@@ -60,7 +60,7 @@ def write_json(fname, data, indent=4, overwrite=True):
             Default 4. Whether to add indentation levels to entries in the json file.
 
         overwrite : bool, opt
-            Default False. Whether to overwritte an already existing file.
+            Default False. Whether to overwrite an already existing file.
 
     """
 

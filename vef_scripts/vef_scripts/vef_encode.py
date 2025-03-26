@@ -12,10 +12,10 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     centerline is also stored at the Centerline subdir. This function-script allows the computation
     of the vascular encoding, stores it at the Encoding subdir.
 
-    By default this function wont overwrite any file, however overwritting can be handled with the
+    By default this function wont overwrite any file, however overwriting can be handled with the
     overwrite and force arguments. If a preexisting centerline exists, the overwrite argument allow
     to overwrite the centerline file. However, if domain and path files already exists, to force
-    the recomputaion the argument force must be used.
+    the recomputation the argument force must be used.
 
 
     Arguments
@@ -30,7 +30,7 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
             are assumed.
 
         binary : bool, opt
-            Default True. Whether to write vtk files in binary mode. Binary is recomended to save
+            Default True. Whether to write vtk files in binary mode. Binary is recommended to save
             disk space.
 
         overwrite : bool, opt

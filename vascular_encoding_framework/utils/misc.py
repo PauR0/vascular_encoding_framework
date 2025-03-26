@@ -14,13 +14,13 @@ def split_metadata_and_fv(fv):
     ---------
 
         fv : np.ndarray
-            The feature vector with the metadata at the beggining.
+            The feature vector with the metadata at the beginning.
 
     Returns
     -------
 
         : np.ndarray
-            The metada and feature vector respectively.
+            The metadata and feature vector respectively.
     """
 
     n_md = round(fv[0])

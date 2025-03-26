@@ -54,7 +54,7 @@ def get_case_directories(
             Default None. A suffix to be appended to filename, before extension in required files.
 
         cohort_relative : bool, optional
-            Default True. If False, the cohort dir is preapended in case_dirs elements.
+            Default True. If False, the cohort dir is pre-appended in case_dirs elements.
 
     Returns
     -------
@@ -101,14 +101,14 @@ def load_cohort_object(
             The object to be loaded.
 
         exclude : list[str]
-            Default is None. A list containing the name of the directories to be exlcuded. By names
+            Default is None. A list containing the name of the directories to be excluded. By names
             what is meant is the paths relative to the cohort_dir.
 
         keys_from_dirs : bool or callable, optional
             Default True. Whether to use the directory names as the keys of the dict. A callable
             can be passed to filter the directory names, i.e. lambda s: s.replace('substring', ''),
             removing the 'substring' from the directory names in the ids. If False, the index is
-            set by the order after sorting the case drectries.
+            set by the order after sorting the case directories.
 
         suffix : str, optional
             Default an empty string. The suffix used when saving the object.
@@ -117,7 +117,7 @@ def load_cohort_object(
     -------
 
         cohort : Dict[str:VascularEncoding]
-            The dictionary containig the vascular encoding objects.
+            The dictionary containing the vascular encoding objects.
 
     """
 
@@ -281,7 +281,7 @@ def cohort_run(cohort_dir, routine, exclude=None, n_proc=1, desc=None):
 
 class _Routinizer:
     """
-    Auxiliar class to make callable objects suitable for Pool parallelization.
+    Auxiliary class to make callable objects suitable for Pool parallelization.
     """
 
     def __init__(self, func, **kwargs) -> None:
