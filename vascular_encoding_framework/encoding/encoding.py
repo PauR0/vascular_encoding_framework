@@ -26,12 +26,6 @@ class Encoding(ABC):
         -------
             md : np.ndarray
                 The metadata array.
-
-        See Also
-        --------
-            :py:meth:`set_metadata`
-            :py:meth:`to_feature_vector`
-            :py:meth:`from_feature_vector`
         """
         ...
     #
@@ -47,12 +41,6 @@ class Encoding(ABC):
         ---------
             md : np.ndarray
                 The metadata array.
-
-        See Also
-        --------
-            :py:meth:`get_metadata`
-            :py:meth:`to_feature_vector`
-            :py:meth:`from_feature_vector`
         """
         ...
     #
@@ -80,11 +68,6 @@ class Encoding(ABC):
             fv : np.ndarray (N,)
                 The feature vector with the selected data.
 
-        See Also
-        --------
-        :py:meth:`from_feature_vector`
-        :py:meth:`VesselEncoding.to_feature_vector`
-        :py:meth:`VesselEncoding.from_feature_vector`
         """
         ...
     #
@@ -111,12 +94,6 @@ class Encoding(ABC):
             md : np.ndarray, optional
                 Default None. If fv does not contain the metadata array at the beginning it can be
                 passed through this argument.
-
-        See Also
-        --------
-        :py:meth:`get_metadata`
-        :py:meth:`set_metadata`
-        :py:meth:`to_feature_vector`
         """
         ...
     #
