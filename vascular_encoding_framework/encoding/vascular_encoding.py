@@ -11,7 +11,7 @@ from .encoding import Encoding
 from .vessel_encoding import VesselAnatomyEncoding
 
 
-class VascularEncoding(Tree, Encoding):
+class VascularAnatomyEncoding(Tree, Encoding):
 
     def __init__(self):
 
@@ -56,8 +56,8 @@ class VascularEncoding(Tree, Encoding):
 
         Returns
         -------
-            self : VascularEncoding
-                The vascular mesh encoded in a Vascular Encoding object.
+            self : VascularAnatomyEncoding
+                The vascular mesh encoded in a VascularAnatomyEncoding object.
 
         See Also
         --------
@@ -127,8 +127,8 @@ class VascularEncoding(Tree, Encoding):
 
         Returns
         -------
-            self : VascularEncoding
-                The vascular mesh encoded in a Vascular Encoding object.
+            self : VascularAnatomyEncoding
+                The vascular mesh encoded in a VascularAnatomyEncoding object.
 
 
         See Also
@@ -293,7 +293,7 @@ class VascularEncoding(Tree, Encoding):
     @staticmethod
     def from_multiblock(vsc_mb):
         """
-        Make a VascularEncoding object from a pyvista MultiBlock.
+        Make a VascularAnatomyEncoding object from a pyvista MultiBlock.
 
         The MultiBlock is expected to contain each vessel as a multiblock itself whose data is stored as
         field data.
@@ -311,8 +311,8 @@ class VascularEncoding(Tree, Encoding):
 
         Return
         ------
-            vsc_enc : VascularEncoding
-                The VascularEncoding object built from the passed multiblock.
+            vsc_enc : VascularAnatomyEncoding
+                The VascularAnatomyEncoding object built from the passed multiblock.
 
         See Also
         --------
@@ -328,7 +328,7 @@ class VascularEncoding(Tree, Encoding):
         roots = [vid for vid, enc in enc_dict.items() if enc.parent in [
             None, 'None']]
 
-        vsc_enc = VascularEncoding()
+        vsc_enc = VascularAnatomyEncoding()
 
         def add_to_tree(i):
             vsc_enc[i] = enc_dict[i]
@@ -345,7 +345,7 @@ class VascularEncoding(Tree, Encoding):
         """
         This method returns a copy of the metadata array.
 
-        The metadata array of a VascularEncoding object is composed by the metadata arrays of the
+        The metadata array of a VascularAnatomyEncoding object is composed by the metadata arrays of the
         VesselAnatomyEncoding objects it contains. The first element is the total length of the metadata
         array, then the number of VesselAnatomyEncoding objects stored in it, and finally the metadata
         arrays of the VesselAnatomyEncoding objects.
@@ -421,7 +421,7 @@ class VascularEncoding(Tree, Encoding):
         """
         This method returns the length of the feature vector.
 
-        The length of a VascularEncoding feature vector is the sum of the length of all the VesselAnatomyEncoding feature vectors contained in it.
+        The length of a VascularAnatomyEncoding feature vector is the sum of the length of all the VesselAnatomyEncoding feature vectors contained in it.
 
         Returns
         -------
@@ -454,13 +454,13 @@ class VascularEncoding(Tree, Encoding):
 
     def to_feature_vector(self, mode='full', exclude=None, add_metadata=True):
         """
-        Convert the VascularEncoding to a feature vector.
+        Convert the VascularAnatomyEncoding to a feature vector.
 
-        The feature vector version of a VascularEncoding consist in appending the feature vector
+        The feature vector version of a VascularAnatomyEncoding consist in appending the feature vector
         representations of all the VesselAnatomyEncoding objects of the network. To read about the feature
         vector format of each vessel read VesselAnatomyEncoding.to_feature_vector documentation.
 
-        For consistency reasons the order for appending each vessel in the VascularEncoding follows
+        For consistency reasons the order for appending each vessel in the VascularAnatomyEncoding follows
         a tree-sorted scheme. Hence, it starts with the first root alphabetically, and continues with
         the first child alphabetically and so on.
 
@@ -517,13 +517,13 @@ class VascularEncoding(Tree, Encoding):
     @staticmethod
     def from_feature_vector(fv, md=None):
         """
-        Build a VascularEncoding object from a feature vector.
+        Build a VascularAnatomyEncoding object from a feature vector.
 
         Warning: This method only works if the feature vector has the metadata at the beginning or it
         is passed using the md argument.
 
         Warning: Due to the lack of hierarchical data of the feature vector mode the returned
-        VascularEncoding object will only have root nodes whose ids correspond to the its order in
+        VascularAnatomyEncoding object will only have root nodes whose ids correspond to the its order in
         the feature vector.
 
 
@@ -539,8 +539,8 @@ class VascularEncoding(Tree, Encoding):
 
         Returns
         -------
-            vsc_enc : VascularEncoding
-                The vascular encoding built from the fv.
+            vsc_enc : VascularAnatomyEncoding
+                The vascular anatomy encoding built from the fv.
 
         See Also
         --------
@@ -552,12 +552,12 @@ class VascularEncoding(Tree, Encoding):
         if md is None:
             md, fv = split_metadata_and_fv(fv)
 
-        vsc_enc = VascularEncoding()
+        vsc_enc = VascularAnatomyEncoding()
         vsc_enc.set_metadata(md)
         n = vsc_enc.get_feature_vector_length()
         if len(fv) != n:
             error_message(
-                f'Cannot build a VascularEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.')
+                f'Cannot build a VascularAnatomyEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements.')
             return None
 
         ini = 0
@@ -571,7 +571,7 @@ class VascularEncoding(Tree, Encoding):
 
     def translate(self, t, update=True):
         """
-        Translate the VascularEncoding object, translating all the VesselAnatomyEncoding objects, with the translation vector t.
+        Translate the VascularAnatomyEncoding object, translating all the VesselAnatomyEncoding objects, with the translation vector t.
 
         Arguments
         ---------
@@ -593,7 +593,7 @@ class VascularEncoding(Tree, Encoding):
 
     def scale(self, s, update=True):
         """
-        Scale the VascularEncoding object, scaling all the VesselAnatomyEncoding objects, by a scalar factor s.
+        Scale the VascularAnatomyEncoding object, scaling all the VesselAnatomyEncoding objects, by a scalar factor s.
 
         Arguments
         ---------
@@ -615,7 +615,7 @@ class VascularEncoding(Tree, Encoding):
 
     def rotate(self, r, update=True):
         """
-        Rotate the VascularEncoding, rotating all the VesselAnatomyEncoding objects, with the provided rotation matrix r.
+        Rotate the VascularAnatomyEncoding, rotating all the VesselAnatomyEncoding objects, with the provided rotation matrix r.
 
         Arguments
         ---------
@@ -651,17 +651,17 @@ def encode_vascular_mesh(vmesh, cl_tree, params, debug):
             The centerline tree of the vascular mesh.
 
         params : dict
-            A dictionary containing all the parameters to compute the vascular encoding.
+            A dictionary containing all the parameters to compute the encoding.
 
     Return
     ------
 
-        vsc_enc : VascularEncoding
-            The vascular encoding object.
+        vsc_enc : VascularAnatomyEncoding
+            The vascular anatomy encoding object.
 
     """
 
-    vsc_enc = VascularEncoding()
+    vsc_enc = VascularAnatomyEncoding()
 
     if params['method'] == 'decoupling':
         vsc_enc.encode_vascular_mesh_decoupling(

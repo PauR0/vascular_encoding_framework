@@ -7,7 +7,7 @@ from .vef_cohort import load_cohort_object, save_cohort_object
 
 def align_encodings(cohort_dir, params=None, exclude=None, overwrite=False):
     """
-    Use the Generalized Procrustes Alignment to align VascularEncodings from a given cohort.
+    Use the Generalized Procrustes Alignment to align VascularAnatomyEncodings from a given cohort.
 
 
     Arguments

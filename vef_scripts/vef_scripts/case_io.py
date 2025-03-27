@@ -447,15 +447,15 @@ def save_centerline(case_dir, cl_tree, suffix='', binary=True, overwrite=False):
 
 def load_vascular_encoding(case_dir, suffix=''):
     """
-    Load the vascular encoding under the case directory convention.
+    Load the vascular anatomy encoding under the case directory convention.
 
-    Using UNIX path format, the vascular encoding is expected to be at subdir Encoding with name
-    encoding.vtm, i.e.:
+    Using UNIX path format, the vascular anatomy encoding is expected to be at subdir Encoding with
+    name encoding.vtm, i.e.:
 
         case_dir/Encoding/encoding.vtm
 
     Due to the MultiBlock save format of vtk, a directory called encoding is also expected to be
-    at Encoding subdir containing the vascular encoding data.
+    at Encoding subdir containing the vascular anatomy encoding data.
 
     Arguments
     ---------
@@ -469,8 +469,8 @@ def load_vascular_encoding(case_dir, suffix=''):
     Returns
     -------
 
-        vsc_enc : vef.VascularEncoding
-            The loaded vascular encoding
+        vsc_enc : vef.VascularAnatomyEncoding
+            The loaded vascular anatomy encoding
     """
 
     fname = get_case_convention(
@@ -481,7 +481,7 @@ def load_vascular_encoding(case_dir, suffix=''):
     vsc_enc = None
     if os.path.exists(fname):
         enc_mb = pv.read(fname)
-        vsc_enc = vef.VascularEncoding.from_multiblock(vsc_mb=enc_mb)
+        vsc_enc = vef.VascularAnatomyEncoding.from_multiblock(vsc_mb=enc_mb)
 
     return vsc_enc
 #
@@ -494,15 +494,15 @@ def save_vascular_encoding(
         binary=True,
         overwrite=False):
     """
-    Save the vascular encoding under the case directory convention.
+    Save the vascular anatomy encoding under the case directory convention.
 
-    Using UNIX path format, the vascular encoding is saved at subdir Encoding with name
+    Using UNIX path format, the vascular anatomy encoding is saved at subdir Encoding with name
     encoding.vtm, i.e.:
 
         case_dir/Encoding/encoding.vtm
 
     Due to the MultiBlock save format of vtk, a directory called encoding is also created
-    at Encoding subdir containing the vascular encoding data.
+    at Encoding subdir containing the vascular anatomy encoding data.
 
     Arguments
     ---------
@@ -510,8 +510,8 @@ def save_vascular_encoding(
         case_dir : str
             The path to the case directory.
 
-        vsc_enc : vef.VascularEncoding
-            The computed vascular encoding.
+        vsc_enc : vef.VascularAnatomyEncoding
+            The computed vascular anatomy encoding.
 
         binary : bool, opt.
             Default True. Whether to save vtk files in binary format.

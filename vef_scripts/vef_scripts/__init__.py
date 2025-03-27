@@ -15,7 +15,7 @@ case_dir/
             centerline.tbd    #Yet to be determined....
             config.json       #A json with centerline computation configuration parameters.
         Encoding/
-            vascular_encode.tbd    #The vascular encoding computed
+            vascular_encode.tbd    #The vascular anatomy encoding computed
             config.json            #A json with encoding configuration parameters.
 
 Not all the scripts require the existence of all the files and directories, for instance,

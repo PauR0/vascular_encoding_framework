@@ -10,7 +10,7 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     """
     Given a vef case directory where there is a vascular mesh with the '_input' suffix, whose
     centerline is also stored at the Centerline subdir. This function-script allows the computation
-    of the vascular encoding, stores it at the Encoding subdir.
+    of the vascular anatomy encoding, stores it at the Encoding subdir.
 
     By default this function wont overwrite any file, however overwriting can be handled with the
     overwrite and force arguments. If a preexisting centerline exists, the overwrite argument allow
@@ -39,8 +39,8 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
 
     Return
     ------
-        vsc_enc : vef.VascularEncoding
-            The computed vascular encoding.
+        vsc_enc : vef.VascularAnatomyEncoding
+            The computed vascular anatomy encoding.
     """
 
     vmesh = load_vascular_mesh(case_dir, suffix='_input')

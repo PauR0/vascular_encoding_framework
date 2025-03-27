@@ -92,14 +92,14 @@ def OrthogonalProcrustes(A, B):
 def as_an_array(obj):
     """
     Function to extract the array expression of different objects.
-    Supported objects are: [np.ndarray, pv.DataObject, VascularEncoding]
+    Supported objects are: [np.ndarray, pv.DataObject, VascularAnatomyEncoding]
 
     This function has no effect on numpy arrays.
 
     Arguments
     ---------
 
-        obj : np.ndarray, pv.DataObject, VascularEncoding
+        obj : np.ndarray, pv.DataObject, VascularAnatomyEncoding
             The object of which the array will be extracted.
 
     Returns
@@ -135,14 +135,14 @@ def as_an_array(obj):
 def as_a_polydata(obj):
     """
     Function to extract the array expression of different objects.
-    Supported objects are: [np.ndarray, pv.DataObject, VascularEncoding]
+    Supported objects are: [np.ndarray, pv.DataObject, VascularAnatomyEncoding]
 
     This function has no effect on numpy arrays.
 
     Arguments
     ---------
 
-        obj : np.ndarray, pv.DataObject, VascularEncoding
+        obj : np.ndarray, pv.DataObject, VascularAnatomyEncoding
             The object of which the array will be extracted.
 
     Returns
