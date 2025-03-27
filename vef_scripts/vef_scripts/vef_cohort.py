@@ -116,8 +116,8 @@ def load_cohort_object(
     Returns
     -------
 
-        cohort : Dict[str:VascularEncoding]
-            The dictionary containing the vascular encoding objects.
+        cohort : Dict[str:VascularAnatomyEncoding]
+            The dictionary containing the vascular anatomy encoding objects.
 
     """
 
@@ -177,7 +177,7 @@ def save_cohort_object(
         cohort : dict[obj]
             A dictionary containing the name of the case directories as keys (relative to cohort_dir)
             and as value the object selected. Currently supported classes for the objects are
-            {VascularEncoding, CenterlineTree, VascularMesh}.
+            {VascularAnatomyEncoding, CenterlineTree, VascularMesh}.
 
         suffix : str, optional
             Default an empty string. The suffix used when saving the object.
@@ -199,11 +199,11 @@ def save_cohort_object(
 
         if not isinstance(
             obj,
-            (vef.VascularEncoding,
+            (vef.VascularAnatomyEncoding,
              vef.CenterlineTree,
              vef.VascularMesh)):
             error_message(
-                'Only VascularEncoding, CenterlineTree adn VascularMesh objects are supported for cohort saving.')
+                'Only VascularAnatomyEncoding, CenterlineTree adn VascularMesh objects are supported for cohort saving.')
             return
 
         if isinstance(obj, vef.CenterlineTree):
@@ -214,7 +214,7 @@ def save_cohort_object(
                 binary=binary,
                 overwrite=overwrite)
 
-        elif isinstance(obj, vef.VascularEncoding):
+        elif isinstance(obj, vef.VascularAnatomyEncoding):
             save_vascular_encoding(
                 case_dir=case_dir,
                 vsc_enc=obj,
@@ -232,7 +232,7 @@ def save_cohort_object(
 
         else:
             error_message(
-                f'Wrong object type {type(obj)}. Only {{VascularEncoding, CenterlineTree, VascularMesh}} are supported.')
+                f'Wrong object type {type(obj)}. Only {{VascularAnatomyEncoding, CenterlineTree, VascularMesh}} are supported.')
 #
 
 

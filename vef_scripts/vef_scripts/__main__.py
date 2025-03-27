@@ -21,7 +21,7 @@ MODES = {'case', 'cohort'}
 
 
 parser = argparse.ArgumentParser(
-    description="""Commandline interface of the vascular encoding
+    description="""Commandline interface of the vascular anatomy encoding
 framework script package.""")  # TODO: Documentation.
 
 parser.add_argument(
@@ -108,7 +108,7 @@ parser.add_argument(
     '--encode',
     dest='encode',
     action='store_true',
-    help="""Run vascular encoding. Requires mesh_input, boundaries_input and
+    help="""Run vascular anatomy encoding. Requires mesh_input, boundaries_input and
                     centerline to exist at case directory.""")
 
 parser.add_argument(
