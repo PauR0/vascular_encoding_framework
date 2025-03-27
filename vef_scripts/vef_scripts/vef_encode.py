@@ -39,7 +39,7 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
 
     Return
     ------
-        cl_tree : vef.VascularEncoding
+        vsc_enc : vef.VascularEncoding
             The computed vascular encoding.
     """
 
