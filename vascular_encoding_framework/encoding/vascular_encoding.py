@@ -8,7 +8,7 @@ from ..messages import error_message
 from ..utils._code import Tree, check_specific
 from ..utils.misc import split_metadata_and_fv
 from .encoding import Encoding
-from .vessel_encoding import VesselEncoding
+from .vessel_encoding import VesselAnatomyEncoding
 
 
 class VascularEncoding(Tree, Encoding):
@@ -67,7 +67,7 @@ class VascularEncoding(Tree, Encoding):
 
         def encode_and_add_vessel(bid):
             nonlocal tau_knots, theta_knots, laplacian_penalty
-            vsl_enc = VesselEncoding()
+            vsl_enc = VesselAnatomyEncoding()
             vsl_enc.set_centerline(cl=cl_tree[bid])
             vsl_mesh = vsl_enc.extract_vessel_from_network(vmesh=vmesh)
             vsl_enc.encode_vessel_mesh(
@@ -155,7 +155,7 @@ class VascularEncoding(Tree, Encoding):
             if cl.parent is not None:
                 cl = remove_centerline_graft(bid)
 
-            ve = VesselEncoding()
+            ve = VesselAnatomyEncoding()
             ve.set_centerline(cl)
             vsl_mesh = ve.extract_vessel_from_network(vmesh, debug=debug)
             ve.encode_vessel_mesh(
@@ -260,7 +260,7 @@ class VascularEncoding(Tree, Encoding):
 
             add_attributes : bool, optional
                 Default True. Whether to add all the attributes required to convert the multiblock
-                back to a VesselEncoding object.
+                back to a VesselAnatomyEncoding object.
 
             tau_res, theta_res : int, optional
                 The resolution to build all the vessel walls. Defaulting to make_surface_mesh method
@@ -274,8 +274,8 @@ class VascularEncoding(Tree, Encoding):
         See Also
         --------
         :py:meth:`from_multiblock`
-        :py:meth:`VesselEncoding.to_multiblock`
-        :py:meth:`VesselEncoding.from_multiblock`
+        :py:meth:`VesselAnatomyEncoding.to_multiblock`
+        :py:meth:`VesselAnatomyEncoding.from_multiblock`
         :py:meth:`Centerline.to_polydata`
         :py:meth:`Centerline.from_polydata`
         """
@@ -303,7 +303,7 @@ class VascularEncoding(Tree, Encoding):
 
             add_attributes : bool, optional
                 Default True. Whether to add all the attributes required to convert the multiblock
-                back to a VesselEncoding object.
+                back to a VesselAnatomyEncoding object.
 
             tau_res, theta_res : int, optional
                 The resolution to build all the vessel walls. Defaulting to make_surface_mesh method
@@ -317,13 +317,13 @@ class VascularEncoding(Tree, Encoding):
         See Also
         --------
         :py:meth:`to_multiblock`
-        :py:meth:`VesselEncoding.to_multiblock`
-        :py:meth:`VesselEncoding.from_multiblock`
+        :py:meth:`VesselAnatomyEncoding.to_multiblock`
+        :py:meth:`VesselAnatomyEncoding.from_multiblock`
         :py:meth:`Centerline.to_polydata`
         :py:meth:`Centerline.from_polydata`
         """
 
-        enc_dict = {vid: VesselEncoding.from_multiblock(
+        enc_dict = {vid: VesselAnatomyEncoding.from_multiblock(
             vsl_mb=vsc_mb[vid]) for vid in vsc_mb.keys()}
         roots = [vid for vid, enc in enc_dict.items() if enc.parent in [
             None, 'None']]
@@ -346,9 +346,9 @@ class VascularEncoding(Tree, Encoding):
         This method returns a copy of the metadata array.
 
         The metadata array of a VascularEncoding object is composed by the metadata arrays of the
-        VesselEncoding objects it contains. The first element is the total length of the metadata
-        array, then the number of VesselEncoding objects stored in it, and finally the metadata
-        arrays of the VesselEncoding objects.
+        VesselAnatomyEncoding objects it contains. The first element is the total length of the metadata
+        array, then the number of VesselAnatomyEncoding objects stored in it, and finally the metadata
+        arrays of the VesselAnatomyEncoding objects.
 
         Returns
         -------
@@ -358,7 +358,7 @@ class VascularEncoding(Tree, Encoding):
         See Also
         --------
             :py:meth:`set_metadata`
-            :py:meth:`VesselEncoding.get_metadata`
+            :py:meth:`VesselAnatomyEncoding.get_metadata`
             :py:meth:`to_feature_vector`
             :py:meth:`from_feature_vector`
         """
@@ -377,7 +377,7 @@ class VascularEncoding(Tree, Encoding):
         for rid in sorted(self.roots):
             append_md(rid)
 
-        nve = len(md)  # Number of VesselEncodings stored
+        nve = len(md)  # Number of VesselAnatomyEncodings stored
         n = (md[0][0]) * nve + 2  # Total Amount of metadata elements
         md = np.concatenate(md)
         md = np.concatenate([[n, nve], md])
@@ -398,19 +398,19 @@ class VascularEncoding(Tree, Encoding):
         See Also
         --------
             :py:meth:`get_metadata`
-            :py:meth:`VesselEncoding.get_metadata`
-            :py:meth:`VesselEncoding.set_metadata`
+            :py:meth:`VesselAnatomyEncoding.get_metadata`
+            :py:meth:`VesselAnatomyEncoding.set_metadata`
             :py:meth:`to_feature_vector`
             :py:meth:`from_feature_vector`
         """
 
-        nve = round(md[1])  # Number of VesselEncodings
+        nve = round(md[1])  # Number of VesselAnatomyEncodings
         ini = 2
 
         for i in range(nve):
             end = ini + round(md[ini])
             ve_md = md[ini:end]
-            vsl = VesselEncoding()
+            vsl = VesselAnatomyEncoding()
             vsl.id = f'{i}'
             vsl.set_metadata(ve_md)
             self[str(i)] = vsl
@@ -421,7 +421,7 @@ class VascularEncoding(Tree, Encoding):
         """
         This method returns the length of the feature vector.
 
-        The length of a VascularEncoding feature vector is the sum of the length of all the VesselEncoding feature vectors contained in it.
+        The length of a VascularEncoding feature vector is the sum of the length of all the VesselAnatomyEncoding feature vectors contained in it.
 
         Returns
         -------
@@ -457,8 +457,8 @@ class VascularEncoding(Tree, Encoding):
         Convert the VascularEncoding to a feature vector.
 
         The feature vector version of a VascularEncoding consist in appending the feature vector
-        representations of all the VesselEncoding objects of the network. To read about the feature
-        vector format of each vessel read VesselEncoding.to_feature_vector documentation.
+        representations of all the VesselAnatomyEncoding objects of the network. To read about the feature
+        vector format of each vessel read VesselAnatomyEncoding.to_feature_vector documentation.
 
         For consistency reasons the order for appending each vessel in the VascularEncoding follows
         a tree-sorted scheme. Hence, it starts with the first root alphabetically, and continues with
@@ -468,8 +468,8 @@ class VascularEncoding(Tree, Encoding):
         ---------
 
             mode : {'full', 'centerline', 'radius', 'image'}
-                The mode to build the feature vector of the VesselEncoding objects. See
-                 `VesselEncoding.to_feature_vector` for further information on each mode.
+                The mode to build the feature vector of the VesselAnatomyEncoding objects. See
+                 `VesselAnatomyEncoding.to_feature_vector` for further information on each mode.
 
             exclude : list[str], optional
                 Default None. A list with the id of vessels to be excluded when building the feature vector.
@@ -486,8 +486,8 @@ class VascularEncoding(Tree, Encoding):
         See Also
         --------
         :py:meth:`from_feature_vector`
-        :py:meth:`VesselEncoding.to_feature_vector`
-        :py:meth:`VesselEncoding.from_feature_vector`
+        :py:meth:`VesselAnatomyEncoding.to_feature_vector`
+        :py:meth:`VesselAnatomyEncoding.from_feature_vector`
         """
 
         if exclude is None:
@@ -571,7 +571,7 @@ class VascularEncoding(Tree, Encoding):
 
     def translate(self, t, update=True):
         """
-        Translate the VascularEncoding object, translating all the VesselEncoding objects, with the translation vector t.
+        Translate the VascularEncoding object, translating all the VesselAnatomyEncoding objects, with the translation vector t.
 
         Arguments
         ---------
@@ -584,7 +584,7 @@ class VascularEncoding(Tree, Encoding):
 
         See Also
         --------
-        :py:meth:`VesselEncoding.translate`
+        :py:meth:`VesselAnatomyEncoding.translate`
         """
 
         for _, ve in self.items():
@@ -593,7 +593,7 @@ class VascularEncoding(Tree, Encoding):
 
     def scale(self, s, update=True):
         """
-        Scale the VascularEncoding object, scaling all the VesselEncoding objects, by a scalar factor s.
+        Scale the VascularEncoding object, scaling all the VesselAnatomyEncoding objects, by a scalar factor s.
 
         Arguments
         ---------
@@ -606,7 +606,7 @@ class VascularEncoding(Tree, Encoding):
 
         See Also
         --------
-        :py:meth:`VesselEncoding.scale`
+        :py:meth:`VesselAnatomyEncoding.scale`
         """
 
         for _, ve in self.items():
@@ -615,7 +615,7 @@ class VascularEncoding(Tree, Encoding):
 
     def rotate(self, r, update=True):
         """
-        Rotate the VascularEncoding, rotating all the VesselEncoding objects, with the provided rotation matrix r.
+        Rotate the VascularEncoding, rotating all the VesselAnatomyEncoding objects, with the provided rotation matrix r.
 
         Arguments
         ---------
@@ -628,7 +628,7 @@ class VascularEncoding(Tree, Encoding):
 
         See Also
         --------
-        :py:meth:`VesselEncoding.rotate`
+        :py:meth:`VesselAnatomyEncoding.rotate`
         """
 
         for _, ve in self.items():

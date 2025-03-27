@@ -15,7 +15,7 @@ from .encoding import Encoding
 from .radius import Radius
 
 
-class VesselEncoding(Node, Encoding):
+class VesselAnatomyEncoding(Node, Encoding):
     """
     The class for encoding a single branch vessel.
     """
@@ -43,7 +43,7 @@ class VesselEncoding(Node, Encoding):
 
     def set_centerline(self, cl):
         """
-        Set the centerline attribute. Note that the VesselEncoding object inherits
+        Set the centerline attribute. Note that the VesselAnatomyEncoding object inherits
         the node attributes from the centerline, in addition if joint_t is defined,
         it is also inherited.
         """
@@ -322,8 +322,8 @@ class VesselEncoding(Node, Encoding):
         Returns
         -------
 
-            self : VesselEncoding
-                The VesselEncoding object.
+            self : VesselAnatomyEncoding
+                The VesselAnatomyEncoding object.
         """
 
         if cl is not None:
@@ -346,7 +346,7 @@ class VesselEncoding(Node, Encoding):
     def compute_residual(self, p):
         """
         This method computes the residual error of the encoding approximation. The method requires
-        the VesselEncoding splines to have been built.
+        the VesselAnatomyEncoding splines to have been built.
 
         Given a point p, located in the vessel wall, let (ta, th) be the two first coordinates of
         the point in the VCS computed using the centerline, then the residual of the approximation
@@ -528,7 +528,7 @@ class VesselEncoding(Node, Encoding):
 
             add_attributes : bool, opt
                 Default True. Whether to add all the attributes required to convert the multiblock
-                back to a VesselEncoding object.
+                back to a VesselAnatomyEncoding object.
 
             tau_res, theta_res : int, opt
                 The resolution to build the vessel wall. Defaulting to make_surface_mesh default
@@ -537,7 +537,7 @@ class VesselEncoding(Node, Encoding):
         Return
         ------
             vsl_mb : pv.MultiBlock
-                The multiblock with the required data to restore the vessel encoding.
+                The multiblock with the required data to restore the vessel anatomy encoding.
 
         See Also
         --------
@@ -547,7 +547,7 @@ class VesselEncoding(Node, Encoding):
 
         if not attribute_checker(
             self, [
-                'centerline', 'radius'], info=f'Cannot convert vessel encoding {self.id} multiblock.'):
+                'centerline', 'radius'], info=f'Cannot convert vessel anatomy encoding {self.id} multiblock.'):
             return None
 
         vsl_mb = pv.MultiBlock()
@@ -590,7 +590,7 @@ class VesselEncoding(Node, Encoding):
     @staticmethod
     def from_multiblock(vsl_mb):
         """
-        Make a VesselEncoding object from a multiblock containing two PolyData objects, one for
+        Make a VesselAnatomyEncoding object from a multiblock containing two PolyData objects, one for
         the centerline and another for the radius.
 
         This static method is the counterpart of to_multiblock. To properly work, this method
@@ -603,12 +603,12 @@ class VesselEncoding(Node, Encoding):
 
             vsl_mb : pv.MultiBlock
                 Default True. Whether to add all the attributes required to convert the multiblock
-                back to a VesselEncoding object.
+                back to a VesselAnatomyEncoding object.
 
         Return
         ------
-            vsl_enc : VesselEncoding
-                The VesselEncoding object built with the attributes stored as field data.
+            vsl_enc : VesselAnatomyEncoding
+                The VesselAnatomyEncoding object built with the attributes stored as field data.
 
         See Also
         --------
@@ -620,10 +620,10 @@ class VesselEncoding(Node, Encoding):
         for name in ['centerline', 'wall']:
             if name not in block_names:
                 error_message(
-                    info=f'Cannot build vessel encoding from multiblock. {name} is not in {block_names}. ')
+                    info=f'Cannot build vessel anatomy encoding from multiblock. {name} is not in {block_names}. ')
                 return None
 
-        vsl_enc = VesselEncoding()
+        vsl_enc = VesselAnatomyEncoding()
 
         cl = Centerline().from_polydata(poly=vsl_mb['centerline'])
         vsl_enc.set_centerline(cl)
@@ -661,7 +661,7 @@ class VesselEncoding(Node, Encoding):
         """
         This method returns a copy of the metadata array.
 
-        The metadata array of a VesselEncoding object is composed by the centerline and radius
+        The metadata array of a VesselAnatomyEncoding object is composed by the centerline and radius
         metadata arrays as follows:
                 [nc+nr+1, nc, cmd_0,...cmd_nc-1, nr, rmd_0,...,rmd_nr-1]
 
@@ -729,9 +729,9 @@ class VesselEncoding(Node, Encoding):
 
     def to_feature_vector(self, mode='full', add_metadata=True):
         """
-        Convert the VesselEncoding to a feature vector.
+        Convert the VesselAnatomyEncoding to a feature vector.
 
-        The feature vector version of a VesselEncoding consist in appending the flattened
+        The feature vector version of a VesselAnatomyEncoding consist in appending the flattened
         centerline and radius coefficients.
 
 
@@ -743,7 +743,7 @@ class VesselEncoding(Node, Encoding):
                 feature vector. Each of the modes works as follows:
 
                 - 'full': This mode stores all the information required to convert the feature
-                    vector back to a VesselEncoding. The feature vector built by this mode starts
+                    vector back to a VesselAnatomyEncoding. The feature vector built by this mode starts
                     with some metadata, followed by the raveled centerline spline coefficients and
                     finishes with the raveled radius coefficients.
                     It should look like:
@@ -784,8 +784,8 @@ class VesselEncoding(Node, Encoding):
         See Also
         --------
         :py:meth:`from_feature_vector`
-        :py:meth:`VesselEncoding.to_feature_vector`
-        :py:meth:`VesselEncoding.from_feature_vector`
+        :py:meth:`VesselAnatomyEncoding.to_feature_vector`
+        :py:meth:`VesselAnatomyEncoding.from_feature_vector`
         """
 
         md = []
@@ -863,7 +863,7 @@ class VesselEncoding(Node, Encoding):
         """
         This method returns the length of the feature vector considering only the spline parameters.
 
-        The length of a VesselEncoding feature vector is the sum of the length of the centerline and radius feature vectors.
+        The length of a VesselAnatomyEncoding feature vector is the sum of the length of the centerline and radius feature vectors.
 
         Returns
         -------
@@ -875,7 +875,7 @@ class VesselEncoding(Node, Encoding):
 
         if not attribute_checker(
             self, [
-                'centerline', 'radius'], info='Cannot compute the VesselEncoding feature vector length.'):
+                'centerline', 'radius'], info='Cannot compute the VesselAnatomyEncoding feature vector length.'):
             return None
 
         n = self.centerline.get_feature_vector_length(
@@ -885,9 +885,9 @@ class VesselEncoding(Node, Encoding):
 
     def extract_from_feature_vector(self, fv, md=None):
         """
-        This method updates the attributes of the VesselEncoding object with those provided in a feature vector.
+        This method updates the attributes of the VesselAnatomyEncoding object with those provided in a feature vector.
 
-        To create a new VesselEncoding object see `from_feature_vector` static method.
+        To create a new VesselAnatomyEncoding object see `from_feature_vector` static method.
 
 
         Arguments
@@ -924,12 +924,12 @@ class VesselEncoding(Node, Encoding):
     @staticmethod
     def from_feature_vector(fv, md=None):
         """
-        Build a VesselEncoding object from a full feature vector.
+        Build a VesselAnatomyEncoding object from a full feature vector.
 
         Warning: This method only works if the feature vector has the metadata at the beginning or it
         is passed using the md argument.
 
-        Warning: The returned VesselEncoding wont have any hierarchical properties nor id since that
+        Warning: The returned VesselAnatomyEncoding wont have any hierarchical properties nor id since that
         information is not stored on the feature vector.
 
 
@@ -945,8 +945,8 @@ class VesselEncoding(Node, Encoding):
 
         Returns
         -------
-            vsl_enc : VesselEncoding
-                The vessel encoding built from the fv.
+            vsl_enc : VesselAnatomyEncoding
+                The vessel anatomy encoding built from the fv.
 
         See Also
         --------
@@ -959,14 +959,14 @@ class VesselEncoding(Node, Encoding):
         if md is None:
             md, fv = split_metadata_and_fv(fv)
 
-        vsl_enc = VesselEncoding()
+        vsl_enc = VesselAnatomyEncoding()
         vsl_enc.extract_from_feature_vector(fv=fv, md=md)
         return vsl_enc
     #
 
     def translate(self, t, update=True):
         """
-        Translate the Vessel Encoding.
+        Translate the VesselAnatomyEncoding object.
 
         The translation only requires translating the centerline coefficients, since the radius is
         is expressed with respect to the centerline.
@@ -993,7 +993,7 @@ class VesselEncoding(Node, Encoding):
 
     def scale(self, s, update=True):
         """
-        Scale the Vessel Encoding.
+        Scale the VesselAnatomyEncoding object.
 
         The scale is applied to both centerline and radius coefficients. No anisotropic scaling is
         allowed, and a single scalar is required.
@@ -1029,7 +1029,7 @@ class VesselEncoding(Node, Encoding):
 
     def rotate(self, r, update=True):
         """
-        Rotate the Vessel Encoding.
+        Rotate the VesselAnatomyEncoding object.
 
         The rotation only requires translating the centerline coefficients, since the radius is
         is expressed with respect to the centerline.
