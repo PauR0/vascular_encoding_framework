@@ -665,7 +665,8 @@ class Boundaries(Tree):
 
     def rotate(self, r):
         """
-        Rotate the VascularEncoding, rotating all the VesselEncoding objects, with the provided rotation matrix r.
+        Rotate the Boundaries object, by rotating all its Boundary objects, with the provided
+        rotation matrix r.
 
         Arguments
         ---------
