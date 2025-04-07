@@ -165,7 +165,6 @@ class CrossSectionScheme(pv.PolyData):
 
         self.build()
         self.compute_polar_coordinates()
-
     #
 
     def _validate_array(self, in_array: np.ndarray, shape: tuple, default: np.ndarray, name: str):
@@ -230,15 +229,15 @@ class CrossSectionScheme(pv.PolyData):
         Arguments
         ---------
         n : int or np.ndarray (N,)
-            If integer it is used as the number of points to be generated. If a nd.narray it is directly
-            used as the radians partition.
+            If integer it is used as the number of points to be generated. If a np.ndarray it is
+            directly used as the radians partition.
 
         r: float, optional,
             Default 1. The radius of the circumference.
 
         aoff : float, optional
             Default 0.0. An angle offset to start the generation. The parametrization employed goes
-            from 0 to $2\pi$, the offset is added at both extremes.
+            from 0 to 2pi, the offset is added at both extremes.
 
         Returns
         -------
@@ -611,8 +610,6 @@ class OGridCrossSection(CrossSectionScheme):
             v2=self.v2
         )
 
-        angs = self.get_angular_coordinates(inner_rect.points[bound_ang_gids])
-
         glob_pts = inner_rect.points.tolist()
         gi = inner_rect.n_points
         faces = []
@@ -626,6 +623,12 @@ class OGridCrossSection(CrossSectionScheme):
             min_percentage=self.min_percentage
         )
 
+        # The outermost points of the inner rectangle
+        out_rect_pts = inner_rect.points[bound_ang_gids]
+        angs = self.get_angular_coordinates(out_rect_pts)
+        # Their projection to the outermost rectangle
+        out_circ_pts = self.sample_circumference(n=angs, r=self.radius)
+
         for i, rho in enumerate(rhos):
 
             # Connect the sq with the first circ.
@@ -638,7 +641,11 @@ class OGridCrossSection(CrossSectionScheme):
                         faces.append(
                             [4, bound_ang_gids[-1], bound_ang_gids[0], gi, gi+j])
             else:
-                glob_pts += self.sample_circumference(n=angs, r=rho).tolist()
+                # Parameterization from square to outer circ -> [0,1]
+                p = (rho - in_r)/(self.radius*(1-self.r))
+                pts = out_rect_pts * (1-p) + out_circ_pts*p
+                glob_pts += pts.tolist()
+                # glob_pts += self.sample_circumference(n=angs, r=rho).tolist()
                 if i < rhos.size-1:
                     for j in range(self.theta_res):
                         if j <= self.theta_res-2 and i <= rhos.size-2:
