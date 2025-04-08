@@ -1,5 +1,4 @@
 
-
 from copy import deepcopy
 
 import numpy as np
@@ -116,7 +115,7 @@ class VesselAnatomyEncoding(Node, Encoding):
             rho,
             rho_norm=True,
             grid=False,
-            full_output=False):
+            full_output=False) -> np.ndarray | tuple[np.ndarray, ...]:
         """
         Given a point expressed in Vessel Coordinate System (VCS), this method
         computes its cartesian coordinates.
@@ -153,6 +152,9 @@ class VesselAnatomyEncoding(Node, Encoding):
             tau, theta, rho, rho_norm : np.ndarray (N, ), opt.
                 If full_output is True, the vessel coordinates of the points are returned.
         """
+
+        # Prevent mod by ref
+        tau, theta, rho = deepcopy(tau),  deepcopy(theta), deepcopy(rho)
 
         if grid:
             gr = np.meshgrid(tau, theta, rho, indexing='ij')
