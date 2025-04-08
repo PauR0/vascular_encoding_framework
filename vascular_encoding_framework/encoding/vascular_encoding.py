@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 
 import numpy as np
 import pyvista as pv
@@ -250,7 +250,7 @@ class VascularAnatomyEncoding(Tree, Encoding):
         return vmesh
     #
 
-    def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None):
+    def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None) -> pv.MultiBlock:
         """
         Make a multiblock composed of other multiblocks from each encoded vessel of the vascular
         structure.
@@ -291,7 +291,7 @@ class VascularAnatomyEncoding(Tree, Encoding):
     #
 
     @staticmethod
-    def from_multiblock(vsc_mb):
+    def from_multiblock(vsc_mb: pv.MultiBlock) -> VascularAnatomyEncoding:
         """
         Make a VascularAnatomyEncoding object from a pyvista MultiBlock.
 
