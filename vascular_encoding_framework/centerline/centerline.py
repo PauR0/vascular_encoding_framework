@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from copy import deepcopy
+
 import numpy as np
 import pyvista as pv
 from scipy.integrate import quad
@@ -593,6 +595,9 @@ class Centerline(UniSpline, Node):
             tau, theta, rho : np.ndarray (N, ), opt.
                 If full_output is True, the vessel coordinates of the points are returned.
         """
+
+        # Prevent mod by ref
+        tau, theta, rho = deepcopy(tau),  deepcopy(theta), deepcopy(rho)
 
         arraylike = (list, np.ndarray)
         if isinstance(theta, arraylike) or grid:
