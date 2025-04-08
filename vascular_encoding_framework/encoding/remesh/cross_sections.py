@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pyvista as pv
 
-from ..messages import error_message, warning_message
-from ..utils.spatial import get_theta_coord, sort_glob_ids_by_angle
+from ...messages import error_message, warning_message
+from ...utils.spatial import get_theta_coord, sort_glob_ids_by_angle
 
 
 def compute_rho_discretization(
@@ -190,7 +190,7 @@ class CrossSectionScheme(pv.PolyData):
         Returns
         -------
         out_array : np.ndarray
-            The propper array, either the original one in the right shape or the default.
+            The proper array, either the original one in the right shape or the default.
 
         Raises
         ------
@@ -277,7 +277,7 @@ class CrossSectionScheme(pv.PolyData):
             The point(s) to compute the angular coordinates
 
         deg : bool, optional
-            Default False. Wheter to return the result in degrees rather than radians.
+            Default False. Whether to return the result in degrees rather than radians.
 
         Returns
         -------
@@ -645,7 +645,6 @@ class OGridCrossSection(CrossSectionScheme):
                 p = (rho - in_r)/(self.radius*(1-self.r))
                 pts = out_rect_pts * (1-p) + out_circ_pts*p
                 glob_pts += pts.tolist()
-                # glob_pts += self.sample_circumference(n=angs, r=rho).tolist()
                 if i < rhos.size-1:
                     for j in range(self.theta_res):
                         if j <= self.theta_res-2 and i <= rhos.size-2:
