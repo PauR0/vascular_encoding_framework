@@ -174,10 +174,10 @@ class VascularAnatomyEncoding(Tree, Encoding):
         return self
     #
 
-    def make_surface_mesh(
+    def make_triangulated_surface_mesh(
             self,
-            tau_resolution=100,
-            theta_resolution=50,
+            tau_res=100,
+            theta_res=50,
             join_at_surface=False,
             **kwargs):
         """
@@ -186,7 +186,7 @@ class VascularAnatomyEncoding(Tree, Encoding):
         Arguments
         ---------
 
-            tau_resolution, theta_resolution : int, optional
+            tau_res, theta_res : int, optional
                 The amount of points to use for longitudinal and angular discretization
 
             join_at_surface : bool, optional
@@ -215,30 +215,25 @@ class VascularAnatomyEncoding(Tree, Encoding):
             ve = self[vid]
 
             if ve.parent is not None:
-                pve = self[ve.parent]
-                tau_ini = ve.centerline.t0
-                if join_at_surface:
-                    tau_ini = pve.compute_centerline_intersection(
-                        ve.centerline, mode='parameter')
-                vsl = ve.make_surface_mesh(
-                    tau_resolution=check_specific(
-                        kwargs, vid, 'tau_knots', tau_resolution), theta_resolution=check_specific(
-                        kwargs, vid, 'tau_knots', theta_resolution), tau_ini=tau_ini)
-                if check_specific(
-                    kwargs,
-                    vid,
-                    'join_at_surface',
-                        join_at_surface):
+                vsl = ve.tube(
+                    tau_res=check_specific(kwargs, vid, 'tau_res', tau_res),
+                    theta_resolution=check_specific(
+                        kwargs, vid, 'theta_res', theta_res),
+                )
+
+                if check_specific(kwargs, vid, 'join_at_surface', join_at_surface):
                     kdt = KDTree(vmesh.points)
                     ids = vsl['tau'] == vsl['tau'].min()
                     _, sids = kdt.query(vsl.points[ids])
                     vsl.points[ids] = vmesh.points[sids]
                 vmesh += vsl
             else:
-                vsl = ve.make_surface_mesh(
+                vsl = ve.tube(
                     tau_resolution=check_specific(
-                        kwargs, vid, 'tau_knots', tau_resolution), theta_resolution=check_specific(
-                        kwargs, vid, 'tau_knots', theta_resolution))
+                        kwargs, vid, 'tau_res', tau_res),
+                    theta_resolution=check_specific(
+                        kwargs, vid, 'theta_res', theta_res)
+                )
                 vmesh += vsl
 
             for cid in ve.children:
@@ -250,7 +245,7 @@ class VascularAnatomyEncoding(Tree, Encoding):
         return vmesh
     #
 
-    def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None) -> pv.MultiBlock:
+    def to_multiblock(self, add_attributes=True, tau_res=100, theta_res=50) -> pv.MultiBlock:
         """
         Make a multiblock composed of other multiblocks from each encoded vessel of the vascular
         structure.
