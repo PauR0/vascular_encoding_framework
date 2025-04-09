@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 import pyvista as pv
 
-from ...messages import error_message, warning_message
+from ...messages import error_message, info_message
 from ...utils.spatial import get_theta_coord, sort_glob_ids_by_angle
 
 
@@ -60,17 +62,17 @@ def compute_rho_discretization(
 
         if prism_layers[0] < 0:
             error_message(
-                f"Too many layers to fit for the given growth rate. The last surpasses the \
-                centerline with a percentage of {prism_layers[0]}...."
+                'Too many layers to fit for the given growth rate. The last surpasses the '
+                + f"centerline with a percentage of {prism_layers[0]}...."
             )
             return None
 
         max_layer_thickness = prism_layers[1] - prism_layers[0]
         transition_ratio = max_layer_thickness / (prism_layers[0]/rho_res)
         if transition_ratio < 0.8 or transition_ratio > 1.5:
-            warning_message(
-                f"The transition between the equally spaced layers and prismatic layers is too \
-                uneven. The ratio between thickness is {transition_ratio} "
+            info_message(
+                'The transition between the equally spaced and prismatic layers might be too '
+                f"uneven. The ratio between thickness is {transition_ratio} "
             )
 
     prism_layers += [r1]
@@ -368,11 +370,10 @@ class CylindricalCrossSection(CrossSectionScheme):
             Default (0,0,0). The origin of the cross section.
         v1 : np.ndarray, optional
             Default (1,0,0). The first axis of the plane containing the cross section. Must be
-            orthonormal to v2
+            orthonormal to v2.
         v2 : np.ndarray, optional
             Default (0,1,0). The second axis of the plane containing the cross section. Must be
-            orthonormal to v2
-
+            orthonormal to v1.
         """
 
         self.twist: bool = twist
@@ -507,12 +508,10 @@ class OGridCrossSection(CrossSectionScheme):
             Default (0,0,0). The origin of the cross section.
         v1 : np.ndarray, optional
             Default (1,0,0). The first axis of the plane containing the cross section. Must be
-            orthonormal to v2
+            orthonormal to v2.
         v2 : np.ndarray, optional
             Default (0,1,0). The second axis of the plane containing the cross section. Must be
-            orthonormal to v2
-        **kwargs
-            Each children classes are expected to have some extra parameters.
+            orthonormal to v1.
         """
 
         if theta_res % 4 != 0:
@@ -674,4 +673,71 @@ class OGridCrossSection(CrossSectionScheme):
 
         return self
     #
+#
+
+
+def get_cross_section(
+    scheme: Literal['base', 'ogrid', 'cylindrical'],
+    theta_res: int,
+    rho_res: int,
+    **kwargs
+) -> CrossSectionScheme:
+    """
+    Generate a cross section with given parameters.
+
+    Scheme-specific and prismatic layers parameters can be provided via kwargs.
+
+    Parameters
+    ----------
+    scheme : {'base', 'ogrid', 'cylindrical'}, optional
+        The discretization scheme to use
+    theta_res : int
+        Angular resolution.
+    rho_res : int
+        Radiaul resolution.
+    **kwargs
+        Scheme specific arguments such as the 'r' in ogrid, or the prismatic layers
+        parameters can be passed as kewyword arguments.
+
+    Returns
+    -------
+    cs : CrossSectionScheme
+        The generated cross section.
+    """
+
+    match scheme:
+
+        case 'base':
+            cs = CrossSectionScheme(
+                theta_res=theta_res,
+                rho_res=rho_res,
+            )
+
+        case 'ogrid':
+            cs = OGridCrossSection(
+                theta_res=theta_res,
+                rho_res=rho_res,
+                r=kwargs.get('r', None),
+                n_layers=kwargs.get('n_layers', None),
+                growth_rate=kwargs.get('growth_rate', None),
+                min_percentage=kwargs.get('min_percentage', None),
+            )
+
+        case 'cylindrical':
+            cs = CylindricalCrossSection(
+                theta_res=theta_res,
+                rho_res=rho_res,
+                n_layers=kwargs.get('n_layers', None),
+                growth_rate=kwargs.get('growth_rate', None),
+                min_percentage=kwargs.get('min_percentage', None),
+                twist=kwargs.get('twist', None),
+            )
+
+        case _:
+            raise ValueError(
+                f"Wrong value for scheme argument ({scheme})."
+                "Available options are {'ogrid', 'cylindrical'}"
+            )
+
+    return cs
 #

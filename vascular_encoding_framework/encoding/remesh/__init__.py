@@ -3,4 +3,6 @@ __all__ = [
     'OGridCrossSection',
 ]
 
-from .cross_sections import CylindricalCrossSection, OGridCrossSection
+from .cross_sections import (CrossSectionScheme, CylindricalCrossSection,
+                             OGridCrossSection)
+from .remesh import VesselMeshing

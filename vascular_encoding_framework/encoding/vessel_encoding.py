@@ -7,11 +7,12 @@ from scipy.optimize import minimize_scalar
 
 from ..centerline import Centerline
 from ..messages import *
-from ..utils._code import Node, attribute_checker, is_numeric
+from ..utils._code import Node, attribute_checker, broadcast_kwargs, is_numeric
 from ..utils.misc import split_metadata_and_fv
 from ..utils.spatial import normalize, radians_to_degrees
 from .encoding import Encoding
 from .radius import Radius
+from .remesh import VesselMeshing
 
 
 class VesselAnatomyEncoding(Node, Encoding):
@@ -26,6 +27,8 @@ class VesselAnatomyEncoding(Node, Encoding):
 
         self.centerline: Centerline = None
         self.radius: Radius = None
+
+        self._compose_methods_from(utils_class=VesselMeshing, prefix='make_')
     #
 
     def set_data(self, **kwargs):
@@ -110,11 +113,12 @@ class VesselAnatomyEncoding(Node, Encoding):
 
     def vcs_to_cartesian(
             self,
-            tau,
-            theta,
-            rho,
+            tau: float | np.ndarray,
+            theta: float | np.ndarray,
+            rho: float | np.ndarray,
             rho_norm=True,
             grid=False,
+            gridded=False,
             full_output=False) -> np.ndarray | tuple[np.ndarray, ...]:
         """
         Given a point expressed in Vessel Coordinate System (VCS), this method
@@ -125,36 +129,34 @@ class VesselAnatomyEncoding(Node, Encoding):
 
         Arguments
         ---------
+        tau : float or array-like (N,)
+            The longitudinal coordinate of the point
+        theta : float or array-like (N,)
+            Angular coordinate of the point
+        rho : float or array-like (N,)
+            The radial coordinate of the point
+        rho_norm : bool, opt
+            Default False. Whether the rho passed is normalized or not.
+        grid : bool
+            Default False. If true, the method returns the cartesian representation of the
+            grid tau x theta x rho.
+        gridded: bool, optional
+            Whether the input comes in a gridded way i.e. tau, theta, and rho have been generated
+            by a function like numpy meshgrid.
+        full_output : bool, false
+            Default False. Whether to return the as well the vcs. Useful in combination with grid.
 
-            tau : float or array-like (N,)
-                The longitudinal coordinate of the point
-
-            theta : float or array-like (N,)
-                Angular coordinate of the point
-
-            rho : float or array-like (N,)
-                The radial coordinate of the point
-
-            rho_norm : bool, opt
-                Default False. Whether the rho passed is normalized or not.
-
-            grid : bool
-                Default False. If true, the method returns the cartesian representation of the
-                grid tau x theta x rho.
-
-            full_output : bool, false
-                Default False. Whether to return the as well the vcs. Useful in combination with grid.
         Returns
         -------
-            p : np.ndarray (N, 3)
-                The point in cartesian coordinates.
-
-            tau, theta, rho, rho_norm : np.ndarray (N, ), opt.
-                If full_output is True, the vessel coordinates of the points are returned.
+        p : np.ndarray (N, 3)
+            The point in cartesian coordinates.
+        tau, theta, rho, rho_norm : np.ndarray (N, ), opt.
+            If full_output is True, the vessel coordinates of the points are returned.
         """
 
-        # Prevent mod by ref
-        tau, theta, rho = deepcopy(tau),  deepcopy(theta), deepcopy(rho)
+        if not gridded:
+            tau, theta, rho = broadcast_kwargs(
+                tau=tau, theta=theta, rho=rho).values()
 
         if grid:
             gr = np.meshgrid(tau, theta, rho, indexing='ij')
@@ -171,7 +173,10 @@ class VesselAnatomyEncoding(Node, Encoding):
             rho_norm = rho / self.radius(tau,
                                          np.ravel(theta)).reshape(rho.shape)
 
-        p = self.centerline.vcs_to_cartesian(tau, theta, rho)
+        p = self.centerline.vcs_to_cartesian(
+            tau, theta, rho, gridded=True if grid or gridded else False
+        )
+
         if full_output:
             return p, tau, theta, rho, rho_norm
 
@@ -423,103 +428,6 @@ class VesselAnatomyEncoding(Node, Encoding):
         return cl(res.x)
     #
 
-    def make_surface_mesh(
-            self,
-            tau_resolution=None,
-            theta_resolution=None,
-            tau_ini=None,
-            tau_end=None,
-            theta_ini=None,
-            theta_end=None,
-            vcs=True):
-        """
-        Make a triangle mesh of the encoded vessel.
-
-        Arguments
-        ---------
-
-            tau_res : int, opt
-                The number of longitudinal discretizations.
-
-            theta_res : int, opt
-                The number of angular discretizations.
-
-            tau_ini, tau_end, theta_ini, theta_end : float, opt
-                Default None. The lower and upper extrema of the interval to build,
-                for the longitudinal and angular dimensions respectively. If None,
-                the whole definition interval is used.
-
-            vcs : bool
-                Defaulting to True. Whether to add the VCS coordinates of
-                each point as a point array.
-
-        Returns
-        -------
-
-            vsl_mesh : VascularMesh
-        """
-
-        if tau_resolution is None:
-            tau_resolution = 100
-
-        if theta_resolution is None:
-            theta_resolution = 100
-
-        if tau_ini is None:
-            tau_ini = self.centerline.t0,
-        if tau_end is None:
-            tau_end = self.centerline.t1
-
-        if theta_ini is None:
-            theta_ini = self.radius.y0
-        if theta_end is None:
-            theta_end = self.radius.y1
-
-        close = True
-        if theta_end != self.radius.y1:
-            close = False
-
-        taus = np.linspace(tau_ini, tau_end, tau_resolution)
-        thetas = np.linspace(theta_ini, theta_end, theta_resolution)
-        rhos = [1.0]
-
-        points, tau, theta, rho, rho_n = self.vcs_to_cartesian(
-            tau=taus, theta=thetas, rho=rhos, grid=True, full_output=True)
-        triangles = []
-
-        for i in range(tau_resolution):
-            if i > 0:
-                for j in range(theta_resolution):
-                    if j == theta_resolution - 1:
-                        if close:
-                            triangles.append([3,
-                                              i * theta_resolution + j,
-                                              (i - 1) * theta_resolution + j,
-                                              (i - 1) * theta_resolution])
-                            triangles.append([3,
-                                              i * theta_resolution + j,
-                                              i * theta_resolution,
-                                              (i - 1) * theta_resolution])
-                    else:
-                        triangles.append([3,
-                                          i * theta_resolution + j,
-                                          (i - 1) * theta_resolution + j,
-                                          (i - 1) * theta_resolution + j + 1])
-                        triangles.append([3,
-                                          i * theta_resolution + j,
-                                          i * theta_resolution + j + 1,
-                                          (i - 1) * theta_resolution + j + 1])
-
-        vsl_mesh = pv.PolyData(points, triangles)
-        if vcs:
-            vsl_mesh['tau'] = tau
-            vsl_mesh['theta'] = theta
-            vsl_mesh['rho'] = rho
-            vsl_mesh['rho_n'] = rho_n
-
-        return vsl_mesh
-    #
-
     def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None):
         """
         Make a multiblock with two PolyData objects, one for the centerline and another for the radius.
@@ -556,9 +464,7 @@ class VesselAnatomyEncoding(Node, Encoding):
         vsl_mb['centerline'] = self.centerline.to_polydata(
             add_attributes=add_attributes, t_res=tau_res)
 
-        wall = self.make_surface_mesh(
-            tau_resolution=tau_res,
-            theta_resolution=theta_res)
+        wall = self.tube(tau_res=tau_res, theta_res=theta_res)
         if add_attributes:
             # Adding tau atts
             wall.add_field_data(

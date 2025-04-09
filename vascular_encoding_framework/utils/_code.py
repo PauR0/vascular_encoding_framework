@@ -473,6 +473,73 @@ def check_specific(params, nid, arg, default):
 #
 
 
+def broadcast_kwargs(**kwargs) -> dict[str, np.ndarray]:
+    """
+    Broadcast all input kwargs to the same shape.
+
+    Parameters
+    ----------
+    **kwargs : float or ndarray
+        Arbitrary keyword arguments that must be either floats or numpy arrays.
+
+    Returns
+    -------
+    dict
+        A dictionary with the same keys as kwargs, where all values
+        are numpy arrays of the same shape.
+
+    Raises
+    ------
+    TypeError
+        If any input is not a float or numpy array.
+    ValueError
+        If arrays of different shapes are provided and cannot be broadcast together.
+
+    Examples
+    --------
+    >>> broadcast_kwargs(a=1.0, b=np.array([2.0, 3.0]))
+    {'a': array([1., 1.]), 'b': array([2., 3.])}
+
+    >>> broadcast_kwargs(x=np.ones((2, 3)), y=5.0)
+    {'x': array([[1., 1., 1.], [1., 1., 1.]]), 'y': array([[5., 5., 5.], [5., 5., 5.]])}
+    """
+    # Validate input types and collect array shapes
+    array_shapes = []
+
+    for key, value in kwargs.items():
+        if isinstance(value, np.ndarray):
+            array_shapes.append(value.shape)
+        elif not isinstance(value, float):
+            raise TypeError(
+                f"Input '{key}' must be a float or numpy array, got {type(value)}")
+
+    # If no arrays provided, return dictionary of 1D arrays with single elements
+    if not array_shapes:
+        return {k: np.array([v]) for k, v in kwargs.items()}
+
+    # Determine target shape from all arrays
+    try:
+        target_shape = np.broadcast_shapes(*array_shapes)
+    except ValueError:
+        raise ValueError(
+            'Input arrays have incompatible shapes that cannot be broadcast together')
+
+    # Create output dictionary
+    result = {}
+
+    for key, value in kwargs.items():
+        if isinstance(value, float):
+            result[key] = np.full(target_shape, value)
+        else:  # Must be a numpy array
+            try:
+                result[key] = np.broadcast_to(value, target_shape).copy()
+            except ValueError:
+                raise ValueError(
+                    f"Could not broadcast input '{key}' to target shape {target_shape}")
+
+    return result
+
+
 def is_sequence(obj):
     """
     Check wether an object is a sequence.

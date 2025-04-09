@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import inspect
 from abc import ABC, abstractmethod
+from functools import partial
+from typing import Callable, Type
 
 import numpy as np
 
@@ -12,6 +15,29 @@ class Encoding(ABC):
 
     def __init__(self):
         ...
+    #
+
+    def _compose_methods_from(self, utils_class: Type, prefix: str) -> None:
+        """Compose all static methods from the utility class.
+
+        Args:
+            utils_class: The utility class containing static methods to compose
+        """
+        for name, method in inspect.getmembers(utils_class, predicate=inspect.isfunction):
+            if name.startswith(prefix):
+                # The key is to not use the decorator here since it causes issues with binding
+                def create_wrapper(util_method: Callable) -> Callable:
+                    def wrapper(*args, **kwargs):
+                        return util_method(self, *args, **kwargs)
+
+                    # Manually copy the metadata instead of using @wraps
+                    wrapper.__name__ = util_method.__name__
+                    wrapper.__doc__ = util_method.__doc__
+                    wrapper.__module__ = util_method.__module__
+                    return wrapper
+
+                simple_name = name.replace(prefix, '')
+                setattr(self, simple_name, create_wrapper(method))
     #
 
     @abstractmethod

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
-
 import numpy as np
 import pyvista as pv
 from scipy.integrate import quad
@@ -12,7 +10,8 @@ from scipy.spatial.transform import Rotation
 
 from ..messages import error_message
 from ..splines.splines import UniSpline, uniform_penalized_spline
-from ..utils._code import Node, Tree, attribute_checker, check_specific
+from ..utils._code import (Node, Tree, attribute_checker, broadcast_kwargs,
+                           check_specific)
 from ..utils.geometry import polyline_from_points
 from ..utils.misc import split_metadata_and_fv
 from ..utils.spatial import (compute_ref_from_points, get_theta_coord,
@@ -561,7 +560,15 @@ class Centerline(UniSpline, Node):
         return np.array((tau, theta, rho))
     #
 
-    def vcs_to_cartesian(self, tau, theta, rho, grid=False, full_output=False):
+    def vcs_to_cartesian(
+        self,
+        tau: float,
+        theta: float,
+        rho: float,
+        grid=False,
+        gridded=False,
+        full_output=False
+    ):
         """
         Given a point expressed in Vessel Coordinate System (VCS), this method
         computes its cartesian coordinates.
@@ -569,35 +576,34 @@ class Centerline(UniSpline, Node):
         Using numpy broadcasting this method allows working with arrays of vessel
         coordinates.
 
-        Arguments:
+        Parameters
         ----------
+        tau : float or array-like (N,)
+            The longitudinal coordinate of the point
+        theta : float or array-like (N,)
+            Angular coordinate of the point
+        rho : float or array-like (N,)
+            The radial coordinate of the point
+        grid : bool, optional
+            Default False. If true, the method returns the cartesian representation of the
+            grid tau x theta x rho.
+        gridded: bool, optional
+            Whether the input comes in a gridded way i.e. tau, theta, and rho have been generated
+            by a function like numpy meshgrid.
+        full_output : bool, false
+            Default False. Whether to return the as well the vcs. Useful in combination with grid.
 
-            tau : float or array-like (N,)
-                The longitudinal coordinate of the point
-
-            theta : float or array-like (N,)
-                Angular coordinate of the point
-
-            rho : float or array-like (N,)
-                The radial coordinate of the point
-
-            grid : bool
-                Default False. If true, the method returns the cartesian representation of the
-                grid tau x theta x rho.
-
-            full_output : bool, false
-                Default False. Whether to return the as well the vcs. Useful in combination with grid.
         Returns
         -------
-            p : np.ndarray (N, 3)
-                The point in cartesian coordinates.
-
-            tau, theta, rho : np.ndarray (N, ), opt.
-                If full_output is True, the vessel coordinates of the points are returned.
+        p : np.ndarray (N, 3)
+            The point in cartesian coordinates.
+        tau, theta, rho : np.ndarray (N, ), opt.
+            If full_output is True, the vessel coordinates of the points are returned.
         """
 
-        # Prevent mod by ref
-        tau, theta, rho = deepcopy(tau),  deepcopy(theta), deepcopy(rho)
+        if not gridded:
+            tau, theta, rho = broadcast_kwargs(
+                tau=tau, theta=theta, rho=rho).values()
 
         arraylike = (list, np.ndarray)
         if isinstance(theta, arraylike) or grid:
