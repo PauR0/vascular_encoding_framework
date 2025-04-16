@@ -15,7 +15,7 @@ from .radius import Radius
 from .remesh import VesselMeshing
 
 
-class VesselAnatomyEncoding(Node, Encoding):
+class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
     """
     The class for encoding a single branch vessel.
     """
@@ -27,8 +27,6 @@ class VesselAnatomyEncoding(Node, Encoding):
 
         self.centerline: Centerline = None
         self.radius: Radius = None
-
-        self._compose_methods_from(utils_class=VesselMeshing, prefix='make_')
     #
 
     def set_data(self, **kwargs):
