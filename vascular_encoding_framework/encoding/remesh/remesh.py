@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -11,15 +12,15 @@ if TYPE_CHECKING:
 from .cross_sections import CrossSectionScheme, get_cross_section
 
 
-class VesselMeshing:
+class VesselMeshing(ABC):
     """
-    An abstract class that contains vessel meshing algorithms to be used by class
-    composition with VesselAnatomyEncoding.
+    An abstract class that contains vessel meshing methods that is inherited by
+    VesselAnatomyEncoding.
 
     """
-    @staticmethod
+
     def make_points_along_radius(
-        vsl_enc: VesselAnatomyEncoding,
+        self: VesselAnatomyEncoding,
         tau: int,
         theta: float,
         rho_res: int,
@@ -67,7 +68,7 @@ class VesselMeshing:
             vc_extremes.append([tau, 0.0, 0.0])
 
         p0, p1 = [
-            vsl_enc.vcs_to_cartesian(
+            self.vcs_to_cartesian(
                 t, th, r, rho_norm=True
             ) for (t, th, r) in vc_extremes
         ]
@@ -75,9 +76,8 @@ class VesselMeshing:
         return np.array([p0*(1-t) + p1*t for t in np.linspace(0, 1, rho_res)]).reshape(rho_res, 3)
     #
 
-    @staticmethod
     def make_cross_section(
-        vsl_enc: VesselAnatomyEncoding,
+        self: VesselAnatomyEncoding,
         scheme: Literal['base', 'ogrid', 'cylindrical'],
         tau: float,
         theta_res: int,
@@ -91,8 +91,6 @@ class VesselMeshing:
 
         Parameters
         ----------
-        vsl_enc : VesselAnatomyEncoding
-            The vessel encoding to use.
         scheme : {'base', 'ogrid', 'cylindrical'}, optional
             The discretization scheme to use
         tau: float,
@@ -121,7 +119,7 @@ class VesselMeshing:
         )
 
         # Grid Points
-        points, tau, theta, rho, rho_norm = vsl_enc.vcs_to_cartesian(
+        points, tau, theta, rho, rho_norm = self.vcs_to_cartesian(
             tau=tau,
             theta=cs['theta'],
             rho=cs['rho'],
@@ -138,9 +136,8 @@ class VesselMeshing:
         return cs
     #
 
-    @staticmethod
     def make_ribbon(
-        vsl_enc: VesselAnatomyEncoding,
+        self: VesselAnatomyEncoding,
         theta: float,
         tau_res: int,
         rho_res: int,
@@ -171,13 +168,13 @@ class VesselMeshing:
         tau, rho, rho_n = [], [], []
 
         taus = np.linspace(
-            vsl_enc.centerline.t0,
-            vsl_enc.centerline.t1,
+            self.centerline.t0,
+            self.centerline.t1,
             tau_res
         )
         for i, t in enumerate(taus):
             pts.append(
-                vsl_enc.points_along_radius(
+                self.points_along_radius(
                     tau=t,
                     theta=theta,
                     rho_res=rho_res,
@@ -185,9 +182,9 @@ class VesselMeshing:
             )
 
             tau.append([t]*pts[-1].shape[0])
-            c = vsl_enc.centerline(t)
+            c = self.centerline(t)
             rho.append(np.linalg.norm(pts[-1] - c, axis=1))
-            rho_n.append(rho[-1] / vsl_enc.radius(t, theta))
+            rho_n.append(rho[-1] / self.radius(t, theta))
 
             if i > 0:
                 for j in range(rho_res):
@@ -207,9 +204,8 @@ class VesselMeshing:
         return ribb
     #
 
-    @staticmethod
     def make_tube(
-        vsl_enc: VesselAnatomyEncoding,
+        self: VesselAnatomyEncoding,
         tau_res: int,
         theta_res: int,
         radius: float = 1,
@@ -253,8 +249,8 @@ class VesselMeshing:
         faces_block = np.array(faces_block, dtype=int)
 
         taus = np.linspace(
-            vsl_enc.centerline.t0,
-            vsl_enc.centerline.t1,
+            self.centerline.t0,
+            self.centerline.t1,
             tau_res
         )
 
@@ -265,7 +261,7 @@ class VesselMeshing:
 
         for i, tau in enumerate(taus):
 
-            points, ta, th, rh, rh_n = vsl_enc.vcs_to_cartesian(
+            points, ta, th, rh, rh_n = self.vcs_to_cartesian(
                 tau=tau,
                 theta=cs['theta'],
                 rho=cs['rho']*radius if normalized else radius,
@@ -294,9 +290,8 @@ class VesselMeshing:
         return tube
     #
 
-    @staticmethod
     def make_volume_mesh(
-        vsl_enc: VesselAnatomyEncoding,
+        self: VesselAnatomyEncoding,
         tau_res: int,
         theta_res: int = None,
         rho_res: int = None,
@@ -312,8 +307,6 @@ class VesselMeshing:
 
         Parameters
         ----------
-        vsl_enc : VesselAnatomyEncoding
-            The vessel encoding object
         tau_res : int
             The number of longitudinal divisions or cross sections
         theta_res : int
@@ -340,8 +333,8 @@ class VesselMeshing:
 
         """
 
-        taus = np.linspace(vsl_enc.centerline.t0,
-                           vsl_enc.centerline.t1, tau_res)
+        taus = np.linspace(self.centerline.t0,
+                           self.centerline.t1, tau_res)
 
         points = []
         cells = {}
@@ -384,7 +377,7 @@ class VesselMeshing:
 
         for i, tau in enumerate(taus):
             # Grid Points
-            pts, tau, theta, rho, rho_norm = vsl_enc.vcs_to_cartesian(
+            pts, tau, theta, rho, rho_norm = self.vcs_to_cartesian(
                 tau=tau,
                 theta=cs['theta'],
                 rho=cs['rho'],
