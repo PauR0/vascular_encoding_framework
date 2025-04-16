@@ -856,7 +856,7 @@ class Centerline(UniSpline, Node):
             torsion of the centerline at height point.
         """
 
-        assert dt > 0, f"Wrong value for differential step. It must be greater than 0."
+        assert dt > 0, 'Wrong value for differential step. It must be greater than 0.'
 
         if t == self.t0:
             b_der = (self.get_frenet_binormal(self.t0+dt) -
