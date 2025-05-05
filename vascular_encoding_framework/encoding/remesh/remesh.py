@@ -14,8 +14,8 @@ from .cross_sections import CrossSectionScheme, get_cross_section
 
 class VesselMeshing(ABC):
     """
-    An abstract class that contains vessel meshing methods that is inherited by
-    VesselAnatomyEncoding.
+    An abstract class containing vessel meshing methods available by class inheritance
+    inherited in VesselAnatomyEncoding.
 
     """
 
@@ -25,7 +25,7 @@ class VesselMeshing(ABC):
         theta: float,
         rho_res: int,
         diameter=False
-    ):
+    ) -> np.ndarray:
         """
         Get a sample of a diameter at a given slice
 
@@ -38,13 +38,10 @@ class VesselMeshing(ABC):
         tau : float
             The distance from the valve for the slice to be returned.
             It must be in [0,1]
-
         theta : float
             The angle at which generate the diameter.
-
         rho_res : int
             Number of points to discretize the radius/diameter segment
-
         diameter : bool
             Default False. Whether to return a diameter instead of a radius segment.
             The diameter is taken from theta to theta+pi
@@ -82,7 +79,6 @@ class VesselMeshing(ABC):
         tau: float,
         theta_res: int,
         rho_res: int,
-        raw: bool = False,
         **kwargs
     ) -> CrossSectionScheme:
         """
@@ -98,9 +94,7 @@ class VesselMeshing(ABC):
         theta_res : int
             Angular resolution.
         rho_res : int
-            Radiaul resolution.
-        raw: bool, optional
-            Whether to return a raw cross section ra
+            Radial resolution.
         **kwargs
             Scheme specific arguments such as the 'r' in ogrid, or the prismatic layers
             parameters can be passed as kewyword arguments.
@@ -141,21 +135,18 @@ class VesselMeshing(ABC):
         theta: float,
         tau_res: int,
         rho_res: int,
-    ):
+    ) -> pv.PolyData:
         """
         Make a triangulated ribbon section along the centerline.
 
         Parameters
         ----------
-
-            theta : float
-                The angle to start the ribbon it must be in [0, pi].
-
-            tau_res : int
-                The number of points to discretize the centerline.
-
-            rho_res : int
-                The number of discretizations in the radius axis.
+        theta : float
+            The angle to start the ribbon it must be in [0, pi].
+        tau_res : int
+            The number of points to discretize the centerline.
+        rho_res : int
+            The number of discretizations in the radius axis.
 
         Returns
         -------
@@ -220,10 +211,8 @@ class VesselMeshing(ABC):
             The number of points along the longitudinal axis
         theta_res : int
             The number of points along the radial axis.
-
         radius : float
             Either the absolute or a relative value.
-
         normalized : bool
             Defaulting to False. How to intepret radius.
 
@@ -321,7 +310,7 @@ class VesselMeshing(ABC):
             A cross section scheme object already built with radius 1, by default None. If passed
             previous arguments, such as theta_res or rho_res are ignored.
 
-        kwargs
+        **kwargs
             Cross section scheme parameters can be passed as keyword arguments, for example, if the
             argument scheme == 'ogrid', the parameter r=0.9 can be passed. Prismatic layers can also
             be passed using kwargs.
