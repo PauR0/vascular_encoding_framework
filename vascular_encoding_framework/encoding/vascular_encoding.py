@@ -8,10 +8,11 @@ from ..messages import error_message
 from ..utils._code import Tree, check_specific
 from ..utils.misc import split_metadata_and_fv
 from .encoding import Encoding
+from .remesh import VascularMeshing
 from .vessel_encoding import VesselAnatomyEncoding
 
 
-class VascularAnatomyEncoding(Tree, Encoding):
+class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
 
     def __init__(self):
 
@@ -20,13 +21,14 @@ class VascularAnatomyEncoding(Tree, Encoding):
     #
 
     def encode_vascular_mesh(
-            self,
-            vmesh,
-            cl_tree,
-            tau_knots=15,
-            theta_knots=15,
-            laplacian_penalty=1.0,
-            **kwargs):
+        self,
+        vmesh,
+        cl_tree,
+        tau_knots=15,
+        theta_knots=15,
+        laplacian_penalty=1.0,
+        **kwargs
+    ):
         """
         Encode a VascularMesh using a centerline tree.
 

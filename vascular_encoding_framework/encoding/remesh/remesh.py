@@ -8,6 +8,7 @@ import pyvista as pv
 
 if TYPE_CHECKING:
     from ..vessel_encoding import VesselAnatomyEncoding
+    from ..vascular_encoding import VascularAnatomyEncoding
 
 from .cross_sections import CrossSectionScheme, get_cross_section
 
@@ -413,3 +414,246 @@ class VesselMeshing(ABC):
             grid[name] = np.ravel(field)
 
         return grid
+    #
+#
+
+
+class VascularMeshing(ABC):
+    """
+    An abstract class containing vascular meshing methods available by class inheritance
+    inherited in VesselAnatomyEncoding.
+
+    """
+
+    def make_cross_section(
+        self: VascularAnatomyEncoding,
+        scheme: Literal['base', 'ogrid', 'cylindrical'],
+        tau: float,
+        theta_res: int,
+        rho_res: int,
+        bid: str | None = None,
+        **kwargs
+    ) -> CrossSectionScheme | pv.MultiBlock:
+        """
+        Generate a cross sections of the vessels with the provided scheme and parameters.
+
+
+        Parameters
+        ----------
+        scheme : {'base', 'ogrid', 'cylindrical'}, optional
+            The discretization scheme to use
+        tau: float,
+            The centerline parameter of the cross section.
+        theta_res : int
+            Angular resolution.
+        rho_res : int
+            Radial resolution.
+        bid : str | None
+            Default None. If passed, the cross section is generated for the given branch, otherwise
+            the cross section is generated at each branch.
+        **kwargs
+            Scheme specific arguments such as the 'r' in ogrid, or the prismatic layers
+            parameters can be passed as kewyword arguments.
+
+        Returns
+        -------
+        cs : CrossSectionScheme
+            The generated cross section.
+        """
+
+        if bid is not None and bid in self:
+            return self[bid].make_cross_section(
+                scheme=scheme,
+                tau=tau,
+                theta_res=theta_res,
+                rho_res=rho_res,
+                **kwargs
+            )
+
+        return pv.MultiBlock(
+            {
+                bid: self[bid].make_cross_section(
+                    scheme=scheme,
+                    tau=tau,
+                    theta_res=theta_res,
+                    rho_res=rho_res,
+                    **kwargs
+                )
+                for bid in self
+            }
+        )
+    #
+
+    def make_ribbon(
+        self: VascularAnatomyEncoding,
+        theta: float,
+        tau_res: int,
+        rho_res: int,
+        bid: str | None = None,
+    ) -> pv.PolyData | pv.MultiBlock:
+        """
+        Make a triangulated ribbon section along the centerline.
+
+        Parameters
+        ----------
+        theta : float
+            The angle to start the ribbon it must be in [0, pi].
+        tau_res : int
+            The number of points to discretize the centerline.
+        rho_res : int
+            The number of discretizations in the radius axis.
+        bid : str | None
+            Default None. If passed, the cross section is generated for the given branch, otherwise
+            the cross section is generated at each branch.
+
+        Returns
+        -------
+            poly : pyvista.PolyData
+                A triangulated mesh with the generated ribbon section.
+
+        """
+
+        if bid is not None and bid in self:
+            return self[bid].make_ribbon(
+                theta=theta,
+                tau_res=tau_res,
+                rho_res=rho_res,
+            )
+
+        return pv.MultiBlock(
+            {
+                bid: self[bid].make_ribbon(
+                    theta=theta,
+                    tau_res=tau_res,
+                    rho_res=rho_res,
+                )
+                for bid in self
+            }
+        )
+    #
+
+    def make_tube(
+        self: VascularAnatomyEncoding,
+        tau_res: int,
+        theta_res: int,
+        radius: float = 1,
+        normalized=True,
+        bid: str | None = None,
+    ) -> pv.PolyData | pv.MultiBlock:
+        """
+        Make a surface along centerline somehow parallel to the wall.
+
+        Parameters
+        ----------
+        tau_res : int
+            The number of points along the longitudinal axis
+        theta_res : int
+            The number of points along the radial axis.
+        radius : float
+            Either the absolute or a relative value.
+        normalized : bool
+            Defaulting to False. How to intepret radius.
+        bid : str | None
+            Default None. If passed, the cross section is generated for the given branch, otherwise
+            the cross section is generated at each branch.
+
+        Returns
+        -------
+        tube : pv.PolyData
+        """
+
+        if bid is not None and bid in self:
+            return self[bid].make_tube(
+                tau_res=tau_res,
+                theta_res=theta_res,
+                radius=radius,
+                normalized=normalized,
+            )
+
+        return pv.MultiBlock(
+            {
+                bid: self[bid].make_tube(
+                    tau_res=tau_res,
+                    theta_res=theta_res,
+                    radius=radius,
+                    normalized=normalized,
+                )
+                for bid in self
+            }
+        )
+    #
+
+    def make_volume_mesh(
+        self: VascularAnatomyEncoding,
+        tau_res: int,
+        theta_res: int = None,
+        rho_res: int = None,
+        scheme: Literal['ogrid', 'cylindrical'] = None,
+        cs: CrossSectionScheme = None,
+        bid: str | None = None,
+        **kwargs
+    ) -> pv.UnstructuredGrid | pv.MultiBlock:
+        """
+        Make a volumetric mesh
+
+        Either the parameters to build a cross section scheme or a cross section scheme objects must
+        be provided. If a cross section is provided, its radius must have been set to 1.
+
+        Parameters
+        ----------
+        tau_res : int
+            The number of longitudinal divisions or cross sections
+        theta_res : int
+            The number of angular divisions. The meaning changes depending on the cross section
+            scheme chosen.
+        rho_res : int
+            The number of radial divisions. The meaning changes depending on the cross section
+            scheme chosen.
+        scheme : Literal['ogrid', 'cylindrical']
+            The cross section scheme to use
+        cs : CrossSectionScheme, optional
+            A cross section scheme object already built with radius 1, by default None. If passed
+            previous arguments, such as theta_res or rho_res are ignored.
+        bid : str | None
+            Default None. If passed, the cross section is generated for the given branch, otherwise
+            the cross section is generated at each branch.
+
+        **kwargs
+            Cross section scheme parameters can be passed as keyword arguments, for example, if the
+            argument scheme == 'ogrid', the parameter r=0.9 can be passed. Prismatic layers can also
+            be passed using kwargs.
+
+        Returns
+        -------
+        grid : pv.UnstructuredGrid
+            The volumetric grid built.
+
+        """
+
+        if bid is not None and bid in self:
+            return self[bid].make_volume_mesh(
+                bid=bid,
+                tau_res=tau_res,
+                theta_res=theta_res,
+                rho_res=rho_res,
+                scheme=scheme,
+                cs=cs,
+                **kwargs
+            )
+
+        return pv.MultiBlock(
+            {
+                bid: self[bid].make_volume_mesh(
+                    bid=bid,
+                    tau_res=tau_res,
+                    theta_res=theta_res,
+                    rho_res=rho_res,
+                    scheme=scheme,
+                    cs=cs,
+                    **kwargs
+                )
+                for bid in self
+            }
+        )
+    #
+#

@@ -5,4 +5,4 @@ __all__ = [
 
 from .cross_sections import (CrossSectionScheme, CylindricalCrossSection,
                              OGridCrossSection)
-from .remesh import VesselMeshing
+from .remesh import VascularMeshing, VesselMeshing
