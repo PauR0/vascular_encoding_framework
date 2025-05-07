@@ -19,7 +19,6 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
 
     def __init__(self):
         Node.__init__(self=self)
-        Encoding.__init__(self=self)
 
         self.centerline: Centerline = None
         self.radius: Radius = None
@@ -46,6 +45,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
             self.set_data(joint_t=cl.joint_t)
 
     def build(self):
+        """Build internal spline objects."""
         self.centerline.build()
         self.radius.build()
 

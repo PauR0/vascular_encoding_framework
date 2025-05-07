@@ -17,7 +17,6 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
 
     def __init__(self):
         Tree.__init__(self=self)
-        Encoding.__init__(self=self)
 
     def encode_vascular_mesh(
         self, vmesh, cl_tree, tau_knots=15, theta_knots=15, laplacian_penalty=1.0, **kwargs
