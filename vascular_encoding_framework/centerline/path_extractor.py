@@ -607,10 +607,13 @@ class CenterlinePathExtractor:
                 )
                 pdt["cl_domain_id"] = np.array(self.boundaries[bid].id_path, dtype=int)
                 pdt["radius"] = self.radius[self.boundaries[bid].id_path]
-                pdt.field_data["parent"] = [self.boundaries[bid].parent]
+                pdt.user_dict["parent"] = self.boundaries[bid].parent
+
+                # Children of root boundaries are root paths....
                 if self.boundaries[bid].parent in self.boundaries.roots:
-                    pdt.field_data["parent"] = ["None"]
-                self.paths.append(pdt, name=f"path_{bid}")
+                    pdt.user_dict["parent"] = None
+
+                self.paths.append(pdt, name=bid)
             for cid in self.boundaries[bid].children:
                 make_polydata_path(bid=cid)
 

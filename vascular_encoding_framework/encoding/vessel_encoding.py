@@ -399,7 +399,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
 
         vsl_mb = pv.MultiBlock()
         vsl_mb["centerline"] = self.centerline.to_polydata(
-            add_attributes=add_attributes, t_res=tau_res
+            add_attributes=add_attributes, tau_res=tau_res
         )
 
         wall = self.make_tube(tau_res=tau_res, theta_res=theta_res)
