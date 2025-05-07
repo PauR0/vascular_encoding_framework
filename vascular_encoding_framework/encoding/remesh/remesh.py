@@ -7,8 +7,8 @@ import numpy as np
 import pyvista as pv
 
 if TYPE_CHECKING:
-    from ..vessel_encoding import VesselAnatomyEncoding
     from ..vascular_encoding import VascularAnatomyEncoding
+    from ..vessel_encoding import VesselAnatomyEncoding
 
 from .cross_sections import CrossSectionScheme, get_cross_section
 
@@ -21,14 +21,10 @@ class VesselMeshing(ABC):
     """
 
     def make_points_along_radius(
-        self: VesselAnatomyEncoding,
-        tau: int,
-        theta: float,
-        rho_res: int,
-        diameter=False
+        self: VesselAnatomyEncoding, tau: int, theta: float, rho_res: int, diameter=False
     ) -> np.ndarray:
         """
-        Get a sample of a diameter at a given slice
+        Get a sample of a diameter at a given slice.
 
         Returns a sample of n points at even values of the rho axis
         starting from given theta to theta+pi at distance height
@@ -58,33 +54,29 @@ class VesselMeshing(ABC):
         vc_extremes = [[tau, theta, 1.0]]
         if diameter:
             if theta < np.pi:
-                ang = 2*np.pi-theta
+                ang = 2 * np.pi - theta
             else:
                 ang = theta - np.pi
             vc_extremes.append([tau, ang, 1.0])
         else:
             vc_extremes.append([tau, 0.0, 0.0])
 
-        p0, p1 = [
-            self.vcs_to_cartesian(
-                t, th, r, rho_norm=True
-            ) for (t, th, r) in vc_extremes
-        ]
+        p0, p1 = [self.vcs_to_cartesian(t, th, r, rho_norm=True) for (t, th, r) in vc_extremes]
 
-        return np.array([p0*(1-t) + p1*t for t in np.linspace(0, 1, rho_res)]).reshape(rho_res, 3)
-    #
+        return np.array([p0 * (1 - t) + p1 * t for t in np.linspace(0, 1, rho_res)]).reshape(
+            rho_res, 3
+        )
 
     def make_cross_section(
         self: VesselAnatomyEncoding,
-        scheme: Literal['base', 'ogrid', 'cylindrical'],
+        scheme: Literal["base", "ogrid", "cylindrical"],
         tau: float,
         theta_res: int,
         rho_res: int,
-        **kwargs
+        **kwargs,
     ) -> CrossSectionScheme:
         """
         Generate a cross section of the vessel with the provided scheme and parameters.
-
 
         Parameters
         ----------
@@ -106,30 +98,20 @@ class VesselMeshing(ABC):
             The generated cross section.
         """
 
-        cs = get_cross_section(
-            scheme=scheme,
-            theta_res=theta_res,
-            rho_res=rho_res,
-            **kwargs
-        )
+        cs = get_cross_section(scheme=scheme, theta_res=theta_res, rho_res=rho_res, **kwargs)
 
         # Grid Points
         points, tau, theta, rho, rho_norm = self.vcs_to_cartesian(
-            tau=tau,
-            theta=cs['theta'],
-            rho=cs['rho'],
-            rho_norm=True,
-            full_output=True
+            tau=tau, theta=cs["theta"], rho=cs["rho"], rho_norm=True, full_output=True
         )
 
         cs.points = points
-        cs['tau'] = tau
-        cs['theta'] = theta
-        cs['rho'] = rho
-        cs['rho_n'] = rho_norm
+        cs["tau"] = tau
+        cs["theta"] = theta
+        cs["rho"] = rho
+        cs["rho_n"] = rho_norm
 
         return cs
-    #
 
     def make_ribbon(
         self: VesselAnatomyEncoding,
@@ -151,19 +133,15 @@ class VesselMeshing(ABC):
 
         Returns
         -------
-            poly : pyvista.PolyData
-                A triangulated mesh with the generated ribbon section.
+        poly : pyvista.PolyData
+            A triangulated mesh with the generated ribbon section.
 
         """
 
         pts, triangles = [], []
         tau, rho, rho_n = [], [], []
 
-        taus = np.linspace(
-            self.centerline.t0,
-            self.centerline.t1,
-            tau_res
-        )
+        taus = np.linspace(self.centerline.t0, self.centerline.t1, tau_res)
         for i, t in enumerate(taus):
             pts.append(
                 self.points_along_radius(
@@ -173,28 +151,29 @@ class VesselMeshing(ABC):
                 )
             )
 
-            tau.append([t]*pts[-1].shape[0])
+            tau.append([t] * pts[-1].shape[0])
             c = self.centerline(t)
             rho.append(np.linalg.norm(pts[-1] - c, axis=1))
             rho_n.append(rho[-1] / self.radius(t, theta))
 
             if i > 0:
                 for j in range(rho_res):
-                    if j != rho_res-1:
+                    if j != rho_res - 1:
                         triangles.append(
-                            [3, i*rho_res + j, (i-1)*rho_res + j,   (i-1)*rho_res + j+1])
+                            [3, i * rho_res + j, (i - 1) * rho_res + j, (i - 1) * rho_res + j + 1]
+                        )
                         triangles.append(
-                            [3, i*rho_res + j,     i*rho_res + j+1, (i-1)*rho_res + j+1])
+                            [3, i * rho_res + j, i * rho_res + j + 1, (i - 1) * rho_res + j + 1]
+                        )
 
         pts = np.concatenate(pts)
         ribb = pv.PolyData(pts, triangles)
-        ribb['tau'] = np.ravel(tau)
-        ribb['theta'] = np.full((ribb.n_points,), fill_value=theta)
-        ribb['rho'] = np.ravel(rho)
-        ribb['rho_n'] = np.ravel(rho_n)
+        ribb["tau"] = np.ravel(tau)
+        ribb["theta"] = np.full((ribb.n_points,), fill_value=theta)
+        ribb["rho"] = np.ravel(rho)
+        ribb["rho_n"] = np.ravel(rho_n)
 
         return ribb
-    #
 
     def make_tube(
         self: VesselAnatomyEncoding,
@@ -224,25 +203,17 @@ class VesselMeshing(ABC):
 
         pts = []
         faces = []
-        vessel_coord = {
-            'tau': [], 'theta': [], 'rho': [], 'rho_n': []
-        }
+        vessel_coord = {"tau": [], "theta": [], "rho": [], "rho_n": []}
 
         faces_block = []
         for j in range(theta_res):
-            if j < theta_res-1:
-                faces_block.append(
-                    [j, j+1, theta_res + j + 1, theta_res + j]
-                )
+            if j < theta_res - 1:
+                faces_block.append([j, j + 1, theta_res + j + 1, theta_res + j])
             else:
-                faces_block.append([j, 0, theta_res, theta_res+j])
+                faces_block.append([j, 0, theta_res, theta_res + j])
         faces_block = np.array(faces_block, dtype=int)
 
-        taus = np.linspace(
-            self.centerline.t0,
-            self.centerline.t1,
-            tau_res
-        )
+        taus = np.linspace(self.centerline.t0, self.centerline.t1, tau_res)
 
         cs = CrossSectionScheme(
             theta_res=theta_res,
@@ -250,23 +221,22 @@ class VesselMeshing(ABC):
         )
 
         for i, tau in enumerate(taus):
-
             points, ta, th, rh, rh_n = self.vcs_to_cartesian(
                 tau=tau,
-                theta=cs['theta'],
-                rho=cs['rho']*radius if normalized else radius,
+                theta=cs["theta"],
+                rho=cs["rho"] * radius if normalized else radius,
                 rho_norm=normalized,
-                full_output=True
+                full_output=True,
             )
 
             pts.append(points)
-            vessel_coord['tau'].append(ta)
-            vessel_coord['theta'].append(th)
-            vessel_coord['rho'].append(rh)
-            vessel_coord['rho_n'].append(rh_n)
+            vessel_coord["tau"].append(ta)
+            vessel_coord["theta"].append(th)
+            vessel_coord["rho"].append(rh)
+            vessel_coord["rho_n"].append(rh_n)
 
-            if i < tau_res-1:
-                faces.append(faces_block+i*theta_res)
+            if i < tau_res - 1:
+                faces.append(faces_block + i * theta_res)
 
         pts = np.concatenate(pts)
         faces = np.vstack(faces)
@@ -278,19 +248,18 @@ class VesselMeshing(ABC):
             tube[name] = np.array(vals).ravel()
 
         return tube
-    #
 
     def make_volume_mesh(
         self: VesselAnatomyEncoding,
         tau_res: int,
         theta_res: int = None,
         rho_res: int = None,
-        scheme: Literal['ogrid', 'cylindrical'] = None,
+        scheme: Literal["ogrid", "cylindrical"] = None,
         cs: CrossSectionScheme = None,
-        **kwargs
+        **kwargs,
     ) -> pv.UnstructuredGrid:
         """
-        Make a volumetric mesh
+        Make a volumetric mesh.
 
         Either the parameters to build a cross section scheme or a cross section scheme objects must
         be provided. If a cross section is provided, its radius must have been set to 1.
@@ -323,30 +292,22 @@ class VesselMeshing(ABC):
 
         """
 
-        taus = np.linspace(self.centerline.t0,
-                           self.centerline.t1, tau_res)
+        taus = np.linspace(self.centerline.t0, self.centerline.t1, tau_res)
 
         points = []
         cells = {}
         cell_types = {}
-        vessel_coord = {
-            'tau': [], 'theta': [], 'rho': [], 'rho_n': []
-        }
+        vessel_coord = {"tau": [], "theta": [], "rho": [], "rho_n": []}
 
         if cs is None:
-            cs = get_cross_section(
-                theta_res=theta_res,
-                rho_res=rho_res,
-                scheme=scheme,
-                **kwargs
-            )
+            cs = get_cross_section(theta_res=theta_res, rho_res=rho_res, scheme=scheme, **kwargs)
 
         # The block of cells between slices
         cells_block = {}
         cs_n_points = cs.n_points
         for face in cs.irregular_faces:
-            n = 2*len(face)
-            ncell = (face.tolist() + (cs_n_points + face).tolist())
+            n = 2 * len(face)
+            ncell = face.tolist() + (cs_n_points + face).tolist()
             if n not in cells_block:
                 cells_block[n] = []
             cells_block[n].append(ncell)
@@ -361,32 +322,28 @@ class VesselMeshing(ABC):
                 cell_types[n] = pv.CellType.HEXAHEDRON
             else:
                 print(
-                    f"WARNING: The provided CrossSectionScheme contains unsupported face with {n//2} faces."
-                    + 'Currently supporting {3, 4} vertex per face.'
+                    f"WARNING: The provided CrossSectionScheme contains unsupported face with {n // 2} faces."
+                    + "Currently supporting {3, 4} vertex per face."
                 )
 
         for i, tau in enumerate(taus):
             # Grid Points
             pts, tau, theta, rho, rho_norm = self.vcs_to_cartesian(
-                tau=tau,
-                theta=cs['theta'],
-                rho=cs['rho'],
-                rho_norm=True,
-                full_output=True
+                tau=tau, theta=cs["theta"], rho=cs["rho"], rho_norm=True, full_output=True
             )
             points.append(pts)
 
-            vessel_coord['tau'].append(tau)
+            vessel_coord["tau"].append(tau)
             # vessel_coord["tau"].append(np.full(shape=(cs_n_points), fill_value=tau))
-            vessel_coord['theta'].append(theta)
+            vessel_coord["theta"].append(theta)
             # vessel_coord["theta"].append(theta)
-            vessel_coord['rho'].append(rho)
+            vessel_coord["rho"].append(rho)
             # vessel_coord["rho"].append(rho)
-            vessel_coord['rho_n'].append(rho_norm)
+            vessel_coord["rho_n"].append(rho_norm)
             # vessel_coord["rho_norm"].append(rho_norm)
 
             # Grid Topology
-            if i < tau_res-1:
+            if i < tau_res - 1:
                 for n, ncells in cells_block.items():
                     ncells_i = i * cs_n_points + ncells
                     cells[n].append(ncells_i)
@@ -396,17 +353,16 @@ class VesselMeshing(ABC):
         gcell_types = []
         for n, ncells in cells.items():
             cells[n] = np.vstack(ncells)
-            aux = np.full(shape=(cells[n].shape[0], 1),
-                          fill_value=1, dtype=int)
-            ct = (aux*cell_types[n]).astype('uint')
-            off = aux*n
+            aux = np.full(shape=(cells[n].shape[0], 1), fill_value=1, dtype=int)
+            ct = (aux * cell_types[n]).astype("uint")
+            off = aux * n
             cells[n] = np.hstack((off, cells[n]))
 
             gcells.append(cells[n].ravel())
             gcell_types.append(ct)
 
         cells = np.concatenate(gcells)
-        celltypes = np.concatenate(gcell_types, dtype='uint')
+        celltypes = np.concatenate(gcell_types, dtype="uint")
         points = np.vstack(points)
         grid = pv.UnstructuredGrid(cells, celltypes, points)
 
@@ -414,8 +370,6 @@ class VesselMeshing(ABC):
             grid[name] = np.ravel(field)
 
         return grid
-    #
-#
 
 
 class VascularMeshing(ABC):
@@ -427,16 +381,15 @@ class VascularMeshing(ABC):
 
     def make_cross_section(
         self: VascularAnatomyEncoding,
-        scheme: Literal['base', 'ogrid', 'cylindrical'],
+        scheme: Literal["base", "ogrid", "cylindrical"],
         tau: float,
         theta_res: int,
         rho_res: int,
         bid: str | None = None,
-        **kwargs
+        **kwargs,
     ) -> CrossSectionScheme | pv.MultiBlock:
         """
         Generate a cross sections of the vessels with the provided scheme and parameters.
-
 
         Parameters
         ----------
@@ -457,32 +410,23 @@ class VascularMeshing(ABC):
 
         Returns
         -------
-        cs : CrossSectionScheme
+         : CrossSectionScheme | pv.MultiBlock
             The generated cross section.
         """
 
         if bid is not None and bid in self:
             return self[bid].make_cross_section(
-                scheme=scheme,
-                tau=tau,
-                theta_res=theta_res,
-                rho_res=rho_res,
-                **kwargs
+                scheme=scheme, tau=tau, theta_res=theta_res, rho_res=rho_res, **kwargs
             )
 
         return pv.MultiBlock(
             {
                 bid: self[bid].make_cross_section(
-                    scheme=scheme,
-                    tau=tau,
-                    theta_res=theta_res,
-                    rho_res=rho_res,
-                    **kwargs
+                    scheme=scheme, tau=tau, theta_res=theta_res, rho_res=rho_res, **kwargs
                 )
                 for bid in self
             }
         )
-    #
 
     def make_ribbon(
         self: VascularAnatomyEncoding,
@@ -508,8 +452,8 @@ class VascularMeshing(ABC):
 
         Returns
         -------
-            poly : pyvista.PolyData
-                A triangulated mesh with the generated ribbon section.
+        : pyvista.PolyData | pv.MultiBlock
+            A triangulated mesh with the generated ribbon section(s).
 
         """
 
@@ -530,7 +474,6 @@ class VascularMeshing(ABC):
                 for bid in self
             }
         )
-    #
 
     def make_tube(
         self: VascularAnatomyEncoding,
@@ -559,7 +502,7 @@ class VascularMeshing(ABC):
 
         Returns
         -------
-        tube : pv.PolyData
+        : pv.PolyData | pv.MultiBlock
         """
 
         if bid is not None and bid in self:
@@ -581,20 +524,19 @@ class VascularMeshing(ABC):
                 for bid in self
             }
         )
-    #
 
     def make_volume_mesh(
         self: VascularAnatomyEncoding,
         tau_res: int,
         theta_res: int = None,
         rho_res: int = None,
-        scheme: Literal['ogrid', 'cylindrical'] = None,
+        scheme: Literal["ogrid", "cylindrical"] = None,
         cs: CrossSectionScheme = None,
         bid: str | None = None,
-        **kwargs
+        **kwargs,
     ) -> pv.UnstructuredGrid | pv.MultiBlock:
         """
-        Make a volumetric mesh
+        Make a volumetric mesh.
 
         Either the parameters to build a cross section scheme or a cross section scheme objects must
         be provided. If a cross section is provided, its radius must have been set to 1.
@@ -625,7 +567,7 @@ class VascularMeshing(ABC):
 
         Returns
         -------
-        grid : pv.UnstructuredGrid
+        : pv.UnstructuredGrid | pv.MultiBlock
             The volumetric grid built.
 
         """
@@ -638,7 +580,7 @@ class VascularMeshing(ABC):
                 rho_res=rho_res,
                 scheme=scheme,
                 cs=cs,
-                **kwargs
+                **kwargs,
             )
 
         return pv.MultiBlock(
@@ -650,10 +592,8 @@ class VascularMeshing(ABC):
                     rho_res=rho_res,
                     scheme=scheme,
                     cs=cs,
-                    **kwargs
+                    **kwargs,
                 )
                 for bid in self
             }
         )
-    #
-#

@@ -9,10 +9,8 @@ def align_encodings(cohort_dir, params=None, exclude=None, overwrite=False):
     """
     Use the Generalized Procrustes Alignment to align VascularAnatomyEncodings from a given cohort.
 
-
-    Arguments
+    Arguments:
     ---------
-
         cohort_dir : str
             Path to a cohort directory with case directories in it.
 
@@ -25,7 +23,6 @@ def align_encodings(cohort_dir, params=None, exclude=None, overwrite=False):
 
     Returns
     -------
-
         gpa : vef.GeneralizedProcrustesAlignment
             The gpa object used.
 
@@ -35,10 +32,8 @@ def align_encodings(cohort_dir, params=None, exclude=None, overwrite=False):
         params = read_alignment_config(path=cohort_dir)
 
     encodings = load_cohort_object(
-        cohort_dir=cohort_dir,
-        which='encoding',
-        exclude=exclude,
-        keys_from_dirs=True)
+        cohort_dir=cohort_dir, which="encoding", exclude=exclude, keys_from_dirs=True
+    )
 
     gpa = vef.GeneralizedProcrustesAlignment()
     gpa.set_parameters(build=True, **params)
@@ -46,9 +41,9 @@ def align_encodings(cohort_dir, params=None, exclude=None, overwrite=False):
     gpa.run()
 
     save_cohort_object(
-        cohort_dir=cohort_dir,
-        cohort=gpa.data_set,
-        suffix='_aligned',
-        overwrite=overwrite)
+        cohort_dir=cohort_dir, cohort=gpa.data_set, suffix="_aligned", overwrite=overwrite
+    )
     write_alignment_config(path=cohort_dir, data=params)
+
+
 #

@@ -16,7 +16,43 @@ dependencies = [
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.1.0"
+ruff = "^0.11.8"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    ".vef_venv",
+    ".vscode",
+]
+
+line-length = 100
+indent-width = 4
+fix = true
+src = ["vascular_encoding_framework"]
+
+
+[tool.ruff.lint]
+select = ["I", "D", "D213"]
+ignore = ["D202","D212", "D205", "D100", "D104"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

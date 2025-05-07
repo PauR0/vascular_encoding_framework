@@ -1,7 +1,7 @@
 __all__ = [
-    'read_centerline_config',
-    'read_encoding_config',
-    'read_alignment_config',
+    "read_centerline_config",
+    "read_encoding_config",
+    "read_alignment_config",
 ]
 
 import json
@@ -13,60 +13,53 @@ from . import _defaults_dir
 
 def read_json(file):
     """
-    Read a json from file
-
+    Read a json from file.
 
     TODO: Use utils._io.read_json
+
     Arguments:
     -----------
-
         file : str
 
-    Returns:
-    ---------
-
+    Returns
+    -------
         params : dict
     """
     params = None
-    with open(file, 'r') as param_file:
+    with open(file, "r") as param_file:
         params = json.load(param_file)
 
     return params
+
+
 #
 
 
 def param_from_file(params, path):
-    """
-    Provide support to redirect parameter to another json to prevent nested jsons.
-    """
+    """Provide support to redirect parameter to another json to prevent nested jsons."""
 
     for k, v in params.items():
         if isinstance(v, str):
+            if v.startswith("FILE::"):  # Two semicolon -> _defaults_dir
+                params[k] = read_json(os.path.join(_defaults_dir, v.removeprefix("FILE::")))
 
-            if v.startswith('FILE::'):  # Two semicolon -> _defaults_dir
-                params[k] = read_json(
-                    os.path.join(
-                        _defaults_dir,
-                        v.removeprefix('FILE::')))
+            elif v.startswith("FILE:"):  # One semicolon -> same_dir
+                params[k] = read_json(os.path.join(path, v.removeprefix("FILE:")))
 
-            elif v.startswith('FILE:'):  # One semicolon -> same_dir
-                params[k] = read_json(os.path.join(
-                    path, v.removeprefix('FILE:')))
+            elif v.startswith("PARAM:"):  # Two semicolon -> _defaults_dir
+                p, fname = v[v.find("(") : v.rfind(")")].replace(" ", "").split(",")
 
-            elif v.startswith('PARAM:'):  # Two semicolon -> _defaults_dir
-                p, fname = v[v.find('('):v.rfind(')')].replace(
-                    ' ', '').split(',')
-
-                if v.startswith('PARAM::'):  # Two semicolon -> _defaults_dir
-                    params[k] = read_json(
-                        os.path.join(_defaults_dir, fname))[p]
-                if v.startswith('PARAM:'):  # One semicolon -> same_dir
+                if v.startswith("PARAM::"):  # Two semicolon -> _defaults_dir
+                    params[k] = read_json(os.path.join(_defaults_dir, fname))[p]
+                if v.startswith("PARAM:"):  # One semicolon -> same_dir
                     params[k] = read_json(os.path.join(path, fname))[p]
 
         elif isinstance(v, dict):
             params[k] = param_from_file(v, path)
 
     return params
+
+
 #
 
 
@@ -76,7 +69,6 @@ def get_json_reader(default_name):
 
     Arguments:
     -----------
-
             default_name : str
                 The default name that reader
 
@@ -84,9 +76,8 @@ def get_json_reader(default_name):
                 The name of the template json, typically stored in
                 defaults/ dir.
 
-    Returns:
-    ---------
-
+    Returns
+    -------
         json_reader : function
             A json reader with a predefine behaviour such as a default name,
             and a template.
@@ -96,7 +87,6 @@ def get_json_reader(default_name):
     fname = default_name
 
     def json_reader(path=None, abs_path=False):
-
         new_params = deepcopy(params)
         try:
             if abs_path:
@@ -113,13 +103,16 @@ def get_json_reader(default_name):
 
         new_params = param_from_file(params=new_params, path=path)
         return new_params
+
     #
 
     return json_reader
+
+
 #
 
 
-read_centerline_config = get_json_reader(default_name='centerline.json')
-read_encoding_config = get_json_reader('encoding.json')
-read_alignment_config = get_json_reader('alignment.json')
+read_centerline_config = get_json_reader(default_name="centerline.json")
+read_encoding_config = get_json_reader("encoding.json")
+read_alignment_config = get_json_reader("alignment.json")
 #

@@ -1,15 +1,9 @@
-
-
 __all__ = [
     "OrthogonalProcrustes",
     "IterativeClosestPoint",
     "RigidProcrustesAlignment",
-    "GeneralizedProcrustesAlignment"
+    "GeneralizedProcrustesAlignment",
 ]
 
-from .alignment import (OrthogonalProcrustes,
-                        IterativeClosestPoint,
-                        RigidProcrustesAlignment)
-
+from .alignment import IterativeClosestPoint, OrthogonalProcrustes, RigidProcrustesAlignment
 from .gpa import GeneralizedProcrustesAlignment
-#

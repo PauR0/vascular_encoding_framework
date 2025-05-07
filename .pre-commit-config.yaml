@@ -1,26 +1,19 @@
 default_stages: [pre-commit, pre-push]
 
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: debug-statements
-      - id: double-quote-string-fixer
-      - id: name-tests-test
-      - id: requirements-txt-fixer
-
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
 
-  - repo: https://github.com/hhatto/autopep8
-    rev: v2.3.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.8
     hooks:
-      - id: autopep8
+      # Run the linter.
+      - id: ruff
+        args: [ --fix ]
+      # Run the formatter.
+      - id: ruff-format
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.2

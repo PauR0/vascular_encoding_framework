@@ -15,7 +15,7 @@ def compute_rho_discretization(
     r1: float = 1.0,
     n_layers: int | None = None,
     growth_rate: float | None = None,
-    min_percentage: float | None = None
+    min_percentage: float | None = None,
 ):
     """
     Compute the radial discretization of a cross section including uniform and prismatic layers.
@@ -25,8 +25,8 @@ def compute_rho_discretization(
     If n_layers is not None, n_layers prismatic layers are added inwards, growing at the provided
     growth_rate and from the provided minimum percentage.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     rho_res : int,
         The amount of equally levels of discretization
 
@@ -56,22 +56,22 @@ def compute_rho_discretization(
     if n_layers is not None:
         aux = r1
         for n in range(n_layers):
-            prism_layers.append(aux - min_percentage*growth_rate**n)
+            prism_layers.append(aux - min_percentage * growth_rate**n)
             aux = prism_layers[-1]
         prism_layers.reverse()
 
         if prism_layers[0] < 0:
             error_message(
-                'Too many layers to fit for the given growth rate. The last surpasses the '
+                "Too many layers to fit for the given growth rate. The last surpasses the "
                 + f"centerline with a percentage of {prism_layers[0]}...."
             )
             return None
 
         max_layer_thickness = prism_layers[1] - prism_layers[0]
-        transition_ratio = max_layer_thickness / (prism_layers[0]/rho_res)
+        transition_ratio = max_layer_thickness / (prism_layers[0] / rho_res)
         if transition_ratio < 0.8 or transition_ratio > 1.5:
             info_message(
-                'The transition between the equally spaced and prismatic layers might be too '
+                "The transition between the equally spaced and prismatic layers might be too "
                 f"uneven. The ratio between thickness is {transition_ratio} "
             )
 
@@ -80,11 +80,9 @@ def compute_rho_discretization(
     if rho_res == 1:
         return np.array(prism_layers)
 
-    rho_discr = np.concatenate(
-        [np.linspace(r0, prism_layers[0], rho_res)[:-1], prism_layers])
+    rho_discr = np.concatenate([np.linspace(r0, prism_layers[0], rho_res)[:-1], prism_layers])
 
     return rho_discr
-#
 
 
 class CrossSectionScheme(pv.PolyData):
@@ -106,10 +104,10 @@ class CrossSectionScheme(pv.PolyData):
         origin: np.ndarray = None,
         v1: np.ndarray = None,
         v2: np.ndarray = None,
-        **kwargs
+        **kwargs,
     ):
         """
-        Constructor for CrossSectionScheme
+        Construct CrossSectionScheme object.
 
         Base class of the cross section discretization schemes.
 
@@ -146,9 +144,7 @@ class CrossSectionScheme(pv.PolyData):
         self.theta_res: int = theta_res
 
         if rho_res <= 0:
-            raise ValueError(
-                f"Radial resolution must be strictly positive 0. Given {rho_res}"
-            )
+            raise ValueError(f"Radial resolution must be strictly positive 0. Given {rho_res}")
         self.rho_res: int = rho_res
 
         # Prism layer parameters
@@ -158,20 +154,16 @@ class CrossSectionScheme(pv.PolyData):
 
         # Geometric parameter for the cross section and its plane.
         self.radius: float = radius
-        self.origin: np.ndarray = self._validate_array(
-            origin, (3,), np.array([0, 0, 0]), 'origin')
-        self.v1: np.ndarray = self._validate_array(
-            v1, (3,), np.array([1, 0, 0]), 'v1')
-        self.v2: np.ndarray = self._validate_array(
-            v2, (3,), np.array([0, 1, 0]), 'v2')
+        self.origin: np.ndarray = self._validate_array(origin, (3,), np.array([0, 0, 0]), "origin")
+        self.v1: np.ndarray = self._validate_array(v1, (3,), np.array([1, 0, 0]), "v1")
+        self.v2: np.ndarray = self._validate_array(v2, (3,), np.array([0, 1, 0]), "v2")
 
         self.build()
         self.compute_polar_coordinates()
-    #
 
     def _validate_array(self, in_array: np.ndarray, shape: tuple, default: np.ndarray, name: str):
         """
-        Method to validate the shape of a provided array.
+        Validate the shape of a provided array.
 
         Array reshaping is attempted.
 
@@ -205,9 +197,7 @@ class CrossSectionScheme(pv.PolyData):
             return default
 
         if not isinstance(in_array, np.ndarray):
-            raise ValueError(
-                f"Wrong type for {name} attribute. Numpy array {shape} was expected."
-            )
+            raise ValueError(f"Wrong type for {name} attribute. Numpy array {shape} was expected.")
 
         if in_array.shape != shape:
             try:
@@ -217,19 +207,15 @@ class CrossSectionScheme(pv.PolyData):
                     f"Provided array for {name} attribute has shape {shape}. Expected is {shape}"
                 )
         return in_array
-    #
 
     def sample_circumference(
-        self,
-        n: int | np.ndarray,
-        r: float = 1.0,
-        aoff: float = 0.0
+        self, n: int | np.ndarray, r: float = 1.0, aoff: float = 0.0
     ) -> np.ndarray:
         """
         Sample n points along a circumference of given radius r at the cross section.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         n : int or np.ndarray (N,)
             If integer it is used as the number of points to be generated. If a np.ndarray it is
             directly used as the radians partition.
@@ -249,23 +235,20 @@ class CrossSectionScheme(pv.PolyData):
         """
 
         if isinstance(n, int):
-            theta = np.linspace(0+aoff, 2*np.pi+aoff, n+1)[:-1]
+            theta = np.linspace(0 + aoff, 2 * np.pi + aoff, n + 1)[:-1]
         elif isinstance(n, np.ndarray) and n.ndim == 1:
             theta = n
         else:
-            error_message(
-                f"Wrong value for theta_res argument {n}. Expecting int or 1D array."
-            )
+            error_message(f"Wrong value for theta_res argument {n}. Expecting int or 1D array.")
             return
 
         points = (
             self.origin.reshape(3, 1)
-            + self.v1.reshape(3, 1)*r*np.cos(theta)
-            + self.v2.reshape(3, 1)*r*np.sin(theta)
+            + self.v1.reshape(3, 1) * r * np.cos(theta)
+            + self.v2.reshape(3, 1) * r * np.sin(theta)
         ).T
 
         return points
-    #
 
     def get_angular_coordinates(self, points: np.ndarray, deg: bool = False) -> np.ndarray:
         """
@@ -286,14 +269,7 @@ class CrossSectionScheme(pv.PolyData):
             ang: float or np.ndarray (N)
         """
 
-        return get_theta_coord(
-            points=points,
-            c=self.origin,
-            v1=self.v1,
-            v2=self.v2,
-            deg=deg
-        )
-    #
+        return get_theta_coord(points=points, c=self.origin, v1=self.v1, v2=self.v2, deg=deg)
 
     def compute_polar_coordinates(self):
         """
@@ -302,35 +278,26 @@ class CrossSectionScheme(pv.PolyData):
         The angular domain is [0, 2pi]
         """
 
-        self['theta'] = self.get_angular_coordinates(points=self.points)
-        self['rho'] = np.linalg.norm(self.points - self.origin, axis=1)
-    #
+        self["theta"] = self.get_angular_coordinates(points=self.points)
+        self["rho"] = np.linalg.norm(self.points - self.origin, axis=1)
 
     def build(self) -> CrossSectionScheme:
         """
-        Method to build the cross section discretization scheme.
+        Build the cross section discretization scheme.
 
         This method is intended to be overwritten by child classes.
         """
 
-        self.points = self.sample_circumference(
-            n=self.theta_res,
-            r=self.radius,
-            aoff=False
-        )
+        self.points = self.sample_circumference(n=self.theta_res, r=self.radius, aoff=False)
 
-        self.faces = np.array([self.theta_res]+list(range(self.theta_res)))
+        self.faces = np.array([self.theta_res] + list(range(self.theta_res)))
         self.triangulate(inplace=True)
 
         return self
-    #
-#
 
 
 class CylindricalCrossSection(CrossSectionScheme):
-    """
-    A cylindrical cross section discretization scheme.
-    """
+    """A cylindrical cross section discretization scheme."""
 
     def __init__(
         self,
@@ -343,10 +310,10 @@ class CylindricalCrossSection(CrossSectionScheme):
         twist: bool = False,
         origin=None,
         v1=None,
-        v2=None
+        v2=None,
     ):
         """
-        Constructor of the cylindrical cross section discretization scheme.
+        Construct a cylindrical cross section discretization scheme.
 
         Parameters
         ----------
@@ -387,16 +354,15 @@ class CylindricalCrossSection(CrossSectionScheme):
             min_percentage=min_percentage,
             origin=origin,
             v1=v1,
-            v2=v2
+            v2=v2,
         )
-    #
 
     def build(self) -> CylindricalCrossSection:
         """
         Make a cross section with cylindrical discretization scheme.
 
-        Returns:
-        ---------
+        Returns
+        -------
             self : CylindricalCrossSection
                 A triangulated mesh with the generated cross section. A point scalar field with the vcs
                 coordinate is can be accessed by cs['tau'], cs['theta'], cs['rho'], cs['rho_n'].
@@ -408,7 +374,7 @@ class CylindricalCrossSection(CrossSectionScheme):
             r1=self.radius,
             n_layers=self.n_layers,
             growth_rate=self.growth_rate,
-            min_percentage=self.min_percentage
+            min_percentage=self.min_percentage,
         )
 
         pts = []
@@ -421,36 +387,33 @@ class CylindricalCrossSection(CrossSectionScheme):
             elif i == 1:
                 pp = self.sample_circumference(n=self.theta_res, r=rho)
                 for j in range(self.theta_res):
-                    if j < self.theta_res-1:
-                        faces.append([3, 1+j, 0, 1+j+1])
+                    if j < self.theta_res - 1:
+                        faces.append([3, 1 + j, 0, 1 + j + 1])
                     else:
-                        faces.append([3, 1+j, 0, 1])
+                        faces.append([3, 1 + j, 0, 1])
             else:
-                aoff = 2*np.pi / \
-                    (2*self.theta_res) if self.twist and i % 2 else 0
-                pp = self.sample_circumference(
-                    n=self.theta_res, r=rho, aoff=aoff
-                )
+                aoff = 2 * np.pi / (2 * self.theta_res) if self.twist and i % 2 else 0
+                pp = self.sample_circumference(n=self.theta_res, r=rho, aoff=aoff)
 
                 for j in range(self.theta_res):
-                    if j < self.theta_res-1:
+                    if j < self.theta_res - 1:
                         faces.append(
                             [
                                 4,
-                                1+(i-1)*self.theta_res + j,
-                                1+(i-2)*self.theta_res + j,
-                                1+(i-2)*self.theta_res + j+1,
-                                1+(i-1)*self.theta_res + j+1
+                                1 + (i - 1) * self.theta_res + j,
+                                1 + (i - 2) * self.theta_res + j,
+                                1 + (i - 2) * self.theta_res + j + 1,
+                                1 + (i - 1) * self.theta_res + j + 1,
                             ]
                         )
                     else:
                         faces.append(
                             [
                                 4,
-                                1+(i-1)*self.theta_res + j,
-                                1+(i-2)*self.theta_res + j,
-                                1+(i-2)*self.theta_res,
-                                1+(i-1)*self.theta_res
+                                1 + (i - 1) * self.theta_res + j,
+                                1 + (i - 2) * self.theta_res + j,
+                                1 + (i - 2) * self.theta_res,
+                                1 + (i - 1) * self.theta_res,
                             ]
                         )
 
@@ -460,14 +423,10 @@ class CylindricalCrossSection(CrossSectionScheme):
         self.faces = np.hstack(faces)
 
         return self
-    #
-#
 
 
 class OGridCrossSection(CrossSectionScheme):
-    """
-    O-Grid cross section discretization scheme
-    """
+    """O-Grid cross section discretization scheme."""
 
     def __init__(
         self,
@@ -483,7 +442,7 @@ class OGridCrossSection(CrossSectionScheme):
         v2: np.ndarray = None,
     ):
         """
-        Constructor for CrossSectionScheme
+        Construct o-grid CrossSectionScheme.
 
         Base class of the cross section discretization schemes.
 
@@ -515,19 +474,13 @@ class OGridCrossSection(CrossSectionScheme):
         """
 
         if theta_res % 4 != 0:
-            raise ValueError(
-                f"Angular resolution has to be a multiple of 4. Given {theta_res}"
-            )
+            raise ValueError(f"Angular resolution has to be a multiple of 4. Given {theta_res}")
 
         if rho_res <= 0:
-            raise ValueError(
-                f"Radial resolution must be strictly positive 0. Given {rho_res}"
-            )
+            raise ValueError(f"Radial resolution must be strictly positive 0. Given {rho_res}")
 
         if r <= 0 or r >= 1:
-            raise ValueError(
-                f"The argument r must be in ]0,1[. Given is {r}."
-            )
+            raise ValueError(f"The argument r must be in ]0,1[. Given is {r}.")
 
         self.r: float = r
 
@@ -542,18 +495,17 @@ class OGridCrossSection(CrossSectionScheme):
             v1=v1,
             v2=v2,
         )
-    #
 
     @staticmethod
-    def make_rectangle_grid(vertex: np.ndarray, n: int):
+    def make_rectangle_grid(vertex: np.ndarray, n: int) -> pv.PolyData:
         """
         Build a rectangle polydata discretized in n points per size.
 
         Let c and v1, v2 be a reference system for a plane in the space. Then, given 4 vertex a number
         of points per side
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         vertex : np.ndarray (4,3)
             The corners of the rectangle ordered by angle.
         n : int
@@ -561,52 +513,46 @@ class OGridCrossSection(CrossSectionScheme):
 
         Returns
         -------
-        _type_
-            _description_
+        rect : pv.PolyData
+            The inner rectangle grid.
         """
 
         d = np.linspace(0, 1, n)
-        u1 = vertex[1]-vertex[0]
-        u2 = vertex[3]-vertex[0]
+        u1 = vertex[1] - vertex[0]
+        u2 = vertex[3] - vertex[0]
 
         bound_ids = []
         pts, faces = [], []
         for i in range(n):
             for j in range(n):
-                pts.append(vertex[0] + d[i]*u1 + d[j]*u2)
-                if j <= n-2 and i <= n-2:
-                    faces.append([4, i*n+j, i*n+j+1, (i+1)*n+j+1, (i+1)*n+j])
-                if i*j == 0 or (i-n+1)*(j-n+1) == 0:
-                    bound_ids.append(i*n+j)
+                pts.append(vertex[0] + d[i] * u1 + d[j] * u2)
+                if j <= n - 2 and i <= n - 2:
+                    faces.append(
+                        [4, i * n + j, i * n + j + 1, (i + 1) * n + j + 1, (i + 1) * n + j]
+                    )
+                if i * j == 0 or (i - n + 1) * (j - n + 1) == 0:
+                    bound_ids.append(i * n + j)
         pts, faces = np.array(pts), np.concatenate(faces)
 
         rect = pv.PolyData(pts, faces)
-        rect['outer points'] = np.zeros((rect.n_points))
-        rect['outer points'][bound_ids] = 1
+        rect["outer points"] = np.zeros((rect.n_points))
+        rect["outer points"][bound_ids] = 1
 
         return rect
-    #
 
     def build(self) -> OGridCrossSection:
-        """
-        Generate the cross section with the o-grid discretization scheme.
-        """
+        """Generate the cross section with the o-grid discretization scheme."""
 
-        in_r = self.r*self.radius
+        in_r = self.r * self.radius
 
-        sq_corners = self.sample_circumference(n=4, r=in_r, aoff=np.pi/4)
+        sq_corners = self.sample_circumference(n=4, r=in_r, aoff=np.pi / 4)
 
-        inner_rect = self.make_rectangle_grid(
-            sq_corners, n=(self.theta_res//4)+1)
+        inner_rect = self.make_rectangle_grid(sq_corners, n=(self.theta_res // 4) + 1)
 
-        bound_ids = inner_rect['outer points'].nonzero()[0]
+        bound_ids = inner_rect["outer points"].nonzero()[0]
 
         bound_ang_gids = sort_glob_ids_by_angle(
-            bound_ids,
-            inner_rect.points[bound_ids],
-            c=self.origin,
-            v1=self.v1,
-            v2=self.v2
+            bound_ids, inner_rect.points[bound_ids], c=self.origin, v1=self.v1, v2=self.v2
         )
 
         glob_pts = inner_rect.points.tolist()
@@ -614,12 +560,12 @@ class OGridCrossSection(CrossSectionScheme):
         faces = []
 
         rhos = compute_rho_discretization(
-            self.rho_res+1,  # +1 Due to the outer edge of the inner square
+            self.rho_res + 1,  # +1 Due to the outer edge of the inner square
             r0=in_r,
             r1=self.radius,
             n_layers=self.n_layers,
             growth_rate=self.growth_rate,
-            min_percentage=self.min_percentage
+            min_percentage=self.min_percentage,
         )
 
         # The outermost points of the inner rectangle
@@ -629,42 +575,41 @@ class OGridCrossSection(CrossSectionScheme):
         out_circ_pts = self.sample_circumference(n=angs, r=self.radius)
 
         for i, rho in enumerate(rhos):
-
             # Connect the sq with the first circ.
             if i == 0:
                 for j in range(self.theta_res):
-                    if j < self.theta_res-1:
+                    if j < self.theta_res - 1:
                         faces.append(
-                            [4, bound_ang_gids[j], bound_ang_gids[j+1], gi+j+1, gi+j])
+                            [4, bound_ang_gids[j], bound_ang_gids[j + 1], gi + j + 1, gi + j]
+                        )
                     else:
-                        faces.append(
-                            [4, bound_ang_gids[-1], bound_ang_gids[0], gi, gi+j])
+                        faces.append([4, bound_ang_gids[-1], bound_ang_gids[0], gi, gi + j])
             else:
                 # Parameterization from square to outer circ -> [0,1]
-                p = (rho - in_r)/(self.radius*(1-self.r))
-                pts = out_rect_pts * (1-p) + out_circ_pts*p
+                p = (rho - in_r) / (self.radius * (1 - self.r))
+                pts = out_rect_pts * (1 - p) + out_circ_pts * p
                 glob_pts += pts.tolist()
-                if i < rhos.size-1:
+                if i < rhos.size - 1:
                     for j in range(self.theta_res):
-                        if j <= self.theta_res-2 and i <= rhos.size-2:
+                        if j <= self.theta_res - 2 and i <= rhos.size - 2:
                             faces.append(
                                 [
                                     4,
-                                    gi+(i-1)*self.theta_res+j,
-                                    gi+(i-1)*self.theta_res+j+1,
-                                    gi+i*self.theta_res+j+1,
-                                    gi+i*self.theta_res+j
+                                    gi + (i - 1) * self.theta_res + j,
+                                    gi + (i - 1) * self.theta_res + j + 1,
+                                    gi + i * self.theta_res + j + 1,
+                                    gi + i * self.theta_res + j,
                                 ]
                             )
 
-                        elif j == self.theta_res-1:
+                        elif j == self.theta_res - 1:
                             faces.append(
                                 [
                                     4,
-                                    gi+(i-1)*self.theta_res+j,
-                                    gi+(i-1)*self.theta_res,
-                                    gi+i*self.theta_res,
-                                    gi+i*self.theta_res+j
+                                    gi + (i - 1) * self.theta_res + j,
+                                    gi + (i - 1) * self.theta_res,
+                                    gi + i * self.theta_res,
+                                    gi + i * self.theta_res + j,
                                 ]
                             )
 
@@ -672,15 +617,10 @@ class OGridCrossSection(CrossSectionScheme):
         self.faces = np.concatenate([inner_rect.faces, np.concatenate(faces)])
 
         return self
-    #
-#
 
 
 def get_cross_section(
-    scheme: Literal['base', 'ogrid', 'cylindrical'],
-    theta_res: int,
-    rho_res: int,
-    **kwargs
+    scheme: Literal["base", "ogrid", "cylindrical"], theta_res: int, rho_res: int, **kwargs
 ) -> CrossSectionScheme:
     """
     Generate a cross section with given parameters.
@@ -706,31 +646,30 @@ def get_cross_section(
     """
 
     match scheme:
-
-        case 'base':
+        case "base":
             cs = CrossSectionScheme(
                 theta_res=theta_res,
                 rho_res=rho_res,
             )
 
-        case 'ogrid':
+        case "ogrid":
             cs = OGridCrossSection(
                 theta_res=theta_res,
                 rho_res=rho_res,
-                r=kwargs.get('r', None),
-                n_layers=kwargs.get('n_layers', None),
-                growth_rate=kwargs.get('growth_rate', None),
-                min_percentage=kwargs.get('min_percentage', None),
+                r=kwargs.get("r", None),
+                n_layers=kwargs.get("n_layers", None),
+                growth_rate=kwargs.get("growth_rate", None),
+                min_percentage=kwargs.get("min_percentage", None),
             )
 
-        case 'cylindrical':
+        case "cylindrical":
             cs = CylindricalCrossSection(
                 theta_res=theta_res,
                 rho_res=rho_res,
-                n_layers=kwargs.get('n_layers', None),
-                growth_rate=kwargs.get('growth_rate', None),
-                min_percentage=kwargs.get('min_percentage', None),
-                twist=kwargs.get('twist', None),
+                n_layers=kwargs.get("n_layers", None),
+                growth_rate=kwargs.get("growth_rate", None),
+                min_percentage=kwargs.get("min_percentage", None),
+                twist=kwargs.get("twist", None),
             )
 
         case _:
@@ -740,4 +679,3 @@ def get_cross_section(
             )
 
     return cs
-#

@@ -4,33 +4,32 @@ Input/output module for vef case directories.
 TODO: Implement an alternative to prevent code duplication for loaders and savers.
 A function-factory seems to be incompatible with docstring.
 """
+
 import os
 from copy import deepcopy
 
 import pyvista as pv
-
 import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
 from vascular_encoding_framework.utils._io import is_writable
 
 _case_convention = {
-    'boundaries': ['Meshes', 'boundaries.json'],
-    'mesh': ['Meshes', 'mesh.vtk'],
-    'cl_domain': ['Centerline', 'domain.vtk'],
-    'cl_path': ['Centerline', 'path.vtm'],
-    'centerline': ['Centerline', 'centerline.vtm'],
-    'encoding': ['Encoding', 'encoding.vtm'],
+    "boundaries": ["Meshes", "boundaries.json"],
+    "mesh": ["Meshes", "mesh.vtk"],
+    "cl_domain": ["Centerline", "domain.vtk"],
+    "cl_path": ["Centerline", "path.vtm"],
+    "centerline": ["Centerline", "centerline.vtm"],
+    "encoding": ["Encoding", "encoding.vtm"],
 }
 #
 
 
-def get_case_convention(obj, suffix='', case_dir=''):
+def get_case_convention(obj, suffix="", case_dir=""):
     """
     Get the path relative to a case directory for the main objects of vef_scripts module.
 
-    Arguments
+    Arguments:
     ---------
-
         obj : {"boundaries", "mesh", "domain", "cl_path", "centerline", "encoding"}
             The name of the object to get the path.
 
@@ -42,28 +41,27 @@ def get_case_convention(obj, suffix='', case_dir=''):
 
     Returns
     -------
-
         cfname : str
             The path, relative to top case directory level, of the object with the provided suffix.
 
     """
 
     cfname = deepcopy(_case_convention[obj])
-    name, ext = cfname[-1].split('.')
-    cfname[-1] = f'{name}{suffix}.{ext}'
+    name, ext = cfname[-1].split(".")
+    cfname[-1] = f"{name}{suffix}.{ext}"
     cfname = os.path.join(*cfname)
     return os.path.join(case_dir, cfname)
+
+
 #
 
 
 def make_subdirs(case_dir, subdir):
     """
-    Make the subdir at case dir
+    Make the subdir at case dir.
 
-
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The case directory
 
@@ -76,15 +74,16 @@ def make_subdirs(case_dir, subdir):
         sd = os.path.join(case_dir, *subdir)
 
     os.makedirs(sd, exist_ok=True)
+
+
 #
 
 
-def load_vascular_mesh(path, suffix='', abs_path=False):
+def load_vascular_mesh(path, suffix="", abs_path=False):
     """
     Load a vascular mesh with all the available data at a given case directory.
 
-
-    Arguments
+    Arguments:
     ----------
         path : string
             The path to the wall mesh.
@@ -105,37 +104,29 @@ def load_vascular_mesh(path, suffix='', abs_path=False):
         mesh_fname = path
         bounds_fname = None
     else:
-        mesh_fname = get_case_convention('mesh', suffix=suffix, case_dir=path)
-        bounds_fname = get_case_convention(
-            'boundaries', suffix=suffix, case_dir=path)
+        mesh_fname = get_case_convention("mesh", suffix=suffix, case_dir=path)
+        bounds_fname = get_case_convention("boundaries", suffix=suffix, case_dir=path)
 
     try:
-        vmesh = vef.VascularMesh.read(
-            filename=mesh_fname,
-            boundaries_fname=bounds_fname)
+        vmesh = vef.VascularMesh.read(filename=mesh_fname, boundaries_fname=bounds_fname)
         return vmesh
 
     except FileNotFoundError:
-        msg.error_message(f'Wrong path given. Cannot find {mesh_fname}.')
+        msg.error_message(f"Wrong path given. Cannot find {mesh_fname}.")
         return None
+
+
 #
 
 
-def save_vascular_mesh(
-        vmesh,
-        path,
-        suffix='',
-        binary=True,
-        abs_path=False,
-        overwrite=False):
+def save_vascular_mesh(vmesh, path, suffix="", binary=True, abs_path=False, overwrite=False):
     """
     Save a vascular mesh with all the available data at a given path. By default
     this function assumes path is a case directory and uses default name convention.
 
 
-    Arguments
+    Arguments:
     ----------
-
         path : string
             The path to the wall mesh.
 
@@ -158,35 +149,32 @@ def save_vascular_mesh(
     """
 
     if not abs_path:
-        make_subdirs(path, 'Meshes')
-        mesh_fname = get_case_convention('mesh', suffix=suffix, case_dir=path)
-        bounds_fname = get_case_convention(
-            'boundaries', suffix=suffix, case_dir=path)
+        make_subdirs(path, "Meshes")
+        mesh_fname = get_case_convention("mesh", suffix=suffix, case_dir=path)
+        bounds_fname = get_case_convention("boundaries", suffix=suffix, case_dir=path)
 
     else:
         dirname, nameext = os.path.split(path)
         name, _ = os.path.splitext(nameext)
         mesh_fname = path
-        bounds_fname = os.path.join(dirname, f'{name}_boundaries')
+        bounds_fname = os.path.join(dirname, f"{name}_boundaries")
 
-    if is_writable(
-            mesh_fname,
-            overwrite=overwrite) and is_writable(
-            bounds_fname,
-            overwrite=overwrite):
-        vmesh.save(
-            fname=mesh_fname,
-            binary=binary,
-            boundaries_fname=bounds_fname)
+    if is_writable(mesh_fname, overwrite=overwrite) and is_writable(
+        bounds_fname, overwrite=overwrite
+    ):
+        vmesh.save(fname=mesh_fname, binary=binary, boundaries_fname=bounds_fname)
 
     else:
         msg.warning_message(
-            f'Overwriting is set to false, and {mesh_fname} or {bounds_fname} already exists. \
-            Nothing will be written.')
+            f"Overwriting is set to false, and {mesh_fname} or {bounds_fname} already exists. \
+            Nothing will be written."
+        )
+
+
 #
 
 
-def load_centerline_domain(case_dir, suffix=''):
+def load_centerline_domain(case_dir, suffix=""):
     """
     Load the centerline domain under the case directory convention.
 
@@ -195,7 +183,7 @@ def load_centerline_domain(case_dir, suffix=''):
 
     case_dir/Centerline/domain.vtk
 
-    Arguments
+    Arguments:
     ---------
         case_dir : str
             The path to the case directory.
@@ -210,24 +198,18 @@ def load_centerline_domain(case_dir, suffix=''):
             The loaded lumen discretization.
     """
 
-    fname = get_case_convention(
-        obj='cl_domain',
-        suffix=suffix,
-        case_dir=case_dir)
+    fname = get_case_convention(obj="cl_domain", suffix=suffix, case_dir=case_dir)
     cl_domain = None
     if os.path.exists(fname):
         cl_domain = pv.read(fname)
 
     return cl_domain
+
+
 #
 
 
-def save_centerline_domain(
-        case_dir,
-        cl_domain,
-        suffix='',
-        binary=True,
-        overwrite=False):
+def save_centerline_domain(case_dir, cl_domain, suffix="", binary=True, overwrite=False):
     """
     Save the centerline domain under the case directory convention.
 
@@ -236,9 +218,8 @@ def save_centerline_domain(
 
         case_dir/Centerline/domain.vtk
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -256,18 +237,17 @@ def save_centerline_domain(
             Default False. Whether to overwrite existing files.
     """
 
-    make_subdirs(case_dir, 'Centerline')
-    fname = get_case_convention(
-        obj='cl_domain',
-        suffix=suffix,
-        case_dir=case_dir)
-    message = f'{fname} exists and overwriting is set to False.'
+    make_subdirs(case_dir, "Centerline")
+    fname = get_case_convention(obj="cl_domain", suffix=suffix, case_dir=case_dir)
+    message = f"{fname} exists and overwriting is set to False."
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_domain.save(fname, binary=binary)
+
+
 #
 
 
-def load_centerline_path(case_dir, suffix=''):
+def load_centerline_path(case_dir, suffix=""):
     """
     Load the centerline path under the case directory convention.
 
@@ -279,9 +259,8 @@ def load_centerline_path(case_dir, suffix=''):
     Due to the MultiBlock save format of vtk, a directory called path is expected to be
     found at Centerline subdir containing the path data.
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -296,25 +275,19 @@ def load_centerline_path(case_dir, suffix=''):
             The loaded paths optimizing the distance to the wall.
     """
 
-    fname = get_case_convention(
-        obj='cl_path',
-        suffix=suffix,
-        case_dir=case_dir)
+    fname = get_case_convention(obj="cl_path", suffix=suffix, case_dir=case_dir)
 
     cl_paths = None
     if os.path.exists(fname):
         cl_paths = pv.read(fname)
 
     return cl_paths
+
+
 #
 
 
-def save_centerline_path(
-        case_dir,
-        cl_path,
-        suffix='',
-        binary=True,
-        overwrite=False):
+def save_centerline_path(case_dir, cl_path, suffix="", binary=True, overwrite=False):
     """
     Save the centerline path under the case directory convention.
 
@@ -326,9 +299,8 @@ def save_centerline_path(
     Due to the MultiBlock save format of vtk, a directory called path is also created at Centerline
     subdir containing the path data.
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -346,18 +318,17 @@ def save_centerline_path(
             Default False. Whether to overwrite existing files.
     """
 
-    make_subdirs(case_dir, 'Centerline')
-    fname = get_case_convention(
-        obj='cl_path',
-        suffix=suffix,
-        case_dir=case_dir)
-    message = f'{fname} exists and overwriting is set to False.'
+    make_subdirs(case_dir, "Centerline")
+    fname = get_case_convention(obj="cl_path", suffix=suffix, case_dir=case_dir)
+    message = f"{fname} exists and overwriting is set to False."
     if is_writable(fname, overwrite=overwrite, message=message):
         cl_path.save(fname, binary=binary)
+
+
 #
 
 
-def load_centerline(case_dir, suffix=''):
+def load_centerline(case_dir, suffix=""):
     """
     Load the centerline tree under the case directory convention.
 
@@ -369,9 +340,8 @@ def load_centerline(case_dir, suffix=''):
     Due to the MultiBlock save format of vtk, a directory called centerline is also expected to be
     at Centerline subdir containing the centerline data.
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -380,29 +350,26 @@ def load_centerline(case_dir, suffix=''):
 
     Returns
     -------
-
         cl_tree : vef.CenterlineTree
             The loaded centerline
     """
 
-    fname = get_case_convention(
-        obj='centerline',
-        suffix=suffix,
-        case_dir=case_dir)
+    fname = get_case_convention(obj="centerline", suffix=suffix, case_dir=case_dir)
 
     cl_tree = None
     if os.path.exists(fname):
         cl_mb = pv.read(fname)
         cl_tree = vef.CenterlineTree().from_multiblock(mb=cl_mb)
     else:
-        msg.warning_message(
-            f"No centerline was found in the case at '{case_dir}' .")
+        msg.warning_message(f"No centerline was found in the case at '{case_dir}' .")
 
     return cl_tree
+
+
 #
 
 
-def save_centerline(case_dir, cl_tree, suffix='', binary=True, overwrite=False):
+def save_centerline(case_dir, cl_tree, suffix="", binary=True, overwrite=False):
     """
     Save the centerline tree under the case directory convention.
 
@@ -414,9 +381,8 @@ def save_centerline(case_dir, cl_tree, suffix='', binary=True, overwrite=False):
     Due to the MultiBlock save format of vtk, a directory called centerline is also created at
     Centerline subdir containing the centerline data.
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -433,19 +399,18 @@ def save_centerline(case_dir, cl_tree, suffix='', binary=True, overwrite=False):
             Default False. Whether to overwrite existing files.
     """
 
-    make_subdirs(case_dir, 'Centerline')
-    fname = get_case_convention(
-        obj='centerline',
-        suffix=suffix,
-        case_dir=case_dir)
-    message = f'{fname} exists and overwriting is set to False.'
+    make_subdirs(case_dir, "Centerline")
+    fname = get_case_convention(obj="centerline", suffix=suffix, case_dir=case_dir)
+    message = f"{fname} exists and overwriting is set to False."
     cl_mb = cl_tree.to_multiblock(add_attributes=True)
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         cl_mb.save(fname, binary)
+
+
 #
 
 
-def load_vascular_encoding(case_dir, suffix=''):
+def load_vascular_encoding(case_dir, suffix=""):
     """
     Load the vascular anatomy encoding under the case directory convention.
 
@@ -457,9 +422,8 @@ def load_vascular_encoding(case_dir, suffix=''):
     Due to the MultiBlock save format of vtk, a directory called encoding is also expected to be
     at Encoding subdir containing the vascular anatomy encoding data.
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -468,15 +432,11 @@ def load_vascular_encoding(case_dir, suffix=''):
 
     Returns
     -------
-
         vsc_enc : vef.VascularAnatomyEncoding
             The loaded vascular anatomy encoding
     """
 
-    fname = get_case_convention(
-        obj='encoding',
-        suffix=suffix,
-        case_dir=case_dir)
+    fname = get_case_convention(obj="encoding", suffix=suffix, case_dir=case_dir)
 
     vsc_enc = None
     if os.path.exists(fname):
@@ -484,15 +444,12 @@ def load_vascular_encoding(case_dir, suffix=''):
         vsc_enc = vef.VascularAnatomyEncoding.from_multiblock(vsc_mb=enc_mb)
 
     return vsc_enc
+
+
 #
 
 
-def save_vascular_encoding(
-        case_dir,
-        vsc_enc,
-        suffix='',
-        binary=True,
-        overwrite=False):
+def save_vascular_encoding(case_dir, vsc_enc, suffix="", binary=True, overwrite=False):
     """
     Save the vascular anatomy encoding under the case directory convention.
 
@@ -504,9 +461,8 @@ def save_vascular_encoding(
     Due to the MultiBlock save format of vtk, a directory called encoding is also created
     at Encoding subdir containing the vascular anatomy encoding data.
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The path to the case directory.
 
@@ -520,13 +476,12 @@ def save_vascular_encoding(
             Default False. Whether to overwrite existing files.
     """
 
-    make_subdirs(case_dir, 'Encoding')
-    fname = get_case_convention(
-        obj='encoding',
-        suffix=suffix,
-        case_dir=case_dir)
-    message = f'{fname} exists and overwriting is set to False.'
+    make_subdirs(case_dir, "Encoding")
+    fname = get_case_convention(obj="encoding", suffix=suffix, case_dir=case_dir)
+    message = f"{fname} exists and overwriting is set to False."
     enc_mb = vsc_enc.to_multiblock()
     if is_writable(fname=fname, overwrite=overwrite, message=message):
         enc_mb.save(fname, binary)
+
+
 #

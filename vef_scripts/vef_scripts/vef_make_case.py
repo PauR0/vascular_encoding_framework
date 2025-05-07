@@ -15,22 +15,21 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
 
     Arguments:
     -------------
-
         mesh, case : str
             The mesh and case paths.
 
         ow : bool
             Whether to overwrite existing files or stop.
 
-    Returns:
-    ---------
+    Returns
+    -------
         mesh, case : str
             The updated strings.
     """
 
     base_dir = os.getcwd()
     if case is None:
-        case_dir = 'vef_case'
+        case_dir = "vef_case"
     else:
         case_dir = case
 
@@ -41,21 +40,25 @@ def handle_case_and_mesh_name(case, mesh, ow=False):
 
     if os.path.exists(case_dir) and not ow:
         msg.warning_message(
-            f'The case: {case_dir} already exists and overwriting is set to False. Nothing will be created.')
+            f"The case: {case_dir} already exists and overwriting is set to False. Nothing will be created."
+        )
         return None, None
 
     return case_dir, mesh
+
+
 #
 
 
 def make_case(
-        case_dir,
-        mesh_fname=None,
-        vmesh=None,
-        show_boundaries=False,
-        overwrite=False,
-        cl_params=None,
-        ec_params=None):
+    case_dir,
+    mesh_fname=None,
+    vmesh=None,
+    show_boundaries=False,
+    overwrite=False,
+    cl_params=None,
+    ec_params=None,
+):
     """
     Function to make a vef case directory at path provided in case_dir argument.
     Additionally, the filename of a mesh can be passed, and it is copied and saved
@@ -63,8 +66,7 @@ def make_case(
     attempts to compute the boundaries and save them at the Meshes directory.
     """
 
-    case_dir, mesh_fname = handle_case_and_mesh_name(
-        case_dir, mesh_fname, ow=overwrite)
+    case_dir, mesh_fname = handle_case_and_mesh_name(case_dir, mesh_fname, ow=overwrite)
 
     if cl_params is None:
         cl_params = read_centerline_config(case_dir)
@@ -79,20 +81,17 @@ def make_case(
         vmesh = load_vascular_mesh(path=mesh_fname, abs_path=True)
     elif vmesh is not None and mesh_fname is not None:
         msg.warning_message(
-            f'Using vmesh provided to make the case. mesh_fname {mesh_fname} is being ignored.')
+            f"Using vmesh provided to make the case. mesh_fname {mesh_fname} is being ignored."
+        )
 
     if vmesh is not None:
-
         if show_boundaries:
             vmesh.plot_boundary_ids()
 
-        meshes_dir = os.path.join(case_dir, 'Meshes')
+        meshes_dir = os.path.join(case_dir, "Meshes")
         os.makedirs(meshes_dir, exist_ok=True)
-        save_vascular_mesh(
-            vmesh,
-            case_dir,
-            suffix='_input',
-            binary=True,
-            overwrite=overwrite)
+        save_vascular_mesh(vmesh, case_dir, suffix="_input", binary=True, overwrite=overwrite)
     return case_dir
+
+
 #

@@ -1,7 +1,6 @@
 import vascular_encoding_framework as vef
 
-from .case_io import (load_centerline, load_vascular_mesh,
-                      save_vascular_encoding)
+from .case_io import load_centerline, load_vascular_mesh, save_vascular_encoding
 from .config.readers import read_encoding_config
 from .config.writers import write_encoding_config
 
@@ -18,9 +17,8 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     the recomputation the argument force must be used.
 
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The case directory under the vef convention.
 
@@ -37,13 +35,13 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
             Default False. Whether to existing files
 
 
-    Return
+    Return:
     ------
         vsc_enc : vef.VascularAnatomyEncoding
             The computed vascular anatomy encoding.
     """
 
-    vmesh = load_vascular_mesh(case_dir, suffix='_input')
+    vmesh = load_vascular_mesh(case_dir, suffix="_input")
     if vmesh is None:
         return None
 
@@ -54,15 +52,12 @@ def encode(case_dir, params=None, binary=True, debug=False, overwrite=False):
     if params is None:
         params = read_encoding_config(case_dir)
 
-    vsc_enc = vef.encode_vascular_mesh(
-        vmesh=vmesh, cl_tree=cl_tree, params=params, debug=debug)
+    vsc_enc = vef.encode_vascular_mesh(vmesh=vmesh, cl_tree=cl_tree, params=params, debug=debug)
 
     write_encoding_config(path=case_dir, data=params)
-    save_vascular_encoding(
-        case_dir=case_dir,
-        vsc_enc=vsc_enc,
-        binary=binary,
-        overwrite=overwrite)
+    save_vascular_encoding(case_dir=case_dir, vsc_enc=vsc_enc, binary=binary, overwrite=overwrite)
 
     return vsc_enc
+
+
 #

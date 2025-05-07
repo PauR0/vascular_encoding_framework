@@ -1,4 +1,3 @@
-
 import json
 import os
 
@@ -11,24 +10,20 @@ def is_writable(fname, overwrite=True, message=None):
 
     Warning: This function assume overwrite by default.
 
-    Arguments
-    ---------
-
-        fname : str
-            The file name to check.
-
-        overwrite : bool, opt
-            Default True. Whether to overwrite or not.
-
-        message : str, opt
-            Default None. If passed, it is printed as the description
-            of an error message.
+    Parameters
+    ----------
+    fname : str
+        The file name to check.
+    overwrite : bool, opt
+        Default True. Whether to overwrite or not.
+    message : str, opt
+        Default None. If passed, it is printed as the description
+        of an error message.
 
     Returns
     -------
-        out : bool
-            True if fname can be written False otherwise.
-
+    out : bool
+        True if fname can be written False otherwise.
     """
 
     out = True
@@ -38,7 +33,6 @@ def is_writable(fname, overwrite=True, message=None):
         out = False
 
     return out
-#
 
 
 def write_json(fname, data, indent=4, overwrite=True):
@@ -47,52 +41,44 @@ def write_json(fname, data, indent=4, overwrite=True):
     with the same name, and overwriting can be prevented using the overwrite argument. All the
     dictionary entries have to be json-serializable.
 
-    Arguments:
-    -----------
-
-        fname : str
-            The filename to be saved. If does not end with .json extension, it is added.
-
-        data : dict
-            The dictionary to be written.
-
-        indent : int, opt
-            Default 4. Whether to add indentation levels to entries in the json file.
-
-        overwrite : bool, opt
-            Default False. Whether to overwrite an already existing file.
+    Parameters
+    ----------
+    fname : str
+        The filename to be saved. If does not end with .json extension, it is added.
+    data : dict
+        The dictionary to be written.
+    indent : int, opt
+        Default 4. Whether to add indentation levels to entries in the json file.
+    overwrite : bool, opt
+        Default False. Whether to overwrite an already existing file.
 
     """
 
     if is_writable(fname, overwrite=overwrite):
-        with open(fname, 'w', encoding='utf-8') as f:
+        with open(fname, "w", encoding="utf-8") as f:
             f.write(json.dumps(data, indent=indent))
-#
 
 
 def read_json(file):
     """
-    Read a json from file
+    Read a json from file.
 
-    Arguments:
-    -----------
+    Parameters
+    ----------
+    file : str
 
-        file : str
-
-    Returns:
-    ---------
-
-        params : dict
+    Returns
+    -------
+    params : dict
 
     See Also
-    ---------
-        :py:func:`save`
+    --------
+    save
 
     """
 
     params = None
-    with open(file, 'r', encoding='utf-8') as param_file:
+    with open(file, "r", encoding="utf-8") as param_file:
         params = json.load(param_file)
 
     return params
-#

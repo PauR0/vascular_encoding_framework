@@ -1,11 +1,15 @@
 import numpy as np
-
 import vascular_encoding_framework as vef
 from vascular_encoding_framework import messages as msg
 
-from .case_io import (load_centerline_domain, load_centerline_path,
-                      load_vascular_mesh, save_centerline,
-                      save_centerline_domain, save_centerline_path)
+from .case_io import (
+    load_centerline_domain,
+    load_centerline_path,
+    load_vascular_mesh,
+    save_centerline,
+    save_centerline_domain,
+    save_centerline_path,
+)
 from .config.readers import read_centerline_config
 from .config.writers import write_centerline_config
 
@@ -15,9 +19,8 @@ def set_v1_from_boundary_roots(vmesh, params):
     This function checks the v1 in the boundary roots of the boundaries tree of a VascularMesh.
     Then if it's not None, the v1 is set on the centerlines starting on the roots.
 
-    Arguments
+    Arguments:
     ---------
-
         vmesh : VascularMesh
             The vascular mesh with boundaries defined.
 
@@ -26,7 +29,6 @@ def set_v1_from_boundary_roots(vmesh, params):
 
     Returns
     -------
-
         params : dict
             The parameter dictionary with the new entries with the v1 appropriately defined.
     """
@@ -37,20 +39,18 @@ def set_v1_from_boundary_roots(vmesh, params):
             for chid in b_root.children:
                 if chid not in params:
                     params[chid] = {}
-                params[chid]['p'] = np.copy(b_root.v1)
-                params[chid]['pt_mode'] = 'project'
+                params[chid]["p"] = np.copy(b_root.v1)
+                params[chid]["pt_mode"] = "project"
 
     return params
+
+
 #
 
 
 def compute_centerline(
-        case_dir,
-        params=None,
-        binary=True,
-        overwrite=False,
-        force=False,
-        debug=False):
+    case_dir, params=None, binary=True, overwrite=False, force=False, debug=False
+):
     """
     Given a vef case directory with an existing mesh with the '_input' suffix, this function-script
     allows the computation of the centerline and its storing at the Centerline subdir.
@@ -61,9 +61,8 @@ def compute_centerline(
     the recomputation the argument force must be used.
 
 
-    Arguments
+    Arguments:
     ---------
-
         case_dir : str
             The case directory under the vef convention.
 
@@ -86,13 +85,13 @@ def compute_centerline(
         debug : bool, opt
             Default False. Whether to run the script in debug mode.
 
-    Return
+    Return:
     ------
         cl_tree : CenterlineTree
             The computed centerline.
     """
 
-    vmesh = load_vascular_mesh(case_dir, suffix='_input')
+    vmesh = load_vascular_mesh(case_dir, suffix="_input")
     if vmesh is None:
         return None
 
@@ -103,37 +102,30 @@ def compute_centerline(
 
     cl_domain = load_centerline_domain(case_dir)
     if cl_domain is None or force:
-        msg.computing_message('centerline domain')
+        msg.computing_message("centerline domain")
         cl_domain = vef.centerline.extract_centerline_domain(
-            vmesh=vmesh, params=params['params_domain'], debug=debug)
-        msg.done_message('centerline domain')
+            vmesh=vmesh, params=params["params_domain"], debug=debug
+        )
+        msg.done_message("centerline domain")
         save_centerline_domain(
-            case_dir=case_dir,
-            cl_domain=cl_domain,
-            binary=binary,
-            overwrite=overwrite)
+            case_dir=case_dir, cl_domain=cl_domain, binary=binary, overwrite=overwrite
+        )
 
     cl_path = load_centerline_path(case_dir)
     if cl_path is None or force:
-        msg.computing_message('centerline paths')
+        msg.computing_message("centerline paths")
         cl_path = vef.centerline.extract_centerline_path(
-            vmesh=vmesh, cl_domain=cl_domain, params=params['params_path'], debug=debug)
-        msg.done_message('centerline paths')
-        save_centerline_path(
-            case_dir=case_dir,
-            cl_path=cl_path,
-            binary=binary,
-            overwrite=overwrite)
+            vmesh=vmesh, cl_domain=cl_domain, params=params["params_path"], debug=debug
+        )
+        msg.done_message("centerline paths")
+        save_centerline_path(case_dir=case_dir, cl_path=cl_path, binary=binary, overwrite=overwrite)
 
-    cl_tree = vef.CenterlineTree.from_multiblock_paths(cl_path,
-                                                       **params)
+    cl_tree = vef.CenterlineTree.from_multiblock_paths(cl_path, **params)
 
     write_centerline_config(path=case_dir, data=params)
-    save_centerline(
-        case_dir=case_dir,
-        cl_tree=cl_tree,
-        binary=binary,
-        overwrite=overwrite)
+    save_centerline(case_dir=case_dir, cl_tree=cl_tree, binary=binary, overwrite=overwrite)
 
     return cl_tree
+
+
 #

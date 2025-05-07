@@ -1,5 +1,3 @@
-
-
 import numpy as np
 
 from ..messages import error_message
@@ -9,79 +7,76 @@ from ..utils.misc import split_metadata_and_fv
 
 
 class Radius(BiSpline):
+    """Radius or Wall function class."""
 
     def __init__(self):
-
         super().__init__()
 
         self.x0 = 0
         self.x1 = 1
-        self.extra_x = 'constant'
+        self.extra_x = "constant"
 
         self.y0 = 0
         self.y1 = 2 * np.pi
-        self.extra_y = 'periodic'
-    #
+        self.extra_y = "periodic"
 
     def set_parameters_from_centerline(self, cl):
         """
-        This method set the radius bounds equal to the Centerline object
-        passed.
+        Set the radius bounds equal to the passed Centerline object.
 
-        Arguments:
-        -----------
-
-            cl : Centerline
-                The Centerline of the vessel
+        Parameters
+        ----------
+        cl : Centerline
+            The Centerline of the vessel
         """
 
         self.x0 = cl.t0
         self.x1 = cl.t1
-    #
 
     def get_metadata(self):
         """
-        This method returns a copy of the metadata array.
+        Return a copy of the metadata array.
 
         As of this code version the
         metadata array is [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
 
         Returns
         -------
-            md : np.ndarray
+        md : np.ndarray
 
         See Also
         --------
-        :py:meth:`get_metadata`
+        get_metadata
 
         """
 
-        md = np.array([5,
-                      self.kx,
-                      self.ky,
-                      self.n_knots_x,
-                      self.n_knots_y,
-                       ])
+        md = np.array(
+            [
+                5,
+                self.kx,
+                self.ky,
+                self.n_knots_x,
+                self.n_knots_y,
+            ]
+        )
 
         return md
-    #
 
     def set_metadata(self, md):
         """
-        This method extracts and sets the attributes from a metadata array.
+        Extract and set the attributes from a metadata array.
 
-        As of this code version the
-        metadata array is [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
+        As of this code version the metadata array is:
+            [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
 
         Returns
         -------
-
-            md : np.ndarray
-                The metadata array.
+        md : np.ndarray
+            The metadata array.
 
         See Also
         --------
-        :py:meth:`get_metadata`
+        get_metadata
 
         """
 
@@ -92,11 +87,10 @@ class Radius(BiSpline):
             n_knots_x=round(md[3]),
             n_knots_y=round(md[4]),
         )
-    #
 
     def get_feature_vector_length(self):
         """
-        This method returns the length of the feature vector considering the spline parameters.
+        Return the length of the feature vector considering the spline parameters.
 
         If nx, ny are the amount of internal knots in each component and kx, ky are the degrees of
         the polynomial BSplines of each component, the length of the radius feature vector is
@@ -105,22 +99,19 @@ class Radius(BiSpline):
 
         Returns
         -------
-
-            rk : int
-                The length of the radius feature vector.
+        rk : int
+            The length of the radius feature vector.
 
         """
 
-        if not attribute_checker(self,
-                                 ['n_knots_x',
-                                  'n_knots_y',
-                                  'kx',
-                                  'ky'],
-                                 info='Cannot compute the Radius feature vector length.'):
+        if not attribute_checker(
+            self,
+            ["n_knots_x", "n_knots_y", "kx", "ky"],
+            info="Cannot compute the Radius feature vector length.",
+        ):
             return None
         rk = (self.n_knots_x + self.kx + 1) * (self.n_knots_y + self.ky + 1)
         return rk
-    #
 
     def to_feature_vector(self, add_metadata=True):
         """
@@ -131,24 +122,22 @@ class Radius(BiSpline):
         of the feature vector. The first entry of the metadata vector is the total number of
         metadata, making it look like [n, md0, ..., mdn], read more about it in get.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
+        add_metadata: bool, optional
+            Default True. Wether to append metadata at the beginning of the feature vector.
 
-            add_metadata: bool, optional
-                Default True. Wether to append metadata at the beginning of the feature vector.
-
-        Return
-        ------
-
-            fv : np.ndarray
-                The feature vector according to mode. The shape of each feature vector changes
-                accordingly.
+        Returns
+        -------
+        fv : np.ndarray
+            The feature vector according to mode. The shape of each feature vector changes
+            accordingly.
 
 
         See Also
         --------
-        :py:meth:`get_metadata`
-        :py:meth:`from_feature_vector`
+        get_metadata
+        from_feature_vector
         """
 
         fv = self.coeffs.ravel()
@@ -157,7 +146,6 @@ class Radius(BiSpline):
             fv = np.concatenate([self.get_metadata(), fv])
 
         return fv
-    #
 
     @staticmethod
     def from_feature_vector(fv, md=None):
@@ -166,28 +154,26 @@ class Radius(BiSpline):
 
         Note that in order to build the Radius, the feature vector must start with the metadata
         array or it must be passed with the md argument. Read more about the metadata array at
-        `get_metadata` method docs.
+        get_metadata method docs.
 
 
-        Arguments
-        ---------
+        Parameters
+        ----------
+        fv : np.ndarray (N,)
+            The feature vector with the metadata at the beginning.
+        md : np.ndarray (M,)
+            The metadata array to use. If passed, it will be assumed that fv does not
+            contain it at the beginning.
 
-            fv : np.ndarray (N,)
-                The feature vector with the metadata at the beginning.
-
-            md : np.ndarray (M,)
-                The metadata array to use. If passed, it will be assumed that fv does not
-                contain it at the beginning.
-
-        Return
-        ------
-            rd : Radius
-                The Radius object built from the feature vector.
+        Returns
+        -------
+        rd : Radius
+            The Radius object built from the feature vector.
 
         See Also
         --------
-        :py:meth:`to_feature_vector`
-        :py:meth:`get_metadata`
+        to_feature_vector
+        get_metadata
         """
 
         if md is None:
@@ -200,7 +186,8 @@ class Radius(BiSpline):
         rk = r * k
         if len(fv) != rk:
             error_message(
-                f'Cannot build a Radius object from feature vector. Expected rk knots ((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided.')
+                f"Cannot build a Radius object from feature vector. Expected rk knots ((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided."
+            )
             return
 
         rd.set_parameters(
@@ -209,68 +196,56 @@ class Radius(BiSpline):
         )
 
         return rd
-    #
 
     @staticmethod
-    def from_points(
-            points,
-            tau_knots,
-            theta_knots,
-            laplacian_penalty=1.0,
-            cl=None,
-            debug=False):
+    def from_points(points, tau_knots, theta_knots, laplacian_penalty=1.0, cl=None, debug=False):
         """
-        Function to build a Radius object from an array of points in the Vessel Coordinate System.
+        Build a Radius object from an array of points in the Vessel Coordinate System.
+
+
         Radius object are a specialized Bivariate Splines. This function allow to build such objects
         by performing a least squares approximation using the longitudinal and angular coordinates
         to model the radius.
 
-        Arguments
-        ---------
-
-            points : np.ndarray (N, 3)
-                The vessel coordinates point array to be approximated.
-
-            tau_knots, theta_knots : int
-                The number of internal knots in longitudinal and angular dimensions respectively.
-                TODO: Allow building non-uniform BSplines.
-
-            laplacian_penalty : float, optional
-                Default 1.0. A penalty factor to apply on the laplacian for spline approximation
-                optimization.
-
-            cl : Centerline, optional
-                Default None. The centerline associated to the radius.
-
-            debug : bool, optional
-                Default False. Whether to show plots during the fitting process.
+        Parameters
+        ----------
+        points : np.ndarray (N, 3)
+            The vessel coordinates point array to be approximated.
+        tau_knots, theta_knots : int
+            The number of internal knots in longitudinal and angular dimensions respectively.
+            TODO: Allow building non-uniform BSplines.
+        laplacian_penalty : float, optional
+            Default 1.0. A penalty factor to apply on the laplacian for spline approximation
+            optimization.
+        cl : Centerline, optional
+            Default None. The centerline associated to the radius.
+        debug : bool, optional
+            Default False. Whether to show plots during the fitting process.
 
         Returns
         -------
-            rd : Radius
-                The radius object built based on the passed points.
+        rd : Radius
+            The radius object built based on the passed points.
         """
 
         rd = Radius()
         if cl is not None:
             rd.set_parameters_from_centerline(cl)
 
-        bispl = uniform_penalized_bivariate_spline(x=points[:, 0],
-                                                   y=points[:, 1],
-                                                   z=points[:, 2],
-                                                   nx=tau_knots,
-                                                   ny=theta_knots,
-                                                   laplacian_penalty=laplacian_penalty,
-                                                   y_periodic=True,
-                                                   kx=rd.kx,
-                                                   ky=rd.ky,
-                                                   bounds=(
-                                                       rd.x0, rd.x1, rd.y0, rd.y1),
-                                                   debug=debug)
-        rd.set_parameters(build=True,
-                          n_knots_x=tau_knots,
-                          n_knots_y=theta_knots,
-                          coeffs=bispl.get_coeffs())
+        bispl = uniform_penalized_bivariate_spline(
+            x=points[:, 0],
+            y=points[:, 1],
+            z=points[:, 2],
+            nx=tau_knots,
+            ny=theta_knots,
+            laplacian_penalty=laplacian_penalty,
+            y_periodic=True,
+            kx=rd.kx,
+            ky=rd.ky,
+            bounds=(rd.x0, rd.x1, rd.y0, rd.y1),
+            debug=debug,
+        )
+        rd.set_parameters(
+            build=True, n_knots_x=tau_knots, n_knots_y=theta_knots, coeffs=bispl.get_coeffs()
+        )
         return rd
-    #
-#
