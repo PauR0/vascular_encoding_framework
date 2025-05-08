@@ -645,37 +645,36 @@ def get_cross_section(
         The generated cross section.
     """
 
-    match scheme:
-        case "base":
-            cs = CrossSectionScheme(
-                theta_res=theta_res,
-                rho_res=rho_res,
-            )
+    if scheme == "base":
+        cs = CrossSectionScheme(
+            theta_res=theta_res,
+            rho_res=rho_res,
+        )
 
-        case "ogrid":
-            cs = OGridCrossSection(
-                theta_res=theta_res,
-                rho_res=rho_res,
-                r=kwargs.get("r", None),
-                n_layers=kwargs.get("n_layers", None),
-                growth_rate=kwargs.get("growth_rate", None),
-                min_percentage=kwargs.get("min_percentage", None),
-            )
+    elif scheme == "ogrid":
+        cs = OGridCrossSection(
+            theta_res=theta_res,
+            rho_res=rho_res,
+            r=kwargs.get("r", None),
+            n_layers=kwargs.get("n_layers", None),
+            growth_rate=kwargs.get("growth_rate", None),
+            min_percentage=kwargs.get("min_percentage", None),
+        )
 
-        case "cylindrical":
-            cs = CylindricalCrossSection(
-                theta_res=theta_res,
-                rho_res=rho_res,
-                n_layers=kwargs.get("n_layers", None),
-                growth_rate=kwargs.get("growth_rate", None),
-                min_percentage=kwargs.get("min_percentage", None),
-                twist=kwargs.get("twist", None),
-            )
+    elif scheme == "cylindrical":
+        cs = CylindricalCrossSection(
+            theta_res=theta_res,
+            rho_res=rho_res,
+            n_layers=kwargs.get("n_layers", None),
+            growth_rate=kwargs.get("growth_rate", None),
+            min_percentage=kwargs.get("min_percentage", None),
+            twist=kwargs.get("twist", None),
+        )
 
-        case _:
-            raise ValueError(
-                f"Wrong value for scheme argument ({scheme})."
-                "Available options are {'ogrid', 'cylindrical'}"
-            )
+    else:
+        raise ValueError(
+            f"Wrong value for scheme argument ({scheme})."
+            "Available options are {'ogrid', 'cylindrical'}"
+        )
 
     return cs
