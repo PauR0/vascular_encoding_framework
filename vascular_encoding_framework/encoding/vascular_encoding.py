@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
@@ -11,6 +13,10 @@ from .encoding import Encoding
 from .remesh import VascularMeshing
 from .vessel_encoding import VesselAnatomyEncoding
 
+if TYPE_CHECKING:
+    from ..centerline import Centerline, CenterlineTree
+    from ..vascular_mesh import VascularMesh
+
 
 class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
     """Vascular anatomy encoding class."""
@@ -19,8 +25,14 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
         Tree.__init__(self=self)
 
     def encode_vascular_mesh(
-        self, vmesh, cl_tree, tau_knots=15, theta_knots=15, laplacian_penalty=1.0, **kwargs
-    ):
+        self,
+        vmesh: VascularMesh,
+        cl_tree: CenterlineTree,
+        tau_knots: int = 15,
+        theta_knots: int = 15,
+        laplacian_penalty: float = 1.0,
+        **kwargs,
+    ) -> VascularAnatomyEncoding:
         """
         Encode a VascularMesh using a centerline tree.
 
@@ -80,15 +92,15 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
 
     def encode_vascular_mesh_decoupling(
         self,
-        vmesh,
-        cl_tree,
-        tau_knots=15,
-        theta_knots=15,
-        laplacian_penalty=1.0,
-        insertion=1.0,
-        debug=False,
+        vmesh: VascularMesh,
+        cl_tree: CenterlineTree,
+        tau_knots: int = 15,
+        theta_knots: int = 15,
+        laplacian_penalty: float = 1.0,
+        insertion: float = 1.0,
+        debug: bool = False,
         **kwargs,
-    ):
+    ) -> VascularAnatomyEncoding:
         """
         Encode a vascular mesh decoupling each branch as an independent vessel.
 
@@ -128,13 +140,13 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
 
         def remove_centerline_graft(bid):
             nonlocal insertion
-            cl = cl_tree[bid]
-            pve = self[cl.parent]
+            cl: Centerline = cl_tree[bid]
+            pve: VesselAnatomyEncoding = self[cl.parent]
             tau = pve.compute_centerline_intersection(cl, mode="parameter")
             r = vmesh.kdt.query(cl(tau))[0] * check_specific(kwargs, bid, "insertion", insertion)
             # Traveling a radius distance towards inlet
             tau_ = cl.travel_distance_parameter(-1 * r, tau)
-            cl = cl.trim(t0_=tau_)
+            cl = cl.trim(tau_0=tau_)
             return cl
 
         def decouple_and_encode_vessel(bid):
@@ -166,8 +178,12 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
         return self
 
     def make_triangulated_surface_mesh(
-        self, tau_res=100, theta_res=50, join_at_surface=False, **kwargs
-    ):
+        self,
+        tau_res: int = 100,
+        theta_res: int = 50,
+        join_at_surface: bool = False,
+        **kwargs,
+    ) -> pv.PolyData:
         """
         Make a triangle mesh of the encoded vascular network.
 
@@ -188,7 +204,7 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
 
         Returns
         -------
-        vmesh : VascularMesh
+        vmesh : pv.PolyData
             The reconstructed wall meshes for each encoded vessel. Note that at current
             state, meshes are not "sewed" together.
         """
@@ -226,7 +242,9 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
 
         return vmesh
 
-    def to_multiblock(self, add_attributes=True, tau_res=100, theta_res=50) -> pv.MultiBlock:
+    def to_multiblock(
+        self, add_attributes: bool = True, tau_res: int = 100, theta_res: int = 50
+    ) -> pv.MultiBlock:
         """
         Make a multiblock composed of other multiblocks from each encoded vessel of the vascular
         structure.
@@ -585,7 +603,7 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
             ve.rotate(r, update=update)
 
 
-def encode_vascular_mesh(vmesh, cl_tree, params, debug):
+def encode_vascular_mesh(vmesh: VascularMesh, cl_tree: CenterlineTree, params: dict, debug: bool):
     """
     Encode a vascular mesh using the provided parameters.
 
