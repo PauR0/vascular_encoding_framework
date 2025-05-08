@@ -754,21 +754,13 @@ class Curve(UniSpline):
 
         for att in atts:
             value = poly.user_dict[att]
-            match att:
-                case "interval":
-                    self.set_parameters(t0=value[0], t1=value[1])
 
-                case "k":
-                    self.set_parameters(k=round(value[0]))
-
-                case "n_knots":
-                    self.set_parameters(n_knots=round(value[0]))
-
-                case "coeffs":
-                    self.set_parameters(coeffs=np.array(value))
-
-                case "extrapolation":
-                    self.set_parameters(extra=str(value[0]))
+            if att == "interval":
+                self.set_parameters(t0=value[0], t1=value[1])
+            elif att == "coeffs":
+                self.set_parameters(coeffs=np.array(value))
+            else:
+                self.set_parameters(**{att: value})
         self.build()
 
         if "v1" in poly.user_dict:
