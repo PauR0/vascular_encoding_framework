@@ -707,7 +707,7 @@ class Curve(UniSpline):
             poly.user_dict["interval"] = [self.t0, self.t1]
             poly.user_dict["k"] = self.k
             poly.user_dict["n_knots"] = self.n_knots
-            poly.user_dict["coeffs"] = deepcopy(self.coeffs)
+            poly.user_dict["coeffs"] = self.coeffs.tolist()
             poly.user_dict["extrapolation"] = self.extra
 
         return poly
