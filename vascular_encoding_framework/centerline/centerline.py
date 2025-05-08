@@ -201,6 +201,37 @@ class Centerline(Curve, Node):
         poly = pv.read(fname)
         return Centerline().from_polydata(poly)
 
+    def trim(
+        self, tau_0: float, tau_1: float = None, trim_knots: bool = False, n_samps: int = 100
+    ) -> Centerline:
+        """
+        Trim the centerline from tau_0 to tau_1 and return the new segment as a Centerline object.
+
+        The amount of knots for the trimmed curve will be computed taking into account the amount of
+        knot_segments in the interval [tau_0, tau_1].
+
+        Parameters
+        ----------
+        tau_0, tau_1 : float
+            The lower and upper extrema to trim. If t1_ is None, self.t1 is assumed.
+        trim_knots : bool, optional
+            Default False. If true the number of knots is adapted to keep the spacing as it was in
+            the untrimmed curve. Otherwise, the number of knots is kept but the spacing is modified.
+        n_samps : int, optional
+            Default 100. The amount of samples to generate to perform the approximation.
+
+        Returns
+        -------
+        cl : Centerline
+            The trimmed Centerline.
+        """
+
+        cl: Centerline = super().trim(t0_=tau_0, t1_=tau_1, trim_knots=trim_knots, n_samps=n_samps)
+
+        cl.set_data_from_other_node(nd=self, extra=["tau_joint"])
+
+        return cl
+
     @staticmethod
     def from_points(
         points,
