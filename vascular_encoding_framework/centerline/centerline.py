@@ -21,7 +21,7 @@ class Centerline(Curve, Node):
         # Hierarchy data
         Node.__init__(self=self)
         # The parameter of the joint at parent centerline
-        self.joint_t: float = None
+        self.tau_joint: float = None
 
         # Geometry data
         Curve.__init__(self=self)
@@ -137,7 +137,7 @@ class Centerline(Curve, Node):
             poly.user_dict["id"] = self.id
             poly.user_dict["parent"] = self.parent
             poly.user_dict["children"] = list(self.children)
-            poly.user_dict["joint_t"] = self.joint_t
+            poly.user_dict["tau_joint"] = self.tau_joint
 
         return poly
 
@@ -164,7 +164,7 @@ class Centerline(Curve, Node):
         It must contain the required in user_dict. The minimum required data are the parameters
         involving the spline building, namely, {'interval' 'k' 'knots' 'coeffs' 'extrapolation'}.
         Additionally, if the centerline belong to a tree, it is advised to also include the
-        attributes {'id', 'parent', 'children', 'joint_t'} in the PolyData user_dict.
+        attributes {'id', 'parent', 'children', 'tau_joint'} in the PolyData user_dict.
 
         Parameters
         ----------
@@ -179,7 +179,7 @@ class Centerline(Curve, Node):
         super().from_polydata(poly=poly)
 
         # Add Node attributes if present
-        node_atts = list(Node().__dict__) + ["joint_t"]
+        node_atts = list(Node().__dict__) + ["tau_joint"]
         for att in node_atts:
             if att in poly.user_dict:
                 value = poly.user_dict[att]

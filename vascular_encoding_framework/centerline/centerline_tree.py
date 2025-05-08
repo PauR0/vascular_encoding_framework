@@ -355,22 +355,22 @@ class CenterlineTree(Tree):
             if parents[nid] is not None:
                 pcl = cl_tree[parents[nid]]
                 pre_joint = paths[nid].points[0]
-                pre_joint_t = pcl.get_projection_parameter(pre_joint)
+                pre_tau_joint = pcl.get_projection_parameter(pre_joint)
                 gr = check_specific(kwargs, nid, "graft_rate", graft_rate)
                 if gr:
-                    joint_t = pcl.travel_distance_parameter(
-                        d=-paths[nid]["radius"][0] * gr, a=pre_joint_t
+                    tau_joint = pcl.travel_distance_parameter(
+                        d=-paths[nid]["radius"][0] * gr, a=pre_tau_joint
                     )
-                    joint = pcl(joint_t)
+                    joint = pcl(tau_joint)
                     ids = np.linalg.norm(points - joint, axis=1) > paths[nid]["radius"][0] * gr
                     points = np.concatenate(
                         [
-                            [joint, pcl((joint_t + pre_joint_t) / 2)],
+                            [joint, pcl((tau_joint + pre_tau_joint) / 2)],
                             paths[nid].points[ids],
                         ]
                     )
                 else:
-                    joint_t = pre_joint_t
+                    tau_joint = pre_tau_joint
 
             cl = Centerline.from_points(
                 points,
@@ -386,7 +386,7 @@ class CenterlineTree(Tree):
             cl.id = nid
             if parents[nid] is not None:
                 cl.parent = parents[nid]
-                cl.joint_t = joint_t
+                cl.tau_joint = tau_joint
             cl_tree[nid] = cl
 
             for cid in cl_ids:

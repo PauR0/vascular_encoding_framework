@@ -35,14 +35,14 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
     def set_centerline(self, cl):
         """
         Set the centerline attribute. Note that the VesselAnatomyEncoding object inherits
-        the node attributes from the centerline, in addition if joint_t is defined,
+        the node attributes from the centerline, in addition if tau_joint is defined,
         it is also inherited.
         """
 
         self.centerline = cl
         self.set_data_from_other_node(cl)
-        if hasattr(cl, "joint_t"):
-            self.set_data(joint_t=cl.joint_t)
+        if hasattr(cl, "tau_joint"):
+            self.set_data(tau_joint=cl.tau_joint)
 
     def build(self):
         """Build internal spline objects."""
@@ -255,7 +255,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
         """
         Encode a vessel using the centerline and the anisotropic radius.
 
-        If the centerline have hierarchical data like its parent or joint_t
+        If the centerline have hierarchical data like its parent or tau_joint
         it is also set as a parameter for the branch.
 
         This method requires self.centerline to be set or passed.
