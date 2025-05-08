@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+from __future__ import annotations
 
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 
 import numpy as np
 import pyvista as pv
@@ -25,13 +24,13 @@ class GeneralizedProcrustesAlignment:
     """
 
     def __init__(self):
-        self.data_set: Dict[str : np.ndarray | pv.DataObject] = None
+        self.data_set: dict[str : np.ndarray | pv.DataObject] = None
 
         self.alignment_method: Literal["procrustes", "ICP"] = "procrustes"
-        self.alignment_params: Dict[str:Any] = None
+        self.alignment_params: dict[str:Any] = None
         self.alignment: Alignment = None
 
-        self.data_set: Dict[str : np.ndarray | pv.DataObject | Encoding] = None
+        self.data_set: dict[str : np.ndarray | pv.DataObject | Encoding] = None
         self.n_iters: int = 3
         # The key (or its index) of the shape to use in the
         self.reference_id: int | str = 0
