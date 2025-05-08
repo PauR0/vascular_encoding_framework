@@ -69,7 +69,7 @@ class Node:
 
         attribute_setter(self, **kwargs)
 
-    def set_data_from_other_node(self, nd):
+    def set_data_from_other_node(self, nd, extra: list[str] = None):
         """
         Copy the Node attribute from other Node object into this.
 
@@ -80,9 +80,15 @@ class Node:
         ----------
         nd : Node
             The node from which attributes will be copied.
+        extra: list[str]
+            Extra attributes to be set from the node object.
         """
 
-        self.set_data(**{k: getattr(nd, k) for k in Node().__dict__})
+        atts = set(Node().__dict__.keys())
+        if extra is not None:
+            atts.update(extra)
+
+        self.set_data(**{k: getattr(nd, k) for k in atts})
 
     def add_child(self, c):
         """Add a child to this branch."""
