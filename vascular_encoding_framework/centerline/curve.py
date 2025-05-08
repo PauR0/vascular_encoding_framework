@@ -790,7 +790,7 @@ class Curve(UniSpline):
         poly = pv.read(fname)
         return Curve().from_polydata(poly)
 
-    def trim(self, t0_, t1_=None, trim_knots=False, pass_atts=True, n_samps=100) -> Curve:
+    def trim(self, t0_, t1_=None, trim_knots=False, n_samps=100) -> Curve:
         """
         Trim the curve from t0_ to t1_ and return the new segment as a curve object.
 
@@ -805,9 +805,6 @@ class Curve(UniSpline):
         trim_knots : bool, optional
             Default False. If true the number of knots is reduced to keep the spacing as it
             was in the untrimmed curve. Otherwise, the number of knots is kept.
-        pass_atts : bool, optional
-            Default True. Whether to pass all the attributes of the current curve
-            to the trimmed one.
         n_samps : int, optional
             Default 100. The amount of samples to generate to perform the approximation.
 
@@ -835,7 +832,7 @@ class Curve(UniSpline):
             curvature_penalty=0.0,
         )
 
-        curve = Curve()
+        curve = self.__class__()
         curve.set_parameters(
             build=True,
             t0=spl.t[0],
