@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pyvista as pv
 
+from .._base._code import Tree, check_specific
 from ..messages import error_message
-from ..utils._code import Tree, check_specific
 from ..utils.spatial import normalize, radians_to_degrees
 from .centerline import Centerline
 from .domain_extractors import extract_centerline_domain
@@ -461,7 +461,7 @@ def extract_centerline(
     vmesh, params, params_domain=None, params_path=None, debug=False
 ) -> CenterlineTree:
     """
-    Compuete the CenterlineTree of a provided a VascularMesh object with propperly defined
+    Compute the CenterlineTree of a provided a VascularMesh object with properly defined
     boundaries.
 
     Parameters

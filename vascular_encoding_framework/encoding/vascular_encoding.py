@@ -6,8 +6,8 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
+from .._base._code import Tree, check_specific
 from ..messages import error_message
-from ..utils._code import Tree, check_specific
 from ..utils.misc import split_metadata_and_fv
 from .encoding import Encoding
 from .remesh import VascularMeshing
@@ -49,15 +49,17 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
                 The centerlines of the vascular surface.
 
             tau_knots, theta_knots : int, optional
-                Default value is 15 for both. The amount of internal knots in for each component of the radius function.
+                Default value is 15 for both. The amount of internal knots in for each component of
+                the radius function.
 
             laplacian_penalty : float, optional
                 Default 1.0.
 
             **kwargs : dict
-                The above described parameters can be provided per vessel using the kwargs. Say there exist a
-                Vessel whose id is AUX, to set specific parameters AUX, one can pass the argument AUX={tau_knots},
-                to set a specific amount of knots and assuming the default values on the other parameters.
+                The above described parameters can be provided per vessel using the kwargs. Say
+                there exist a Vessel whose id is AUX, to set specific parameters AUX, one can pass
+                the argument AUX={tau_knots}, to set a specific amount of knots and assuming the
+                default values on the other parameters.
 
         Returns
         -------
@@ -123,9 +125,10 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
         debug : bool, optional
             A mode running mode that display plots of the process.
         **kwargs : dict
-            The above described parameters can be provided per vessel using the kwargs. Say there exist a
-            Vessel whose id is AUX, to set specific parameters AUX, one can pass the argument AUX={tau_knots},
-            to set a specific amount of knots and assuming the default values on the other parameters.
+            The above described parameters can be provided per vessel using the kwargs. Say there
+            exist a Vessel whose id is AUX, to set specific parameters AUX, one can pass the
+            argument AUX={tau_knots}, to set a specific amount of knots and assuming the default
+            values on the other parameters.
 
         Returns
         -------

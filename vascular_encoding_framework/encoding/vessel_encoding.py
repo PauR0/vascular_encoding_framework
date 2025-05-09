@@ -6,9 +6,9 @@ import numpy as np
 import pyvista as pv
 from scipy.optimize import minimize_scalar
 
+from .._base._code import Node, attribute_checker, broadcast_kwargs, is_numeric
 from ..centerline import Centerline
-from ..messages import *
-from ..utils._code import Node, attribute_checker, broadcast_kwargs, is_numeric
+from ..messages import error_message
 from ..utils.misc import split_metadata_and_fv
 from ..utils.spatial import normalize, radians_to_degrees
 from .encoding import Encoding

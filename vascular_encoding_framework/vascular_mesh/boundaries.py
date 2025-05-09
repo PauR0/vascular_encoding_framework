@@ -4,9 +4,9 @@ import numpy as np
 import pyvista as pv
 from scipy.interpolate import BSpline
 
-from ..messages import *
+from .._base._code import Node, Tree, attribute_checker
+from ..messages import error_message
 from ..splines.splines import compute_rho_spline, get_uniform_knot_vector
-from ..utils._code import Node, Tree, attribute_checker
 from ..utils._io import read_json, write_json
 from ..utils.spatial import cart_to_polar, normalize, planar_coordinates
 
@@ -418,7 +418,7 @@ class Boundaries(Tree):
     def to_dict(self, compact=True, serialize=True):
         """
         Convert the Boundaries object into a python dictionary. If the serialize argument is True,
-        numpy arrays will be casted to python lists (for json writability).
+        numpy arrays will be casted to python lists (for json compatibility).
 
         Parameters
         ----------

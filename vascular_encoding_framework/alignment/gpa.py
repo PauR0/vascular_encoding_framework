@@ -5,9 +5,9 @@ from typing import Any, Literal
 import numpy as np
 import pyvista as pv
 
+from .._base._code import attribute_checker, attribute_setter
 from ..encoding.encoding import Encoding
-from ..messages import *
-from ..utils._code import attribute_checker, attribute_setter
+from ..messages import error_message
 from .alignment import Alignment, IterativeClosestPoint, RigidProcrustesAlignment, as_an_array
 
 

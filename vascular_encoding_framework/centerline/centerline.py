@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pyvista as pv
 
+from .._base._code import Node, attribute_checker, broadcast_kwargs
 from ..messages import error_message
-from ..utils._code import Node, attribute_checker, broadcast_kwargs
 from ..utils.misc import split_metadata_and_fv
 from ..utils.spatial import get_theta_coord
 from .curve import Curve

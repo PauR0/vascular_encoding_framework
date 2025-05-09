@@ -6,8 +6,8 @@ import numpy as np
 from scipy.interpolate import BivariateSpline, BSpline, splev, splrep
 from scipy.optimize import minimize
 
-from ..messages import *
-from ..utils._code import attribute_checker, attribute_setter
+from .._base._code import attribute_checker, attribute_setter
+from ..messages import error_message
 from .psplines import (
     bivariate_optimization_loss,
     get_bivariate_semiperiodic_constraint,
@@ -621,9 +621,10 @@ def compute_rho_spline(polar_points, n_knots, k=3, logger=None):
 
             coeff_r = None
         else:
-            rmse = compute_slice_rmse(
-                polar_points=polar_points, n_knots_slice=n_knots, coeff=coeff_r
-            )
+            raise NotImplementedError("Root mean squared error not implemented yet!")
+            # rmse = compute_slice_rmse(
+            #    polar_points=polar_points, n_knots_slice=n_knots, coeff=coeff_r
+            # )
 
     return coeff_r, rmse
 

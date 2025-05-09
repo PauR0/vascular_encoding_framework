@@ -1,8 +1,8 @@
 import numpy as np
 
+from .._base._code import attribute_checker
 from ..messages import error_message
 from ..splines.splines import BiSpline, uniform_penalized_bivariate_spline
-from ..utils._code import attribute_checker
 from ..utils.misc import split_metadata_and_fv
 
 
