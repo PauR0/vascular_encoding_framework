@@ -37,8 +37,6 @@ class GeneralizedProcrustesAlignment:
         # first iteration as the mean shape.
         self.build_alignment()
 
-    #
-
     def set_parameters(self, build=True, **kwargs):
         """Set parameters as attributes of the object."""
         gpa = self.__class__()
@@ -47,8 +45,6 @@ class GeneralizedProcrustesAlignment:
 
         if build:
             self.build_alignment()
-
-    #
 
     def build_alignment(self):
         """
@@ -73,8 +69,6 @@ class GeneralizedProcrustesAlignment:
         if self.alignment_params is not None:
             self.alignment.set_parameters(**self.alignment_params)
 
-    #
-
     def compute_mean_shape(self):
         """
         Compute the mean shape of the data set.
@@ -92,8 +86,6 @@ class GeneralizedProcrustesAlignment:
             return None
 
         return np.mean([as_an_array(v) for _, v in self.data_set.items()], axis=0)
-
-    #
 
     def run(self):
         """Compute the GPA over the data set."""
@@ -123,5 +115,3 @@ class GeneralizedProcrustesAlignment:
 
             self.alignment.target = self.compute_mean_shape()
             n_iter += 1
-
-    #
