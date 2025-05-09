@@ -3,6 +3,11 @@
           "editor.formatOnSave": true,
           "editor.defaultFormatter": "charliermarsh.ruff"
     },
+    "cSpell.ignorePaths": [
+        ".git",
+        ".vscode",
+        "pyproject.toml"
+    ],
     "cSpell.words": [
         "arrayable",
         "Arun",
