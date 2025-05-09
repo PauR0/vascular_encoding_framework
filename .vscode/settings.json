@@ -26,6 +26,7 @@
         "disp",
         "Frenet",
         "maxiter",
+        "meshgrid",
         "multiblock",
         "multiblocks",
         "ndarray",
