@@ -790,7 +790,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         vsl_enc.extract_from_feature_vector(fv=fv, md=md)
         return vsl_enc
 
-    def translate(self, t, update=True):
+    def translate(self, t):
         """
         Translate the VesselAnatomyEncoding object.
 
@@ -801,8 +801,6 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         ----------
         t : np.ndarray (3,)
             The translation vector.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -810,13 +808,9 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         """
 
         if self.centerline is not None:
-            self.centerline.coeffs += t.reshape(
-                3,
-            )
-            if update:
-                self.centerline.build()
+            self.centerline.translate(t)
 
-    def scale(self, s, update=True):
+    def scale(self, s):
         """
         Scale the VesselAnatomyEncoding object.
 
@@ -841,38 +835,24 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
             )
 
         if self.centerline is not None:
-            self.centerline.coeffs *= s
-            if update:
-                self.centerline.build()
-
+            self.centerline.scale(s=s)
         if self.radius is not None:
-            self.radius.coeffs *= s
-            if update:
-                self.radius.build()
+            self.radius.scale()
 
-    def rotate(self, r, update=True):
+    def rotate(self, r):
         """
         Rotate the VesselAnatomyEncoding object.
 
         The rotation only requires translating the centerline coefficients, since the radius is
-        is expressed with respect to the centerline.
+        expressed with respect to the centerline.
 
         Parameters
         ----------
         r : np.ndarray (3, 3)
             The rotation matrix.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
         Centerline.rotate
         """
-
-        # ensure normality of the rotation matrix columns
-        r /= np.linalg.norm(r, axis=0)
-
-        if self.centerline is not None:
-            self.centerline.coeffs = (r @ self.centerline.coeffs.T).T
-            if update:
-                self.centerline.build()
+        self.centerline.rotate(r=r)

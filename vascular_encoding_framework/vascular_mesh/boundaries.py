@@ -6,7 +6,7 @@ from scipy.interpolate import BSpline
 
 from .._base import Node, Tree, attribute_checker
 from ..messages import error_message
-from ..splines.splines import compute_rho_spline, get_uniform_knot_vector
+from ..splines import compute_rho_spline, get_uniform_knot_vector
 from ..utils._io import read_json, write_json
 from ..utils.spatial import cart_to_polar, normalize, planar_coordinates
 
@@ -145,8 +145,6 @@ class Boundary(Node):
 
         return planar_coordinates(points=pts.T, c0=self.center, v1=self.v1, v2=self.v2).T
 
-    #
-
     def cartesian_2D_to_polar(self, pts, sort=True):
         """
         Transform 2D Cartesian points to polar coordinates
@@ -214,8 +212,6 @@ class Boundary(Node):
         pts_polar = self.cartesian_2D_to_polar(pts=pts2D, sort=sort)
 
         return pts_polar
-
-    #
 
     def build_rho_spline(self):
         """
@@ -329,16 +325,16 @@ class Boundary(Node):
         """
 
         if self.center is not None:
-            self.center += t.reshape(
-                3,
-            )
+            self.center += t.reshape((3,))
 
         if self.points is not None:
-            self.points += t.reshape(
-                3,
-            )
+            self.points += t.reshape((3,))
 
-    def scale(self, s, update=True):
+        if self.rho_coef is not None:
+            self.rho_coeffs += t.reshape((3,))
+            self.build_rho_spline()
+
+    def scale(self, s):
         """
         Scale the Boundary object.
 
@@ -346,8 +342,6 @@ class Boundary(Node):
         ----------
         s : float
             The scale factor.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
         """
 
         if self.center is not None:
@@ -358,8 +352,7 @@ class Boundary(Node):
 
         if self.rho_coef is not None:
             self.rho_coef *= s
-            if update:
-                self.build_rho_spline()
+            self.build_rho_spline()
 
     def rotate(self, r):
         """
@@ -369,8 +362,6 @@ class Boundary(Node):
         ----------
         r : np.ndarray (3, 3)
             The rotation matrix.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -381,27 +372,23 @@ class Boundary(Node):
         r /= np.linalg.norm(r, axis=0)
 
         if self.center is not None:
-            self.center = (r @ self.center.reshape(3, 1)).reshape(
-                3,
-            )
+            self.center = (r @ self.center.reshape(3, 1)).reshape((3,))
 
         if self.normal is not None:
-            self.normal = (r @ self.normal.reshape(3, 1)).reshape(
-                3,
-            )
+            self.normal = (r @ self.normal.reshape(3, 1)).reshape((3,))
 
         if self.v1 is not None:
-            self.v1 = (r @ self.v1.reshape(3, 1)).reshape(
-                3,
-            )
+            self.v1 = (r @ self.v1.reshape(3, 1)).reshape((3,))
 
         if self.v2 is not None:
-            self.v2 = (r @ self.v2.reshape(3, 1)).reshape(
-                3,
-            )
+            self.v2 = (r @ self.v2.reshape(3, 1)).reshape((3,))
 
         if self.points is not None:
             self.points = (r @ self.points.T).T
+
+        if self.rho_coef is not None:
+            self.rho_coeffs = (r @ self.rho_coeffs.T).T
+            self.build_rho_spline()
 
 
 class Boundaries(Tree):
@@ -472,8 +459,6 @@ class Boundaries(Tree):
         outmultiblock = self.to_multiblock()
         if outmultiblock.n_blocks:
             outmultiblock.save(filename=mbfname, binary=binary)
-
-    #
 
     def to_multiblock(self):
         """
@@ -583,7 +568,7 @@ class Boundaries(Tree):
         for _, bd in self.items():
             bd.translate(t)
 
-    def scale(self, s, update=True):
+    def scale(self, s):
         """
         Scale the Boundaries object, scaling all the Boundary objects, by a scalar factor s.
 
@@ -591,8 +576,6 @@ class Boundaries(Tree):
         ----------
         s : float
             The scale factor.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -600,7 +583,7 @@ class Boundaries(Tree):
         """
 
         for _, bd in self.items():
-            bd.scale(s, update=update)
+            bd.scale(s)
 
     def rotate(self, r):
         """

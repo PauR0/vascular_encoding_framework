@@ -6,14 +6,15 @@ import numpy as np
 from scipy.interpolate import make_lsq_spline
 from scipy.spatial.transform import Rotation
 
+from .._base import SpatialObject
+from ..splines import UniSpline
 from ..utils.spatial import normalize
-from .curve import Curve
 
 if TYPE_CHECKING:
     from .curve import Curve
 
 
-class ParallelTransport(Curve):
+class ParallelTransport(UniSpline, SpatialObject):
     """Parallel Transport class."""
 
     def __init__(self) -> None:
@@ -85,3 +86,46 @@ class ParallelTransport(Curve):
         rot_vec = normalize(np.cross(t0, t1)) * np.arccos(t0dott1)
         R = Rotation.from_rotvec(rot_vec)
         return R.apply(v)
+
+    def translate(self, t):
+        """
+        Has no effect on parallel transport.
+
+        Parameters
+        ----------
+        t : np.ndarray (3,)
+            Ignored.
+        """
+        ...
+
+    def scale(self, s):
+        """
+        Has no effect on parallel transport.
+
+        Parameters
+        ----------
+        s : float
+            Ignored.
+        """
+        ...
+
+    def rotate(self, r):
+        """
+        Rotate the Parallel Transport.
+
+        Rotation is applied to the coefficients of the transport splines.
+
+        Parameters
+        ----------
+        r : np.ndarray (3, 3)
+            The rotation matrix.
+        update : bool, optional
+            Default True. Whether to rebuild the splines after the rotation.
+        """
+
+        # ensure normality of the rotation matrix columns
+        r /= np.linalg.norm(r, axis=0)
+
+        if self.coeffs is not None:
+            self.coeffs = (r @ self.coeffs.T).T
+            self.build()

@@ -9,7 +9,7 @@ from scipy.spatial import KDTree
 
 from .._base import SpatialObject, attribute_checker
 from ..messages import error_message
-from ..splines.splines import UniSpline, uniform_penalized_spline
+from ..splines import UniSpline, uniform_penalized_spline
 from ..utils.geometry import polyline_from_points
 from ..utils.spatial import compute_ref_from_points, normalize
 from .parallel_transport import ParallelTransport
@@ -212,16 +212,19 @@ class Curve(UniSpline, SpatialObject):
         v2_0 = normalize(np.cross(self.get_tangent(self.t0), self.v1.v0))
         self.v2 = self.compute_parallel_transport(mode="as_is", p=v2_0)
 
-    def build(self):
+    def build(self, samples=True, local_ref=True, adapted_frame=True):
         """Build the splines and sets up useful attributes."""
 
         super().build()
         self.tangent = self._spl.derivative()
 
         # Update functions that depend on centerline.
-        self.compute_samples()
-        self.compute_local_ref()
-        self.compute_adapted_frame(mode="project", p=None)
+        if samples:
+            self.compute_samples()
+        if local_ref:
+            self.compute_local_ref()
+        if adapted_frame:
+            self.compute_adapted_frame(mode="project", p=None)
 
     def get_projection_parameter(self, p, method="scalar", full_output=False):
         """
@@ -916,7 +919,7 @@ class Curve(UniSpline, SpatialObject):
 
         return curve
 
-    def translate(self, t, update=True):
+    def translate(self, t):
         """
         Translate the curve.
 
@@ -927,18 +930,15 @@ class Curve(UniSpline, SpatialObject):
         ----------
         t : np.ndarray (3,)
             The translation vector.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
         """
 
         if self.coeffs is not None:
             self.coeffs += t.reshape(
                 3,
             )
-            if update:
-                self.build()
+            self.build()
 
-    def scale(self, s, update=True):
+    def scale(self, s):
         """
         Scale the curve.
 
@@ -949,16 +949,13 @@ class Curve(UniSpline, SpatialObject):
         ----------
         s : float
             The scale factor.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
         """
 
         if self.coeffs is not None:
             self.coeffs *= s
-            if update:
-                self.build()
+            self.build()
 
-    def rotate(self, r, update=True):
+    def rotate(self, r):
         """
         Rotate the curve.
 
@@ -969,8 +966,6 @@ class Curve(UniSpline, SpatialObject):
         ----------
         r : np.ndarray (3, 3)
             The rotation matrix.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
         """
 
         # ensure normality of the rotation matrix columns
@@ -978,5 +973,6 @@ class Curve(UniSpline, SpatialObject):
 
         if self.coeffs is not None:
             self.coeffs = (r @ self.coeffs.T).T
-            if update:
-                self.build()
+            self.build(adapted_frame=False)
+            self.v1.rotate(r=r)
+            self.v2.rotate(r=r)

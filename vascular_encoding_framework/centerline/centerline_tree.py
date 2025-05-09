@@ -394,7 +394,7 @@ class CenterlineTree(Tree, SpatialObject):
 
         return cl_tree
 
-    def translate(self, t, update=True):
+    def translate(self, t):
         """
         Translate the CenterlineTree object, translating all the Centerline objects, with the
         translation vector t.
@@ -403,8 +403,6 @@ class CenterlineTree(Tree, SpatialObject):
         ----------
         t : np.ndarray (3,)
             The translation vector.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -412,9 +410,9 @@ class CenterlineTree(Tree, SpatialObject):
         """
 
         for _, cl in self.items():
-            cl.translate(t, update=update)
+            cl.translate(t)
 
-    def scale(self, s, update=True):
+    def scale(self, s):
         """
         Scale the CenterlineTree object, scaling all the Centerline objects, by a scalar factor s.
 
@@ -422,8 +420,6 @@ class CenterlineTree(Tree, SpatialObject):
         ----------
         s : float
             The scale factor.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -431,9 +427,9 @@ class CenterlineTree(Tree, SpatialObject):
         """
 
         for _, cl in self.items():
-            cl.scale(s, update=update)
+            cl.scale(s)
 
-    def rotate(self, r, update=True):
+    def rotate(self, r):
         """
         Rotate the CenterlineTree, rotating all the Centerline objects, with the provided rotation
         matrix r.
@@ -442,8 +438,6 @@ class CenterlineTree(Tree, SpatialObject):
         ----------
         r : np.ndarray (3, 3)
             The rotation matrix.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -451,7 +445,7 @@ class CenterlineTree(Tree, SpatialObject):
         """
 
         for _, cl in self.items():
-            cl.rotate(r, update=update)
+            cl.rotate(r)
 
 
 def extract_centerline(

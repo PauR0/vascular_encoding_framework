@@ -547,7 +547,7 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
 
         return vsc_enc
 
-    def translate(self, t, update=True):
+    def translate(self, t):
         """
         Translate the VascularAnatomyEncoding object, translating all the VesselAnatomyEncoding
         objects, with the translation vector t.
@@ -556,8 +556,6 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         ----------
         t : np.ndarray (3,)
             The translation vector.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -565,18 +563,17 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
 
         for _, ve in self.items():
-            ve.translate(t, update=update)
+            ve.translate(t)
 
-    def scale(self, s, update=True):
+    def scale(self, s):
         """
-        Scale the VascularAnatomyEncoding object, scaling all the VesselAnatomyEncoding objects, by a scalar factor s.
+        Scale the VascularAnatomyEncoding object, scaling all the VesselAnatomyEncoding objects, by
+        a scalar factor s.
 
         Parameters
         ----------
         s : float
             The scale factor.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -584,18 +581,17 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
 
         for _, ve in self.items():
-            ve.scale(s, update=update)
+            ve.scale(s)
 
-    def rotate(self, r, update=True):
+    def rotate(self, r):
         """
-        Rotate the VascularAnatomyEncoding, rotating all the VesselAnatomyEncoding objects, with the provided rotation matrix r.
+        Rotate the VascularAnatomyEncoding, rotating all the VesselAnatomyEncoding objects, with the
+        provided rotation matrix r.
 
         Parameters
         ----------
         r : np.ndarray (3, 3)
             The rotation matrix.
-        update : bool, optional
-            Default True. Whether to rebuild the splines after the transformation.
 
         See Also
         --------
@@ -603,7 +599,7 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
 
         for _, ve in self.items():
-            ve.rotate(r, update=update)
+            ve.rotate(r)
 
 
 def encode_vascular_mesh(vmesh: VascularMesh, cl_tree: CenterlineTree, params: dict, debug: bool):

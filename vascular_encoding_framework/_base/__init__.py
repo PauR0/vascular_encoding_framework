@@ -8,6 +8,7 @@ __all__ = [
     "attribute_setter",
     "Node",
     "SpatialObject",
+    "Spline",
     "Tree",
 ]
 
@@ -22,4 +23,5 @@ from .misc import (
 )
 from .node import Node
 from .spatial_object import SpatialObject
+from .spline import Spline
 from .tree import Tree
