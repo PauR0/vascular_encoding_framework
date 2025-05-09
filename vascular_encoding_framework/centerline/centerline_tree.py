@@ -190,21 +190,19 @@ class CenterlineTree(Tree):
 
     def cartesian_to_vcs(self, p, cl_id=None, n=None, method="scalar", thrs=30, full_output=False):
         """
-        Given a 3D point p expressed in cartesian coordinates, this method
-        computes its expression in the Vessel Coordinate System (VCS) of the
-        centerline it has been associated to.
+        Given a 3D point p expressed in cartesian coordinates, this method computes its expression
+        in the Vessel Coordinate System (VCS) of the centerline it has been associated to.
 
         Parameters
         ----------
         p : np.ndarray (3,)
             The 3D point.
         cl_id : str, opt
-            Default None. The id of the centerline in the tree to project
-            the point. If None, it is computed using get_centerline_association
-            method.
+            Default None. The id of the centerline in the tree to project the point. If None, it is
+            computed using get_centerline_association method.
         n : np.ndarray, opt
-            Default None. A normal direction at the point, useful if the point
-            belongs to the surface of the vascular domain, its normal can be used.
+            Default None. A normal direction at the point, useful if the point belongs to the
+            surface of the vascular domain, its normal can be used.
         method : Literal {'scalar', 'vec', 'jac-vec', 'sample'}
             The method use to compute the projection.
         full_output : bool, opt
@@ -257,10 +255,9 @@ class CenterlineTree(Tree):
         """
         Make a CenterlineTree object from a pyvista MultiBlock made polydatas.
 
-        As the counterpart of to_multiblock, this static method is meant for building
-        CenterlineTree objects from a pyvista MultiBlock, where each element of the MultiBlock
-        is a PolyData with the information required to build the Tree structure and the Spline
-        information.
+        As the counterpart of to_multiblock, this static method is meant for building CenterlineTree
+        objects from a pyvista MultiBlock, where each element of the MultiBlock is a PolyData
+        with the information required to build the Tree structure and the Spline information.
 
         Parameters
         ----------
@@ -303,33 +300,31 @@ class CenterlineTree(Tree):
         points joined by lines, basically like the output of CenterlinePathExtractor.
 
 
-        Each polydata must have a field_data called 'parent' and has to be a list with
-        a single id (present in the multiblock names).
+        Each polydata must have the corresponding metadata as user_dict.
 
         Parameters
         ----------
         paths : pv.MultiBlock
-            The multiblock containing the centerline paths. All the elements in the paths
-            have to be of PolyData type. Each of these polydatas must have a field_data
-            called 'parent', that has to be a list with a single id (present in the multiblock names).
-            The names of the polydatas must be separable in "path_" + "id" as in path_AsAo
-        n_knots : dict[str]
-            A dictionary with the knots to perform the spline curve least squares fitting of each polydata.
-            The id is accessed by the centerline id, and the value can be the list of knots to use, or a int
-            in the latter, a uniform spline is built with the number provided.
+            The multiblock containing the centerline paths. All the elements in paths must be of
+            PolyData type. Their block name will be interpreted as their ID. Each of these polydatas
+            must have the centerline metadata defined as user_dict.
+        n_knots : int
+            The number of knots to perform the fitting. To use a specific value per branch, read
+            the kwargs documentation.
         graft_rate : float, opt
-            Default is 0.5. A parameter to control the grafting insertion. Represent a distance proportional to the radius
-            traveled towards the parent branch inlet along the centerline at the junction.
+            Default is 0.5. A parameter to control the grafting insertion. Represent a distance
+            proportional to the radius traveled towards the parent branch inlet along the centerline
+            at the junction. To use a specific value per branch, read the kwargs documentation.
         force_extremes : {False, True, 'ini', 'end'}
             Default True. Whether to force the centerline to interpolate the boundary behavior
             of the approximation. If True the first and last point are interpolated and its
-            tangent is approximated by finite differences using the surrounding points. If
-            'ini', respectively 'end', only one of both extremes is forced.
+            tangent is approximated by finite differences using the surrounding points. If 'ini',
+            respectively 'end', only one of both extremes is forced.
         **kwargs : dict
-            The above described arguments can be provided per branch using the kwargs. Say there exist a
-            path_AUX in the passed multiblock, to set specific parameters for the branch AUX, one can pass
-            the dictionary AUX={n_knots:20}, setting the number of knots to 20 and assuming the default
-            values for the rest of the parameters.
+            The above described arguments can be provided per branch using the kwargs. Say there
+            exist a path with id AUX in the passed multiblock, to set specific parameters for the
+            branch AUX, one can pass the dictionary AUX={n_knots:20}, setting the number of knots to
+            20 and assuming the default values for the rest of the parameters.
 
         Returns
         -------
@@ -401,7 +396,8 @@ class CenterlineTree(Tree):
 
     def translate(self, t, update=True):
         """
-        Translate the CenterlineTree object, translating all the Centerline objects, with the translation vector t.
+        Translate the CenterlineTree object, translating all the Centerline objects, with the
+        translation vector t.
 
         Parameters
         ----------
@@ -439,7 +435,8 @@ class CenterlineTree(Tree):
 
     def rotate(self, r, update=True):
         """
-        Rotate the CenterlineTree, rotating all the Centerline objects, with the provided rotation matrix r.
+        Rotate the CenterlineTree, rotating all the Centerline objects, with the provided rotation
+        matrix r.
 
         Parameters
         ----------
@@ -461,16 +458,15 @@ def extract_centerline(
     vmesh, params, params_domain=None, params_path=None, debug=False
 ) -> CenterlineTree:
     """
-    Compute the CenterlineTree of a provided a VascularMesh object with properly defined
-    boundaries.
+    Compute the CenterlineTree of a provided a VascularMesh object with properly defined boundaries.
 
     Parameters
     ----------
     vmesh : VascularMesh
         The VascularMesh object where centerline is to be computed.
     params : dict
-        The parameters for the spline approximation for each boundary, together with the grafting rate
-        and tangent forcing parameters.
+        The parameters for the spline approximation for each boundary, together with the grafting
+        rate and tangent forcing parameters.
     params_domain : dict, opt
         The parameters for the domain extraction algorithm. More information about it in the
         domain_extractors module.
