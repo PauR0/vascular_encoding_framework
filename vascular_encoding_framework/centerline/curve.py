@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from copy import deepcopy
-
 import numpy as np
 import pyvista as pv
 from scipy.integrate import quad
@@ -11,7 +9,7 @@ from scipy.spatial import KDTree
 
 from ..messages import error_message
 from ..splines.splines import UniSpline, uniform_penalized_spline
-from ..utils._code import Node, attribute_checker
+from ..utils._code import attribute_checker
 from ..utils.geometry import polyline_from_points
 from ..utils.spatial import compute_ref_from_points, normalize
 from .parallel_transport import ParallelTransport
@@ -470,7 +468,7 @@ class Curve(UniSpline):
         """
         Compute the arc length of the centerline.
 
-        It is computed accordint to:
+        It is computed according to:
 
                     L_c(a,b) = int_a^b ||c'(t)|| dt.
 
