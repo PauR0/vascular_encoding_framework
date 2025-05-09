@@ -2,7 +2,7 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base._code import attribute_setter
+from .._base import attribute_setter
 from ..messages import error_message
 from ..utils.geometry import approximate_cross_section, extract_section, triangulate_cross_section
 from ..utils.spatial import compose_transformation_matrix, compute_ref_from_points

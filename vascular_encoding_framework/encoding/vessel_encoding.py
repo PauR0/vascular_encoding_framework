@@ -6,8 +6,7 @@ import numpy as np
 import pyvista as pv
 from scipy.optimize import minimize_scalar
 
-from .._base.misc import attribute_checker, broadcast_kwargs, is_numeric
-from .._base.node import Node
+from .._base import Node, SpatialObject, attribute_checker, broadcast_kwargs, is_numeric
 from ..centerline import Centerline
 from ..messages import error_message
 from ..utils.misc import split_metadata_and_fv
@@ -17,7 +16,7 @@ from .radius import Radius
 from .remesh import VesselMeshing
 
 
-class VesselAnatomyEncoding(Node, Encoding, VesselMeshing):
+class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
     """The class for encoding a single branch vessel."""
 
     def __init__(self):

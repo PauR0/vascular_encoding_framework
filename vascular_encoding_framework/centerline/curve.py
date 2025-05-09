@@ -7,7 +7,7 @@ from scipy.interpolate import BSpline
 from scipy.optimize import minimize, minimize_scalar
 from scipy.spatial import KDTree
 
-from .._base.misc import attribute_checker
+from .._base import SpatialObject, attribute_checker
 from ..messages import error_message
 from ..splines.splines import UniSpline, uniform_penalized_spline
 from ..utils.geometry import polyline_from_points
@@ -15,7 +15,7 @@ from ..utils.spatial import compute_ref_from_points, normalize
 from .parallel_transport import ParallelTransport
 
 
-class Curve(UniSpline):
+class Curve(UniSpline, SpatialObject):
     """The curve class contains the main attributes and methods of a Bspline curve."""
 
     def __init__(self):

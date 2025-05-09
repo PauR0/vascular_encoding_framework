@@ -6,8 +6,7 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base.misc import check_specific
-from .._base.tree import Tree
+from .._base import SpatialObject, Tree, check_specific
 from ..messages import error_message
 from ..utils.misc import split_metadata_and_fv
 from .encoding import Encoding
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
     from ..vascular_mesh import VascularMesh
 
 
-class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing):
+class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
     """Vascular anatomy encoding class."""
 
     def __init__(self):

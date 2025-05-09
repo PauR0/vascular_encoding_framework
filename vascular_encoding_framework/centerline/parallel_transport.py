@@ -6,14 +6,14 @@ import numpy as np
 from scipy.interpolate import make_lsq_spline
 from scipy.spatial.transform import Rotation
 
-from ..splines.splines import UniSpline
 from ..utils.spatial import normalize
+from .curve import Curve
 
 if TYPE_CHECKING:
     from .curve import Curve
 
 
-class ParallelTransport(UniSpline):
+class ParallelTransport(Curve):
     """Parallel Transport class."""
 
     def __init__(self) -> None:

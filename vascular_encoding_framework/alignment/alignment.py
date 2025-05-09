@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy as np
 import pyvista as pv
 
-from .._base.misc import attribute_checker, attribute_setter
+from .._base import attribute_checker, attribute_setter
 from ..encoding.encoding import Encoding
 from ..messages import error_message
 from ..utils.spatial import decompose_transformation_matrix, transform_point_array

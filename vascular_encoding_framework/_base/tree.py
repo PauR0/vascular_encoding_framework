@@ -1,3 +1,7 @@
+__all__ = [
+    "Tree",
+]
+
 from copy import deepcopy
 
 from ..messages import error_message, warning_message
