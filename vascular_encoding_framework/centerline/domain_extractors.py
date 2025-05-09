@@ -4,7 +4,7 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base._code import attribute_checker, attribute_setter
+from .._base.misc import attribute_checker, attribute_setter
 from ..messages import computing_message, done_message, error_message
 from ..vascular_mesh import VascularMesh
 

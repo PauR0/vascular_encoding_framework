@@ -4,7 +4,9 @@ import numpy as np
 import pyvista as pv
 from scipy.interpolate import BSpline
 
-from .._base._code import Node, Tree, attribute_checker
+from .._base.misc import attribute_checker
+from .._base.node import Node
+from .._base.tree import Tree
 from ..messages import error_message
 from ..splines.splines import compute_rho_spline, get_uniform_knot_vector
 from ..utils._io import read_json, write_json

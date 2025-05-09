@@ -6,7 +6,8 @@ import numpy as np
 import pyvista as pv
 from scipy.optimize import minimize_scalar
 
-from .._base._code import Node, attribute_checker, broadcast_kwargs, is_numeric
+from .._base.misc import attribute_checker, broadcast_kwargs, is_numeric
+from .._base.node import Node
 from ..centerline import Centerline
 from ..messages import error_message
 from ..utils.misc import split_metadata_and_fv

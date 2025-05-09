@@ -6,7 +6,8 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base._code import Tree, check_specific
+from .._base.misc import check_specific
+from .._base.tree import Tree
 from ..messages import error_message
 from ..utils.misc import split_metadata_and_fv
 from .encoding import Encoding

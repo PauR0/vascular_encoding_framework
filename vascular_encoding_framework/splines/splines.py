@@ -6,7 +6,7 @@ import numpy as np
 from scipy.interpolate import BivariateSpline, BSpline, splev, splrep
 from scipy.optimize import minimize
 
-from .._base._code import attribute_checker, attribute_setter
+from .._base.misc import attribute_checker, attribute_setter
 from ..messages import error_message
 from .psplines import (
     bivariate_optimization_loss,

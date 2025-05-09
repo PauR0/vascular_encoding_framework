@@ -7,7 +7,7 @@ from scipy.interpolate import BSpline
 from scipy.optimize import minimize, minimize_scalar
 from scipy.spatial import KDTree
 
-from .._base._code import attribute_checker
+from .._base.misc import attribute_checker
 from ..messages import error_message
 from ..splines.splines import UniSpline, uniform_penalized_spline
 from ..utils.geometry import polyline_from_points

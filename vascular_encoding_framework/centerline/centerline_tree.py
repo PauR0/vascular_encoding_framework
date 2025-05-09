@@ -3,7 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pyvista as pv
 
-from .._base._code import Tree, check_specific
+from .._base.misc import check_specific
+from .._base.tree import Tree
 from ..messages import error_message
 from ..utils.spatial import normalize, radians_to_degrees
 from .centerline import Centerline
