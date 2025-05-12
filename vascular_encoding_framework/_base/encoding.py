@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -10,6 +10,9 @@ class Encoding(ABC):
     """Base class for encoding classes."""
 
     def __init__(self):
+        if TYPE_CHECKING:
+            self._hyperparameters: list[str]
+
         required_attributes = ["_hyperparameters"]
         for attr in required_attributes:
             if not hasattr(self, attr):
@@ -18,9 +21,14 @@ class Encoding(ABC):
                 )
 
     @abstractmethod
-    def get_hyperparameters(self) -> dict[str, Any]:
+    def get_hyperparameters(self, **kwargs) -> dict[str, Any]:
         """
         Get dict containing the hyperparameters of the encoding object.
+
+        Parameters
+        ----------
+        **kwargs
+            Child subclasses may pass those hyperparameters that are not object attributes.
 
         Returns
         -------
@@ -31,7 +39,21 @@ class Encoding(ABC):
         --------
         set_hyperparameters
         """
-        ...
+
+        hp = {}
+        for p in self._hyperparameters:
+            if p in kwargs:
+                value = kwargs[p]
+            elif hasattr(self, p):
+                value = getattr(self, p)
+            else:
+                raise AttributeError(
+                    f"Unable to build hyperparameter dict for class {self.__class__.__name__}."
+                    + f"Parameter {p} is not an attribute nor has been passed."
+                )
+            hp[p] = value
+
+        return hp
 
     @abstractmethod
     def set_hyperparameters(self, hp: dict[str, Any], **kwargs):
@@ -43,7 +65,7 @@ class Encoding(ABC):
         hp : dict[str, Any]
             The hyperparameter dictionary.
         kwargs:
-            Specific keyword arguments of the subclass implementation
+            Specific keyword arguments of the subclass implementation.
 
         See Also
         --------
@@ -82,7 +104,6 @@ class Encoding(ABC):
         Build an Encoding object from a feature vector.
 
         Warning: The hyperparameters must either be passed or set.
-
 
         Parameters
         ----------
