@@ -90,7 +90,7 @@ class VesselMeshing(ABC):
             Radial resolution.
         **kwargs
             Scheme specific arguments such as the 'r' in ogrid, or the prismatic layers
-            parameters can be passed as kewyword arguments.
+            parameters can be passed as keyword arguments.
 
         Returns
         -------
@@ -194,7 +194,7 @@ class VesselMeshing(ABC):
         radius : float
             Either the absolute or a relative value.
         normalized : bool
-            Defaulting to False. How to intepret radius.
+            Defaulting to False. How to interpret radius.
 
         Returns
         -------
@@ -406,7 +406,7 @@ class VascularMeshing(ABC):
             the cross section is generated at each branch.
         **kwargs
             Scheme specific arguments such as the 'r' in ogrid, or the prismatic layers
-            parameters can be passed as kewyword arguments.
+            parameters can be passed as keyword arguments.
 
         Returns
         -------
@@ -495,7 +495,7 @@ class VascularMeshing(ABC):
         radius : float
             Either the absolute or a relative value.
         normalized : bool
-            Defaulting to False. How to intepret radius.
+            Defaulting to False. How to interpret radius.
         bid : str | None
             Default None. If passed, the cross section is generated for the given branch, otherwise
             the cross section is generated at each branch.

@@ -380,7 +380,7 @@ class Centerline(Curve, Node, Encoding):
         coefficients.
 
         > Note that the feature vector itself lacks the hyperparameter data. To be able to re-build
-        a centerline object from its represenation the hyperparameters are needed as well.
+        a centerline object from its representation the hyperparameters are needed as well.
 
         Returns
         -------
