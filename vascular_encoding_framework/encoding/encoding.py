@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 
@@ -11,34 +12,45 @@ class Encoding(ABC):
     exist in an encoding.
     """
 
-    @abstractmethod
-    def get_metadata(self, **kwargs) -> np.ndarray:
-        """
-        Get a copy of the metadata array.
+    def __init__(self):
+        required_attributes = ["_hyperparameters"]
+        for attr in required_attributes:
+            if not hasattr(self, attr):
+                raise NotImplementedError(
+                    f"{self.__class__.__name__} must define the attribute: '{attr}'"
+                )
 
-        The format of the metadata array of an Encoding is to be specified in the documentation
-        of the subclass.
+    @abstractmethod
+    def get_hyperparameters(self) -> dict[str, Any]:
+        """
+        Get dict containing the hyperparameters of the encoding object.
 
         Returns
         -------
-        md : np.ndarray
-            The metadata array.
+        hp : dict[str, Any]
+            The hyperparameter dict.
+
+        See Also
+        --------
+        set_hyperparameters
         """
         ...
 
     @abstractmethod
-    def set_metadata(self, md, **kwargs) -> np.ndarray:
+    def set_hyperparameters(self, hp: dict[str, Any], **kwargs):
         """
-        Extract and set the attributes from a the metadata array.
-
-        See get_metadata method's documentation for further information on the expected format.
+        Set the hyperparameters.
 
         Parameters
         ----------
-        md : np.ndarray
-            The metadata array.
+        hp : dict[str, Any]
+            The hyperparameter dictionary.
         kwargs:
             Specific keyword arguments of the subclass implementation
+
+        See Also
+        --------
+        get_hyperparameters
         """
         ...
 
@@ -55,7 +67,7 @@ class Encoding(ABC):
         ...
 
     @abstractmethod
-    def to_feature_vector(self, add_metadata=True, **kwargs) -> np.ndarray:
+    def to_feature_vector(self) -> np.ndarray:
         """
         Convert the Encoding to a feature vector.
 
@@ -68,24 +80,28 @@ class Encoding(ABC):
         ...
 
     @staticmethod
-    def from_feature_vector(fv, md=None) -> Encoding:
+    def from_feature_vector(fv: np.ndarray, hp: dict[str, Any] = None) -> Encoding:
         """
         Build an Encoding object from a feature vector.
 
-        Warning: This method only works if the feature vector has the metadata at the beginning or it
-        is passed using the md argument.
-
-        Warning: Due to the lack of hierarchical data of the feature vector mode the returned
-        Encoding object will only have root nodes whose ids correspond to the its order in the
-        feature vector.
+        Warning: The hyperparameters must either be passed or set.
 
 
         Parameters
         ----------
         fv : np.ndarray or array-like (N,)
-            The feature vector with the metadata array at the beginning.
-        md : np.ndarray, optional
-            Default None. If fv does not contain the metadata array at the beginning it can be
-            passed through this argument.
+            The feature vector.
+        hp : dict[str, Any], optional
+            Default None. If not passed, the hyperparameter dict must have been set previously.
+
+        Returns
+        -------
+        enc : Encoding
+            The built encoding with all the attributes appropriately set.
+
+        See Also
+        --------
+        get_hyperparameters
+        set_hyperparameters
         """
         ...
