@@ -2,14 +2,14 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base import attribute_setter
+from .._base import SpatialObject, attribute_setter
 from ..messages import error_message
 from ..utils.geometry import approximate_cross_section, extract_section, triangulate_cross_section
 from ..utils.spatial import compose_transformation_matrix, compute_ref_from_points
 from .boundaries import Boundaries, Boundary
 
 
-class VascularMesh(pv.PolyData):
+class VascularMesh(pv.PolyData, SpatialObject):
     """
     The class to contain the triangle mesh representation of a Vascular
     structure with its attributes such as boundary data. The mesh is expected
@@ -52,16 +52,12 @@ class VascularMesh(pv.PolyData):
         """Compute the KDTree for the points in the wall mesh."""
         self.kdt = KDTree(self.points)
 
-    #
-
     def compute_local_ref(self):
         """Compute the object oriented frame by means of a PCA."""
 
         c, e1, e2, e3 = compute_ref_from_points(self.points)
         self.set_local_ref(c, e1, e2, e3)
         return c, e1, e2, e3
-
-    #
 
     def set_local_ref(self, center, e1, e2, e3):
         """Set the objet oriented frame."""
@@ -195,13 +191,13 @@ class VascularMesh(pv.PolyData):
 
         Parameters
         ----------
-            overwrite : bool, opt
-                Default False. Whether to overwrite the boundaries attribute.
+        overwrite : bool, opt
+            Default False. Whether to overwrite the boundaries attribute.
 
         Returns
         -------
-            boundaries : Boundaries
-                The computed boundaries object.
+        boundaries : Boundaries
+            The computed boundaries object.
         """
 
         bnds = self.extract_feature_edges(
@@ -257,11 +253,12 @@ class VascularMesh(pv.PolyData):
 
         Parameters
         ----------
-            print_data : bool
-
-            edge_color : str
-
-            line_width : int
+        print_data : bool, optional
+            Default False. Whether to print boundary data in the terminal.
+        edge_color : str, optional
+            Default red. A pyvsta-compatible color.
+        line_width : int
+            Default None. Defaulting to pyvista's default.
 
         """
 
