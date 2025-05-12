@@ -705,7 +705,8 @@ class Curve(UniSpline, SpatialObject):
 
         if add_attributes:
             # Adding Spline atts:
-            poly.user_dict["interval"] = [self.t0, self.t1]
+            poly.user_dict["t0"] = self.t0
+            poly.user_dict["t1"] = self.t1
             poly.user_dict["k"] = self.k
             poly.user_dict["n_knots"] = self.n_knots
             poly.user_dict["coeffs"] = self.coeffs.tolist()
@@ -745,7 +746,7 @@ class Curve(UniSpline, SpatialObject):
             The curve object with the attributes already set.
         """
 
-        atts = ["interval", "k", "n_knots", "coeffs", "extrapolation"]
+        atts = ["t0", "t1", "k", "n_knots", "coeffs", "extrapolation"]
         for att in atts:
             if att not in poly.user_dict:
                 error_message(
@@ -756,9 +757,7 @@ class Curve(UniSpline, SpatialObject):
         for att in atts:
             value = poly.user_dict[att]
 
-            if att == "interval":
-                self.set_parameters(t0=value[0], t1=value[1])
-            elif att == "coeffs":
+            if att == "coeffs":
                 self.set_parameters(coeffs=np.array(value))
             else:
                 self.set_parameters(**{att: value})

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pyvista as pv
 
-from .._base import Node, attribute_checker, broadcast_kwargs
-from ..messages import error_message
-from ..utils.misc import split_metadata_and_fv
+from .._base import Encoding, Node, attribute_checker, broadcast_kwargs
 from ..utils.spatial import get_theta_coord
 from .curve import Curve
 from .parallel_transport import ParallelTransport
 
 
-class Centerline(Curve, Node):
+class Centerline(Curve, Node, Encoding):
     """
     The centerline class contains the main attributes and methods of a Bspline
     curve that models the centerline of a branch.
@@ -25,6 +25,23 @@ class Centerline(Curve, Node):
 
         # Geometry data
         Curve.__init__(self=self)
+
+        # Encoding data
+        self._hyperparameters: list[str] = [
+            # Hierarchy
+            "id",
+            "parent",
+            "children",
+            "tau_joint",
+            # Curve
+            "t0",
+            "t1",
+            "k",
+            "n_knots",
+            "extrapolation",
+            "n_samples",
+            "v1_0",
+        ]
 
     def __str__(self):
         """Return the node data of the centerline as string."""
@@ -161,10 +178,7 @@ class Centerline(Curve, Node):
         """
         Build a centerline object from a pyvista PolyData.
 
-        It must contain the required in user_dict. The minimum required data are the parameters
-        involving the spline building, namely, {'interval' 'k' 'knots' 'coeffs' 'extrapolation'}.
-        Additionally, if the centerline belong to a tree, it is advised to also include the
-        attributes {'id', 'parent', 'children', 'tau_joint'} in the PolyData user_dict.
+        It must contain the hyperparameters in user_dict.
 
         Parameters
         ----------
@@ -301,45 +315,30 @@ class Centerline(Curve, Node):
 
         return cl
 
-    def get_metadata(self) -> np.ndarray:
+    def get_hyperparameters(self) -> dict[str, Any]:
         """
-        Return a copy of the metadata array.
-
-        As of this code version the
-        metadata array is [7, k, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
+        Get the hyperparameter dictionary of the object.
 
         Returns
         -------
-        md : np.ndarray
+        hp : dict[str, Any]
+            The json-serializable hyperparameter dictionary.
 
         See Also
         --------
-        set_metadata
-        to_feature_vector
-        from_feature_vector
+        set_hyperparameters
         """
 
-        v1 = self.v1(self.t0)
-        md = np.array([7, self.k, self.n_knots, self.n_samples, v1[0], v1[1], v1[2]])
+        return super().get_hyperparameters(v1_0=self.v1(self.t0))
 
-        return md
-
-    def set_metadata(self, md):
+    def set_hyperparameters(self, hp: dict[str, Any]):
         """
-        Extract and set the attributes from a the metadata array.
-
-        As of this code version the metadata array is expected to be
-                [6, k, n_knots, n_samples, v1(t0)[0], v1(t0)[1], v1(t0)[2]].
-
+        Set the attributes from a hyperparameter dictionary.
 
         Parameters
         ----------
-        md : np.ndarray or array-like
-            The metadata array.
-        build : bool, optional
-            Default False. Whether to build the splines after setting the metadata.
-            This should be set to true if parameters such as coefficients have been
-            previously set.
+        hp : dict[str, Any]
+            The hyperparameter dict.
 
         See Also
         --------
@@ -347,24 +346,18 @@ class Centerline(Curve, Node):
         from_feature_vector
         """
 
-        self.set_parameters(
-            build=False,
-            k=round(md[1]),
-            n_knots=round(md[2]),
-            n_samples=round(md[3]),
-        )
+        self.set_parameters(**{p for p in hp if p != "v1_0"})
 
         self.v1 = ParallelTransport()
-        self.v1.v0 = md[4:]
+        self.v1.v0 = np.array(hp["v1_0"])
 
     def get_feature_vector_length(self) -> int:
         """
-        Return the length of the feature vector considering the spline parameters.
+        Return the feature vector's length of a Centerline object.
 
         If n is the amount of internal knots, and k is the degree of the BSpline polynomials,
         the length of the centerline feature vector is computed as: 3(n+k+1). The multiplication
-        by 3 is due to the three components of the coefficients (a.k.a. control points.).
-
+        by 3 is due to the three components of the coefficients (a.k.a. control points).
 
         Returns
         -------
@@ -379,64 +372,46 @@ class Centerline(Curve, Node):
         l = 3 * (self.n_knots + self.k + 1)
         return l
 
-    def to_feature_vector(self, add_metadata=True) -> np.ndarray:
+    def to_feature_vector(self) -> np.ndarray:
         """
         Convert the Centerline object to its feature vector representation.
 
         The feature vector version of a Centerline consist in appending the raveled centerline
-        coefficients. If add_metadata is True (which is the default), a metadata vector is appended
-        at the beginning of the feature vector. The first entry of the metadata vector is the amount
-        of metadata in total, making it look like [n, md0, ..., mdn], read more about it in get.
+        coefficients.
 
-        Parameters
-        ----------
-        add_metadata: bool, optional
-            Default True. Wether to append metadata at the beginning of the feature vector.
+        > Note that the feature vector itself lacks the hyperparameter data. To be able to re-build
+        a centerline object from its represenation the hyperparameters are needed as well.
 
         Returns
         -------
         fv : np.ndarray
-            The feature vector according to mode. The shape of each feature vector changes
-            accordingly.
-
-        Notes
-        -----
-        Note that the feature vector representation does not bear any hierarchical data, not even
-        if add_metadata is True. Be sure that hierarchical data is properly stored if will be later
-        required. For storage purposes check to_multiblock method.
+            The feature vector representation.
 
 
         See Also
         --------
-        get_metadata
+        get_hyperparameters
         from_feature_vector
 
         """
 
-        fv = self.coeffs.ravel()
-
-        if add_metadata:
-            fv = np.concatenate([self.get_metadata(), fv])
-
-        return fv
+        return self.coeffs.ravel()
 
     @staticmethod
-    def from_feature_vector(fv, md=None) -> Centerline:
+    def from_feature_vector(fv, hp=None) -> Centerline:
         """
         Build a Centerline object from a feature vector.
 
-        Note that in order to build the Centerline, the feature vector must start with the metadata
-        array or it must be passed using the md argument. Read more about the metadata array at
-        get_metadata method docs.
+        > Note that while hyperparameters argument is optional it must have been previously set or
+        passed.
 
 
         Parameters
         ----------
         fv : np.ndarray (N,)
             The feature vector with the metadata at the beginning.
-        md : np.ndarray (M,)
-            The metadata array to use. If passed, it will be assumed that fv does not
-            contain it at the beginning.
+        hp : np.ndarray (M,)
+            The hyperparameter dictionary to use.
 
         Returns
         -------
@@ -446,27 +421,21 @@ class Centerline(Curve, Node):
         See Also
         --------
         to_feature_vector
-        get_metadata
+        get_hyperparameters
         """
 
         cl = Centerline()
 
-        if md is None:
-            md, fv = split_metadata_and_fv(fv)
-
-        cl.set_metadata(md)
+        if hp is not None:
+            cl.set_hyperparameters(hp)
 
         l = cl.get_feature_vector_length()
         if len(fv) != l:
-            error_message(
-                f"Cannot build a Centerline object from feature vector. Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided."
+            raise ValueError(
+                "Cannot build a Centerline object from feature vector."
+                + f"Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided."
             )
-            return None
 
-        cl.set_parameters(
-            build=True,
-            coeffs=fv.reshape(-1, 3),
-            extra="linear",
-        )
+        cl.set_parameters(build=True, coeffs=fv.reshape(-1, 3))
 
         return cl
