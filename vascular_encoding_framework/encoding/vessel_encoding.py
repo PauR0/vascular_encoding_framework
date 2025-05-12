@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from typing import Any
 
 import numpy as np
 import pyvista as pv
@@ -9,7 +10,6 @@ from scipy.optimize import minimize_scalar
 from .._base import Encoding, Node, SpatialObject, attribute_checker, broadcast_kwargs, is_numeric
 from ..centerline import Centerline
 from ..messages import error_message
-from ..utils.misc import split_metadata_and_fv
 from ..utils.spatial import normalize, radians_to_degrees
 from .radius import Radius
 from .remesh import VesselMeshing
@@ -24,6 +24,8 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         self.centerline: Centerline = None
         self.radius: Radius = None
 
+        self._hyperparameters = ["centerline", "radius"]
+
     def set_data(self, **kwargs):
         """Set attributes using kwargs and the setattr function."""
 
@@ -33,17 +35,21 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         return super().set_data(**kwargs)
 
-    def set_centerline(self, cl):
+    def set_centerline(self, cl: Centerline):
         """
-        Set the centerline attribute. Note that the VesselAnatomyEncoding object inherits
-        the node attributes from the centerline, in addition if tau_joint is defined,
-        it is also inherited.
-        """
+        Set the centerline attribute.
 
+        > Note that the VesselAnatomyEncoding object inherits the node
+        attributes from the centerline, in addition if tau_joint is defined, it is also inherited.
+
+        Parameters
+        ----------
+        cl : Centerline
+            The centerline object to be set.
+        """
         self.centerline = cl
-        self.set_data_from_other_node(cl)
-        if hasattr(cl, "tau_joint"):
-            self.set_data(tau_joint=cl.tau_joint)
+        extra = ["tau_joint"] if hasattr(cl, "tau_joint") else None
+        self.set_data_from_other_node(cl, extra=extra)
 
     def build(self):
         """Build internal spline objects."""
@@ -367,7 +373,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         return cl(res.x)
 
-    def to_multiblock(self, add_attributes=True, tau_res=None, theta_res=None):
+    def to_multiblock(self, add_attributes=True, tau_res=100, theta_res=50):
         """
         Make a multiblock with two PolyData objects, one for the centerline and one for the radius.
 
@@ -377,8 +383,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
             Default True. Whether to add all the attributes required to convert the multiblock
             back to a VesselAnatomyEncoding object.
         tau_res, theta_res : int, opt
-            The resolution to build the vessel wall. Defaulting to make_surface_mesh default
-            values.
+            The resolution to build the vessel wall.
 
         Returns
         -------
@@ -387,7 +392,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         See Also
         --------
-        :py:meth:`from_multiblock`
+        from_multiblock
 
         """
 
@@ -405,23 +410,10 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         wall = self.make_tube(tau_res=tau_res, theta_res=theta_res)
         if add_attributes:
-            # Adding tau atts
-            wall.add_field_data(
-                np.array([self.radius.x0, self.radius.x1]), "tau_interval", deep=True
-            )
-            wall.add_field_data(np.array([self.radius.kx]), "tau_k", deep=True)
-            wall.add_field_data(np.array([self.radius.n_knots_x]), "n_tau_knots", deep=True)
-            wall.add_field_data(np.array([self.radius.extra_x]), "tau_extrapolation", deep=True)
+            rhp = self.radius.get_hyperparameters()
+            wall.user_dict["radius"] = rhp
+            wall.user_dict["radius"]["feature vector"] = self.radius.to_feature_vector()
 
-            # Adding theta atts
-            wall.add_field_data(
-                np.array([self.radius.y0, self.radius.y1]), "theta_interval", deep=True
-            )
-            wall.add_field_data(np.array([self.radius.ky]), "theta_k", deep=True)
-            wall.add_field_data(np.array([self.radius.n_knots_y]), "n_theta_knots", deep=True)
-            wall.add_field_data(np.array([self.radius.extra_y]), "theta_extrapolation", deep=True)
-
-            wall.add_field_data(np.array(self.radius.coeffs), "coeffs", deep=True)
         vsl_mb["wall"] = wall
 
         return vsl_mb
@@ -439,14 +431,14 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         Parameters
         ----------
-            vsl_mb : pv.MultiBlock
-                Default True. Whether to add all the attributes required to convert the multiblock
-                back to a VesselAnatomyEncoding object.
+        vsl_mb : pv.MultiBlock
+            A pyvista Multiblock with both wall and centerline PolyDatas and the required
+            parameters.
 
         Returns
         -------
-            vsl_enc : VesselAnatomyEncoding
-                The VesselAnatomyEncoding object built with the attributes stored as field data.
+        vsl_enc : VesselAnatomyEncoding
+            The VesselAnatomyEncoding object built from the MultiBlock.
 
         See Also
         --------
@@ -457,110 +449,75 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         block_names = vsl_mb.keys()
         for name in ["centerline", "wall"]:
             if name not in block_names:
-                error_message(
-                    info=f"Cannot build vessel anatomy encoding from multiblock. {name} is not in {block_names}. "
+                raise ValueError(
+                    "Cannot build vessel anatomy encoding from multiblock."
+                    + f"{name} is not in {block_names}."
                 )
-                return None
 
         vsl_enc = VesselAnatomyEncoding()
 
         cl = Centerline().from_polydata(poly=vsl_mb["centerline"])
         vsl_enc.set_centerline(cl)
 
-        radius = Radius()
         wall = vsl_mb["wall"]
-        # Setting tau params
-        radius.set_parameters(
-            x0=wall.get_array("tau_interval", preference="field")[0],
-            x1=wall.get_array("tau_interval", preference="field")[1],
-            kx=wall.get_array("tau_k", preference="field")[0],
-            n_knots_x=wall.get_array("n_tau_knots", preference="field")[0],
-            extra_x=wall.get_array("tau_extrapolation", preference="field")[0],
+        radius = Radius.from_feature_vector(
+            hp={p for p in wall.user_dict["radius"] if p != "feature vector"},
+            fv=wall.user_dict["radius"]["feature vector"],
         )
-
-        # Setting theta params
-        radius.set_parameters(
-            y0=wall.get_array("theta_interval", preference="field")[0],
-            y1=wall.get_array("theta_interval", preference="field")[1],
-            ky=wall.get_array("theta_k", preference="field")[0],
-            n_knots_y=wall.get_array("n_theta_knots", preference="field")[0],
-            extra_y=wall.get_array("theta_extrapolation", preference="field")[0],
-        )
-
-        radius.set_parameters(build=True, coeffs=wall.get_array("coeffs", preference="field"))
-
         vsl_enc.set_data(radius=radius)
 
         return vsl_enc
 
-    def get_metadata(self):
+    def get_hyperparameters(self) -> dict[str, Any]:
         """
-        Return a copy of the metadata array.
-
-        The metadata array of a VesselAnatomyEncoding object is composed by the centerline and radius
-        metadata arrays as follows:
-                [nc+nr+1, nc, cmd_0,...cmd_nc-1, nr, rmd_0,...,rmd_nr-1]
+        Get the hyperparameter dictionary of the VesselAnatomyEncoding object.
 
         Returns
         -------
-        md : np.ndarray
-            The metadata array.
+        hp : dict[str, Any]
+            The hyperparameter dictionary.
 
         See Also
         --------
-        set_metadata
-        Centerline.get_metadata
-        Radius.get_metadata
-        to_feature_vector
+        set_hyperparameters
+        Centerline.get_hyperparameters
+        Radius.get_hyperparameters
         from_feature_vector
-
         """
 
-        cmd = self.centerline.get_metadata()
-        rmd = self.radius.get_metadata()
-        md = np.concatenate([[cmd[0] + rmd[0] + 1], cmd, rmd])
-        return md
+        return super().get_hyperparameters()
 
-    def set_metadata(self, md):
+    def set_hyperparameters(self, hp: dict[str, Any]):
         """
-        Extract and set the attributes from a the metadata array.
-
-        See get_metadata method's documentation for further information on the expected format.
+        Set the hyperparameters.
 
         Parameters
         ----------
-        md : np.ndarray
-            The metadata array.
+        hp : dict[str, Any]
+            The hyperparameters dictionary.
 
         See Also
         --------
-        get_metadata
-        Centerline.set_metadata
-        Radius.set_metadata
-        to_feature_vector
+        get_hyperparameters
+        Centerline.set_hyperparameters
+        Radius.set_hyperparameters
         from_feature_vector
         """
 
         # Centerline
-        nc = round(md[1])
-        ini = 1
-        end = ini + nc
-        cmd = md[ini:end]
-        if self.centerline is None:
-            self.centerline = Centerline()
-        self.centerline.set_metadata(md=cmd)
+        centerline = self.centerline
+        if centerline is None:
+            centerline = Centerline()
+        centerline.set_hyperparameters(hp=hp["centerline"])
+        self.set_centerline(centerline)
 
         # Radius
-        nr = round(md[end])
-        ini = end
-        end = ini + nr
-        rmd = md[ini:end]
         if self.radius is None:
             self.radius = Radius()
         self.radius.set_parameters_from_centerline(self.centerline)
-        self.radius.set_metadata(md=rmd)
+        self.radius.set_hyperparameters(md=hp["radius"])
 
-    def to_feature_vector(self, mode="full", add_metadata=True):
+    def to_feature_vector(self, mode="full"):
         """
         Convert the VesselAnatomyEncoding to a feature vector.
 
@@ -570,34 +527,18 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         Parameters
         ----------
-        mode : {'full', 'centerline', 'radius', 'image'}, optional
-            Default 'full'. Argument to control the way the VesselObject is converted in a
-            feature vector. Each of the modes works as follows:
+        mode : {'full', 'centerline', 'radius'}, optional
+            Default 'full'. Argument to select the components to compose the  feature vector. Each
+            of the modes works as follows:
 
-            - 'full': This mode stores all the information required to convert the feature
-                vector back to a VesselAnatomyEncoding. The feature vector built by this mode starts
-                with some metadata, followed by the raveled centerline spline coefficients and
-                finishes with the raveled radius coefficients.
-                It should look like:
-                fv = (clx_0,...,clx_l, cly_0,...,cly_l, clz_0,...,clz_l, r_00,...,r_kr)
-                Where: - l = n_knots_centerline + k       + 1
-                        - k = n_knots_tau        + k_tau   + 1
-                        - r = n_knots_theta      + k_theta + 1
+            - 'full': Concatenation of both centerline and radius feature vectors. This option is
+            required for posterior rebuilding of the VesselAnatomyEncoding.
 
-            - 'centerline' : This mode only returns the centerline coefficients.
-                It should look like:
-                fv = (clx_0,...,clx_L, cly_0,...,cly_L, clz_0,...,clz_L)
+            - 'centerline' : This mode only returns the centerline coefficients. It is equivalent to
+            self.centerline.to_feature_vector()
 
-            - 'radius' : This mode only returns the radius coefficients.
-                It should look like:
-                fv = (r_00,...,r_0R,r_10,...,r_KR)
-
-            - 'image' : return the feature vector arranged as an image.
-                NOT IMPLEMENTED YET
-        add_metadata : bool, optional
-            Default True. If True, a metadata array is append at the beginning of the feature vector.
-            The first element of it corresponds with the number of metadata elements.
-                md = (nmd, md_0,...,m_nmd-1)
+            - 'radius' : This mode only returns the radius coefficients. It is equivalent to
+            self.centerline.to_feature_vector()
 
         Returns
         -------
@@ -605,67 +546,46 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
             The feature vector according to mode. The shape of each feature vector changes
             accordingly.
 
-        Notes
-        -----
-        Note that the feature vector representation does not bear any hierarchical data, not even
-        if add_metadata is True. Be sure that hierarchical data is properly stored if will be later
-        required. For storage purposes check `to_multiblock` method.
-
-
         See Also
         --------
-        :py:meth:`from_feature_vector`
-        :py:meth:`VesselAnatomyEncoding.to_feature_vector`
-        :py:meth:`VesselAnatomyEncoding.from_feature_vector`
+        from_feature_vector
+        Centerline.to_feature_vector
+        Radius.from_feature_vector
         """
 
-        md = []
-
-        if mode not in {"full", "centerline", "radius", "image"}:
-            error_message(
-                "Wrong value for mode argument, cannot make a feature vector."
-                + f"Provided is: {mode}, must be in ['full', 'centerline','radius', 'image']."
+        if mode not in {"full", "centerline", "radius"}:
+            raise ValueError(
+                "Wrong value for mode argument."
+                + f"Provided is: {mode}, must be in {{'full', 'centerline','radius', 'image'}}."
             )
-            return None
 
-        if mode == "centerline":
-            fv = self.centerline.to_feature_vector(add_metadata=add_metadata)
+        cfv = []
+        if mode in ["full", "centerline"]:
+            cfv = self.centerline.to_feature_vector()
 
-        if mode == "radius":
-            fv = self.radius.to_feature_vector(add_metadata=add_metadata)
+        rfv = []
+        if mode in ["full", "radius"]:
+            rfv = self.radius.to_feature_vector()
 
-        if mode == "full":
-            cfv = self.centerline.to_feature_vector(add_metadata=False)
-            rfv = self.radius.to_feature_vector(add_metadata=False)
-            if add_metadata:
-                md = self.get_metadata()
-            fv = np.concatenate([md, cfv, rfv])
-
-        if mode == "image":
-            # TODO
-            raise NotImplementedError(
-                "The implementation is not yet developed, this mode will be available in future versions."
-            )
+        fv = np.concatenate([cfv, rfv])
 
         return fv
 
-    def split_feature_vector(self, fv, has_metadata=False):
+    def split_feature_vector(self, fv):
         """
         Split the centerline component from the radius component of a feature vector.
 
-        This function requires the metadata of the centerline and radius objects exist.
+        This function requires the previous setting of the hyperparameters of both centerline and
+        radius objects.
 
         Parameters
         ----------
         fv : np.ndarray or array-like (N,)
-        has_metadata : bool, optional
-            Default False. If true, the first element is assumed to be the amount of metadata,
-            then the first elements are removed according to this number.
 
         Returns
         -------
             cfv, rfv : np.ndarray
-                The centerline and radius feature vectors respectively, both with no metadata.
+                The centerline and radius feature vectors respectively.
 
         See Also
         --------
@@ -674,17 +594,13 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         Radius.to_feature_vector
         """
 
-        if has_metadata:
-            nmd = fv[0]
-            fv = fv[nmd:]
-
         l = self.centerline.get_feature_vector_length()
         rk = self.radius.get_feature_vector_length()
         if len(fv) != l + rk:
-            error_message(
-                f"Cant split feature vector with length {len(fv)} in a centerline fv of length {l} and a radius fv of length {rk}"
+            raise ValueError(
+                f"Cant split feature vector with length {len(fv)} into a centerline fv of length"
+                + f"{l} and a radius fv of length {rk}"
             )
-            return None, None
 
         cfv, rfv = fv[:l], fv[l:]
         return cfv, rfv
@@ -712,7 +628,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         n = self.centerline.get_feature_vector_length() + self.radius.get_feature_vector_length()
         return n
 
-    def extract_from_feature_vector(self, fv, md=None):
+    def update_from_feature_vector(self, fv):
         """
         Update the attributes of the VesselAnatomyEncoding object with those provided in a feature
         vector.
@@ -724,10 +640,6 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         ----------
         fv : np.ndarray or array-like (N,)
             The feature vector with the metadata array at the beginning.
-        md : np.ndarray, optional
-            Default None. If fv does not contain the metadata array at the beginning it can be
-            passed through this argument.
-
 
         See Also
         --------
@@ -735,39 +647,21 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         to_feature_vector
         """
 
-        if md is not None:
-            self.set_metadata(md=md)
-
-        n = self.get_feature_vector_length()
-        if len(fv) != n:
-            error_message(
-                f"Cannot extract attributes from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements."
-            )
-            return None
-
         cfv, rfv = self.split_feature_vector(fv)
         self.centerline.set_parameters(build=True, coeffs=cfv.reshape(-1, 3))
         self.radius.set_parameters(build=True, coeffs=rfv)
 
     @staticmethod
-    def from_feature_vector(fv, md=None):
+    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray) -> VesselAnatomyEncoding:
         """
         Build a VesselAnatomyEncoding object from a full feature vector.
 
-        Warning: This method only works if the feature vector has the metadata at the beginning or it
-        is passed using the md argument.
-
-        Warning: The returned VesselAnatomyEncoding wont have any hierarchical properties nor id since that
-        information is not stored on the feature vector.
-
-
         Parameters
         ----------
-        fv : np.ndarray or array-like (N,)
-            The feature vector with the metadata array at the beginning.
-        md : np.ndarray, optional
-            Default None. If fv does not contain the metadata array at the beginning it can be
-            passed through this argument.
+        hp : dict[str, Any]
+            The hyperparameter dictionary.
+        fv : np.ndarray (N,)
+            The feature vector.
 
         Returns
         -------
@@ -776,17 +670,13 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         See Also
         --------
-        get_metadata
-        set_metadata
+        get_hyperparameters
         to_feature_vector
-
         """
 
-        if md is None:
-            md, fv = split_metadata_and_fv(fv)
-
         vsl_enc = VesselAnatomyEncoding()
-        vsl_enc.extract_from_feature_vector(fv=fv, md=md)
+        vsl_enc.set_hyperparameters(hp)
+        vsl_enc.update_from_feature_vector(fv=fv)
         return vsl_enc
 
     def translate(self, t):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pyvista as pv
@@ -8,7 +8,6 @@ from scipy.spatial import KDTree
 
 from .._base import Encoding, SpatialObject, Tree, check_specific
 from ..messages import error_message
-from ..utils.misc import split_metadata_and_fv
 from .remesh import VascularMeshing
 from .vessel_encoding import VesselAnatomyEncoding
 
@@ -22,6 +21,9 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
 
     def __init__(self):
         Tree.__init__(self=self)
+
+        self.kind = ["uncoupled"]
+        self._hyperparameters = []
 
     def encode_vascular_mesh(
         self,
@@ -137,7 +139,6 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         See Also
         --------
         encode_vascular_mesh
-
         """
 
         def remove_centerline_graft(bid):
@@ -330,81 +331,53 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
 
         return vsc_enc
 
-    def get_metadata(self, exclude=None):
+    def get_hyperparameters(self) -> dict[str, Any]:
         """
-        Return a copy of the metadata array.
-
-        The metadata array of a VascularAnatomyEncoding object is composed by the metadata arrays of the
-        VesselAnatomyEncoding objects it contains. The first element is the total length of the metadata
-        array, then the number of VesselAnatomyEncoding objects stored in it, and finally the metadata
-        arrays of the VesselAnatomyEncoding objects.
+        Get the dict containing the hyperparameters of the VascularAnatomyEncoding object.
 
         Returns
         -------
-        md : np.ndarray
-            The metadata array.
-
-        See Also
-        --------
-        set_metadata
-        VesselAnatomyEncoding.get_metadata
-        to_feature_vector
-        from_feature_vector
+        hp : dict[str, Any]
+            The json serializable dictionary with the hyperparameters of the encoding.
         """
 
-        if exclude is None:
-            exclude = []
+        self._hyperparameters = list(self.keys())
+        return super().get_hyperparameters(**self)
 
-        md = []
-
-        def append_md(vid):
-            if vid not in exclude:
-                md.append(self[vid].get_metadata())
-                for cid in sorted(self[vid].children):
-                    append_md(cid)
-
-        for rid in sorted(self.roots):
-            append_md(rid)
-
-        nve = len(md)  # Number of VesselAnatomyEncodings stored
-        n = (md[0][0]) * nve + 2  # Total Amount of metadata elements
-        md = np.concatenate(md)
-        md = np.concatenate([[n, nve], md])
-        return md
-
-    def set_metadata(self, md):
+    def set_hyperparameters(self, hp: dict[str, Any]):
         """
-        Extract and set the attributes from a the metadata array.
+        Set the hyperparameters of a VascularAnatomyEncoding object.
 
-        See get_metadata method's documentation for further information on the expected format.
+        Note that this will initialize or modify the required VesselAnatomyEncoding objects
+        according to the dictionary keys.
 
         Parameters
         ----------
-            md : np.ndarray
-                The metadata array.
+        hp : dict[str, Any]
+            The hyperparameter dictionary.
 
         See Also
         --------
-        get_metadata
-        VesselAnatomyEncoding.get_metadata
-        VesselAnatomyEncoding.set_metadata
-        to_feature_vector
-        from_feature_vector
+        get_hyperparameters
         """
 
-        nve = round(md[1])  # Number of VesselAnatomyEncodings
-        ini = 2
+        def set_branch_hp(bid):
+            vsl_enc = VesselAnatomyEncoding()
+            if bid in self:
+                vsl_enc: VesselAnatomyEncoding = self[bid]
+            vsl_enc.set_hyperparameters(hp=hp[bid])
 
-        for i in range(nve):
-            end = ini + round(md[ini])
-            ve_md = md[ini:end]
-            vsl = VesselAnatomyEncoding()
-            vsl.id = f"{i}"
-            vsl.set_metadata(ve_md)
-            self[str(i)] = vsl
-            ini = end
+            for cid in vsl_enc.children:
+                set_branch_hp(bid)
 
-    def get_feature_vector_length(self, exclude=None):
+        for rid, _hp in hp.items():
+            # Hierarchy is stored in vsl_enc centerline hp
+            if _hp["centerline"]["parent"] is None:
+                set_branch_hp(rid)
+
+        return
+
+    def get_feature_vector_length(self):
         """
         Return the length of the feature vector.
 
@@ -416,49 +389,24 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         n : int
             The length of the centerline feature vector.
         """
-
-        if len(self) < 1:
-            return 0
-
-        if exclude is None:
-            exclude = []
-
         n = 0
-
-        def add_length(vid):
-            nonlocal n
-            if vid not in exclude:
-                n += self[vid].get_feature_vector_length()
-                for cid in self[vid].children:
-                    add_length(cid)
-
-        for rid in self.roots:
-            add_length(rid)
+        for vsl_enc in self.values():
+            n += vsl_enc.get_feature_vector_length()
 
         return n
 
-    def to_feature_vector(self, mode="full", exclude=None, add_metadata=True):
+    def to_feature_vector(self, mode="full") -> np.ndarray:
         """
         Convert the VascularAnatomyEncoding to a feature vector.
 
-        The feature vector version of a VascularAnatomyEncoding consist in appending the feature vector
-        representations of all the VesselAnatomyEncoding objects of the network. To read about the feature
-        vector format of each vessel read VesselAnatomyEncoding.to_feature_vector documentation.
-
-        For consistency reasons the order for appending each vessel in the VascularAnatomyEncoding follows
-        a tree-sorted scheme. Hence, it starts with the first root alphabetically, and continues with
-        the first child alphabetically and so on.
+        The feature vector version of a VascularAnatomyEncoding consist in the inductive and
+        alphabetically appending of the VesselAnatomyEncoding objects in it.
 
         Parameters
         ----------
-        mode : {'full', 'centerline', 'radius', 'image'}
-            The mode to build the feature vector of the VesselAnatomyEncoding objects. See
-                VesselAnatomyEncoding.to_feature_vector for further information on each mode.
-        exclude : list[str], optional
-            Default None. A list with the id of vessels to be excluded when building the feature vector.
-            Warning: Note that not only the provided vessel will be excluded but also all the subtree rooted in it.
-        add_metadata : bool, optional
-            Default True. Whether to add the metadata array at the beginning of the feature vector.
+        mode : {'full', 'centerline', 'radius'}
+            The mode to build the feature vector of the VesselAnatomyEncoding objects. _Warning_:
+            Only "full" allows the posterior rebuilding of the encoding.
 
         Returns
         -------
@@ -472,29 +420,21 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         VesselAnatomyEncoding.from_feature_vector
         """
 
-        if exclude is None:
-            exclude = []
-
         fv = []
 
         def append_fv(vid):
-            if vid not in exclude:
-                fv.append(self[vid].to_feature_vector(mode=mode, add_metadata=False))
-                for cid in sorted(self[vid].children):
-                    append_fv(cid)
+            fv.append(self[vid].to_feature_vector(mode=mode, add_metadata=False))
+            for cid in sorted(self[vid].children):
+                append_fv(cid)
 
         for rid in sorted(self.roots):
             append_fv(rid)
 
         fv = np.concatenate(fv)
-
-        md = self.get_metadata() if add_metadata else []
-        fv = np.concatenate([md, fv])
-
         return fv
 
     @staticmethod
-    def from_feature_vector(fv, md=None):
+    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray) -> VascularAnatomyEncoding:
         """
         Build a VascularAnatomyEncoding object from a feature vector.
 
@@ -508,11 +448,10 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
 
         Parameters
         ----------
-        fv : np.ndarray or array-like (N,)
+        hp : dict[str, Any]
+            The hyperparameter dictionary for the VascularAnatomyEncoding object.
+        fv : np.ndarray
             The feature vector with the metadata array at the beginning.
-        md : np.ndarray, optional
-            Default None. If fv does not contain the metadata array at the beginning it can be
-            passed through this argument.
 
         Returns
         -------
@@ -521,28 +460,34 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
 
         See Also
         --------
-        get_metadata
-        set_metadata
+        get_hyperparameters
+        set_hyperparameters
         to_feature_vector
         """
 
-        if md is None:
-            md, fv = split_metadata_and_fv(fv)
-
         vsc_enc = VascularAnatomyEncoding()
-        vsc_enc.set_metadata(md)
+        vsc_enc.set_hyperparameters(hp=hp)
         n = vsc_enc.get_feature_vector_length()
         if len(fv) != n:
-            error_message(
-                f"Cannot build a VascularAnatomyEncoding object from feature vector. Expected a feature vector of length {n} and the one provided has {len(fv)} elements."
+            raise ValueError(
+                "Cannot build a VascularAnatomyEncoding object from feature vector. Expected a"
+                + f"feature vector of length {n} and the one provided has {len(fv)} elements."
             )
-            return None
 
         ini = 0
-        for _, vsl in vsc_enc.items():
-            end = ini + vsl.get_feature_vector_length()
-            vsl.extract_from_feature_vector(fv[ini:end])
+
+        def extract_vessel_fv(vid):
+            nonlocal ini
+            vsl_enc: VesselAnatomyEncoding = vsc_enc[vid]
+            end = vsl_enc.get_feature_vector_length()
+            vsl_enc.update_from_feature_vector(fv=fv[ini:end])
             ini = end
+
+            for cid in sorted(vsl_enc.children):
+                extract_vessel_fv(cid)
+
+        for rid in sorted(vsc_enc.roots):
+            extract_vessel_fv(rid)
 
         return vsc_enc
 

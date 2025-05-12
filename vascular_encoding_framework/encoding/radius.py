@@ -1,16 +1,19 @@
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 
-from .._base import attribute_checker
-from ..messages import error_message
+from .._base import Encoding, attribute_checker
 from ..splines import BiSpline, uniform_penalized_bivariate_spline
-from ..utils.misc import split_metadata_and_fv
+
+if TYPE_CHECKING:
+    from ..centerline import Centerline
 
 
-class Radius(BiSpline):
+class Radius(BiSpline, Encoding):
     """Radius or Wall function class."""
 
     def __init__(self):
-        super().__init__()
+        BiSpline().__init__(self=self)
 
         self.x0 = 0
         self.x1 = 1
@@ -20,7 +23,20 @@ class Radius(BiSpline):
         self.y1 = 2 * np.pi
         self.extra_y = "periodic"
 
-    def set_parameters_from_centerline(self, cl):
+        self._hyperparameters = [
+            "x0",
+            "x1",
+            "kx",
+            "n_knots_x",
+            "extra_x",
+            "y0",
+            "y1",
+            "ky",
+            "n_knots_y",
+            "extra_y",
+        ]
+
+    def set_parameters_from_centerline(self, cl: Centerline):
         """
         Set the radius bounds equal to the passed Centerline object.
 
@@ -33,60 +49,32 @@ class Radius(BiSpline):
         self.x0 = cl.t0
         self.x1 = cl.t1
 
-    def get_metadata(self):
+    def get_hyperparameters(self) -> dict[str, Any]:
         """
-        Return a copy of the metadata array.
-
-        As of this code version the
-        metadata array is [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
+        Get the hyperparameter dictionary of the Radius object.
 
         Returns
         -------
-        md : np.ndarray
+        hp : dict[str, Any]
+
+        See Also
+        --------
+        set_hyperparameters
+
+        """
+
+        return super().get_hyperparameters()
+
+    def set_hyperparameters(self, hp: dict[str, Any]):
+        """
+        Set hyperparameters from a dictionary.
 
         See Also
         --------
         get_metadata
-
         """
 
-        md = np.array(
-            [
-                5,
-                self.kx,
-                self.ky,
-                self.n_knots_x,
-                self.n_knots_y,
-            ]
-        )
-
-        return md
-
-    def set_metadata(self, md):
-        """
-        Extract and set the attributes from a metadata array.
-
-        As of this code version the metadata array is:
-            [5, k_tau, k_theta, n_knots_tau, n_knots_theta].
-
-        Returns
-        -------
-        md : np.ndarray
-            The metadata array.
-
-        See Also
-        --------
-        get_metadata
-
-        """
-
-        self.set_parameters(
-            build=False,
-            kx=round(md[1]),
-            ky=round(md[2]),
-            n_knots_x=round(md[3]),
-            n_knots_y=round(md[4]),
-        )
+        self.set_parameters(build=False, **hp)
 
     def get_feature_vector_length(self):
         """
@@ -95,7 +83,6 @@ class Radius(BiSpline):
         If nx, ny are the amount of internal knots in each component and kx, ky are the degrees of
         the polynomial BSplines of each component, the length of the radius feature vector is
         (nx+kx+1)*(ny*ky+1).
-
 
         Returns
         -------
@@ -113,26 +100,16 @@ class Radius(BiSpline):
         rk = (self.n_knots_x + self.kx + 1) * (self.n_knots_y + self.ky + 1)
         return rk
 
-    def to_feature_vector(self, add_metadata=True):
+    def to_feature_vector(self) -> np.ndarray:
         """
         Convert the Radius object to its feature vector representation.
 
         The feature vector version of a Radius object consist in the raveled radius coefficients.
-        If add_metadata is True (which is the default), a metadata array is appended at the beginning
-        of the feature vector. The first entry of the metadata vector is the total number of
-        metadata, making it look like [n, md0, ..., mdn], read more about it in get.
-
-        Parameters
-        ----------
-        add_metadata: bool, optional
-            Default True. Wether to append metadata at the beginning of the feature vector.
 
         Returns
         -------
-        fv : np.ndarray
-            The feature vector according to mode. The shape of each feature vector changes
-            accordingly.
-
+        : np.ndarray
+            The feature vector of the Radius object.
 
         See Also
         --------
@@ -140,15 +117,10 @@ class Radius(BiSpline):
         from_feature_vector
         """
 
-        fv = self.coeffs.ravel()
-
-        if add_metadata:
-            fv = np.concatenate([self.get_metadata(), fv])
-
-        return fv
+        return self.coeffs.ravel()
 
     @staticmethod
-    def from_feature_vector(fv, md=None):
+    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray):
         """
         Build a Radius object from a feature vector.
 
@@ -156,14 +128,12 @@ class Radius(BiSpline):
         array or it must be passed with the md argument. Read more about the metadata array at
         get_metadata method docs.
 
-
         Parameters
         ----------
+        hp : dict[str, Any], optional
+            The hyperparameter dictionary.
         fv : np.ndarray (N,)
             The feature vector with the metadata at the beginning.
-        md : np.ndarray (M,)
-            The metadata array to use. If passed, it will be assumed that fv does not
-            contain it at the beginning.
 
         Returns
         -------
@@ -176,24 +146,18 @@ class Radius(BiSpline):
         get_metadata
         """
 
-        if md is None:
-            md, fv = split_metadata_and_fv(fv)
-
         rd = Radius()
-        rd.set_metadata(md)
+        rd.set_hyperparameters(hp)
 
         r, k = (rd.n_knots_x + rd.kx + 1), (rd.n_knots_y + rd.ky + 1)
         rk = r * k
         if len(fv) != rk:
-            error_message(
-                f"Cannot build a Radius object from feature vector. Expected rk knots ((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided."
+            raise ValueError(
+                f"Cannot build a Radius object from feature vector. Expected {rk} knots "
+                + f"((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided."
             )
-            return
 
-        rd.set_parameters(
-            build=True,
-            coeffs=fv,
-        )
+        rd.set_parameters(build=True, coeffs=fv)
 
         return rd
 
