@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pyvista as pv
 
+from .cross_sections import CrossSectionScheme, get_cross_section
+
 if TYPE_CHECKING:
     from ..vascular_encoding import VascularAnatomyEncoding
     from ..vessel_encoding import VesselAnatomyEncoding
-
-from .cross_sections import CrossSectionScheme, get_cross_section
 
 
 class VesselMeshing(ABC):
