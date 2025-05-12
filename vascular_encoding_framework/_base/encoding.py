@@ -51,7 +51,11 @@ class Encoding(ABC):
                     f"Unable to build hyperparameter dict for class {self.__class__.__name__}."
                     + f"Parameter {p} is not an attribute nor has been passed."
                 )
-            hp[p] = value
+
+            if isinstance(value, Encoding):
+                hp[p] = value.get_hyperparameters()
+            else:
+                hp[p] = value
 
         return hp
 
