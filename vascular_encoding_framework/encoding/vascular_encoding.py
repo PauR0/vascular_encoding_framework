@@ -6,10 +6,9 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base import SpatialObject, Tree, check_specific
+from .._base import Encoding, SpatialObject, Tree, check_specific
 from ..messages import error_message
 from ..utils.misc import split_metadata_and_fv
-from .encoding import Encoding
 from .remesh import VascularMeshing
 from .vessel_encoding import VesselAnatomyEncoding
 

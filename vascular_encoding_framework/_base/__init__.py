@@ -1,4 +1,5 @@
 __all__ = [
+    "Encoding",
     "check_specific",
     "broadcast_kwargs",
     "is_sequence",
@@ -12,6 +13,7 @@ __all__ = [
     "Tree",
 ]
 
+from .encoding import Encoding
 from .misc import (
     attribute_checker,
     attribute_setter,

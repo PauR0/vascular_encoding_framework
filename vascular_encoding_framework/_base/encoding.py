@@ -7,10 +7,7 @@ import numpy as np
 
 
 class Encoding(ABC):
-    """
-    Base class for encoding object. This class contains the method required to
-    exist in an encoding.
-    """
+    """Base class for encoding classes."""
 
     def __init__(self):
         required_attributes = ["_hyperparameters"]
