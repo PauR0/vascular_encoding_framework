@@ -103,7 +103,7 @@ class Encoding(ABC):
         ...
 
     @staticmethod
-    def from_feature_vector(fv: np.ndarray, hp: dict[str, Any] = None) -> Encoding:
+    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray) -> Encoding:
         """
         Build an Encoding object from a feature vector.
 
@@ -111,10 +111,10 @@ class Encoding(ABC):
 
         Parameters
         ----------
+        hp : dict[str, Any], optional
+            The hyperparameter dictionary.
         fv : np.ndarray or array-like (N,)
             The feature vector.
-        hp : dict[str, Any], optional
-            Default None. If not passed, the hyperparameter dict must have been set previously.
 
         Returns
         -------
