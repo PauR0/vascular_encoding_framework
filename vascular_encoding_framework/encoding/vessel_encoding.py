@@ -411,8 +411,8 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         wall = self.make_tube(tau_res=tau_res, theta_res=theta_res)
         if add_attributes:
             rhp = self.radius.get_hyperparameters()
+            rhp["feature vector"] = self.radius.to_feature_vector().tolist()
             wall.user_dict["radius"] = rhp
-            wall.user_dict["radius"]["feature vector"] = self.radius.to_feature_vector()
 
         vsl_mb["wall"] = wall
 
@@ -461,8 +461,8 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         wall = vsl_mb["wall"]
         radius = Radius.from_feature_vector(
-            hp={p for p in wall.user_dict["radius"] if p != "feature vector"},
-            fv=wall.user_dict["radius"]["feature vector"],
+            hp={p: v for p, v in wall.user_dict["radius"].items() if p != "feature vector"},
+            fv=np.array(wall.user_dict["radius"]["feature vector"]),
         )
         vsl_enc.set_data(radius=radius)
 
@@ -515,7 +515,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         if self.radius is None:
             self.radius = Radius()
         self.radius.set_parameters_from_centerline(self.centerline)
-        self.radius.set_hyperparameters(md=hp["radius"])
+        self.radius.set_hyperparameters(hp=hp["radius"])
 
     def to_feature_vector(self, mode="full"):
         """
@@ -599,7 +599,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         if len(fv) != l + rk:
             raise ValueError(
                 f"Cant split feature vector with length {len(fv)} into a centerline fv of length"
-                + f"{l} and a radius fv of length {rk}"
+                + f" {l} and a radius fv of length {rk}"
             )
 
         cfv, rfv = fv[:l], fv[l:]

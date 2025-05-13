@@ -346,7 +346,7 @@ class Centerline(Curve, Node, Encoding):
         from_feature_vector
         """
 
-        self.set_parameters(**{p for p in hp if p != "v1_0"})
+        self.set_parameters(**{p: v for p, v in hp.items() if p != "v1_0"})
 
         self.v1 = ParallelTransport()
         self.v1.v0 = np.array(hp["v1_0"])

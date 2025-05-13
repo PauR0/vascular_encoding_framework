@@ -7,7 +7,6 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from .._base import Encoding, SpatialObject, Tree, check_specific
-from ..messages import error_message
 from .remesh import VascularMeshing
 from .vessel_encoding import VesselAnatomyEncoding
 
@@ -288,17 +287,13 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
         Make a VascularAnatomyEncoding object from a pyvista MultiBlock.
 
-        The MultiBlock is expected to contain each vessel as a multiblock itself whose data is stored as
-        field data.
+        The MultiBlock is expected to contain each vessel as a multiblock itself. The
+        hyperparameters and feature vectors must be stored in user_dicts of each block.
 
         Parameters
         ----------
-        add_attributes : bool, optional
-            Default True. Whether to add all the attributes required to convert the multiblock
-            back to a VesselAnatomyEncoding object.
-        tau_res, theta_res : int, optional
-            The resolution to build all the vessel walls. Defaulting to make_surface_mesh method
-            default values.
+        vsc_mb : pv.MultiBlock
+            The pyvista multiblock with each element.
 
         Returns
         -------
@@ -310,8 +305,6 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         to_multiblock
         VesselAnatomyEncoding.to_multiblock
         VesselAnatomyEncoding.from_multiblock
-        Centerline.to_polydata
-        Centerline.from_polydata
         """
 
         enc_dict = {
@@ -362,13 +355,12 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
 
         def set_branch_hp(bid):
-            vsl_enc = VesselAnatomyEncoding()
-            if bid in self:
-                vsl_enc: VesselAnatomyEncoding = self[bid]
+            vsl_enc = self[bid] if bid in self else VesselAnatomyEncoding()
             vsl_enc.set_hyperparameters(hp=hp[bid])
+            self[bid] = vsl_enc
 
             for cid in vsl_enc.children:
-                set_branch_hp(bid)
+                set_branch_hp(cid)
 
         for rid, _hp in hp.items():
             # Hierarchy is stored in vsl_enc centerline hp
@@ -399,8 +391,10 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
         Convert the VascularAnatomyEncoding to a feature vector.
 
-        The feature vector version of a VascularAnatomyEncoding consist in the inductive and
-        alphabetically appending of the VesselAnatomyEncoding objects in it.
+        The feature vector version of a VascularAnatomyEncoding consist in the appending of its
+        VesselAnatomyEncoding objects in a alphabetic-inductive order. This is, the first root
+        branch is picked in alphabetic order, then its first children in alphabetic order, and so
+        on, and so on.
 
         Parameters
         ----------
@@ -423,7 +417,7 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         fv = []
 
         def append_fv(vid):
-            fv.append(self[vid].to_feature_vector(mode=mode, add_metadata=False))
+            fv.append(self[vid].to_feature_vector(mode=mode))
             for cid in sorted(self[vid].children):
                 append_fv(cid)
 
@@ -438,20 +432,12 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         """
         Build a VascularAnatomyEncoding object from a feature vector.
 
-        Warning: This method only works if the feature vector has the metadata at the beginning or it
-        is passed using the md argument.
-
-        Warning: Due to the lack of hierarchical data of the feature vector mode the returned
-        VascularAnatomyEncoding object will only have root nodes whose ids correspond to the its order in
-        the feature vector.
-
-
         Parameters
         ----------
         hp : dict[str, Any]
             The hyperparameter dictionary for the VascularAnatomyEncoding object.
         fv : np.ndarray
-            The feature vector with the metadata array at the beginning.
+            The feature vector.
 
         Returns
         -------
@@ -479,7 +465,7 @@ class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
         def extract_vessel_fv(vid):
             nonlocal ini
             vsl_enc: VesselAnatomyEncoding = vsc_enc[vid]
-            end = vsl_enc.get_feature_vector_length()
+            end = ini + vsl_enc.get_feature_vector_length()
             vsl_enc.update_from_feature_vector(fv=fv[ini:end])
             ini = end
 
@@ -574,8 +560,9 @@ def encode_vascular_mesh(vmesh: VascularMesh, cl_tree: CenterlineTree, params: d
         vsc_enc.encode_vascular_mesh(vmesh, cl_tree, **params)
 
     else:
-        error_message(
-            f"Wrong value for encoding method argument. Available options are {{ 'decoupling', 'at_joint' }} and given is {params['method']}"
+        raise ValueError(
+            "Wrong value for encoding method argument."
+            + f"Available options are {{'decoupling', 'at_joint'}} and given is {params['method']}"
         )
 
     return vsc_enc

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -13,7 +15,7 @@ class Radius(BiSpline, Encoding):
     """Radius or Wall function class."""
 
     def __init__(self):
-        BiSpline().__init__(self=self)
+        BiSpline.__init__(self=self)
 
         self.x0 = 0
         self.x1 = 1
@@ -35,6 +37,7 @@ class Radius(BiSpline, Encoding):
             "n_knots_y",
             "extra_y",
         ]
+        Encoding.__init__(self=self)
 
     def set_parameters_from_centerline(self, cl: Centerline):
         """
@@ -157,7 +160,7 @@ class Radius(BiSpline, Encoding):
                 + f"((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided."
             )
 
-        rd.set_parameters(build=True, coeffs=fv)
+        rd.set_parameters(build=True, coeffs=np.array(fv))
 
         return rd
 
