@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Generic, ItemsView, Iterator, TypeVar, ValuesView
+from collections.abc import ItemsView, ValuesView
+from typing import Generic, Iterator, TypeVar
 
 _VT = TypeVar("_VT")
 
@@ -21,7 +22,7 @@ class ValueTypedDict(dict[str, _VT], Generic[_VT]):
     def values(self) -> ValuesView[_VT]:
         return super().values()
 
-    def items(self) -> ItemsView[tuple[str, _VT]]:
+    def items(self) -> ItemsView[str, _VT]:
         return super().items()
 
     def __iter__(self) -> Iterator[str]:
