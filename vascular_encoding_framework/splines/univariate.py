@@ -24,7 +24,7 @@ class UniSpline(Spline):
         self.n_knots: int = None
         self.extra: Literal["linear", "constant"] = "linear"
 
-        self._spl: BSpline
+        self._spl: BSpline = None
 
     def __call__(self, t):
         """
@@ -54,10 +54,8 @@ class UniSpline(Spline):
             The evaluation of t. If coeffs are N-dimensional, the output so will.
         """
 
-        if not attribute_checker(
-            self, ["_spl"], info="can't evaluate spline, it has not been built..."
-        ):
-            return False
+        if self._spl is None:
+            raise AttributeError("Can't evaluate spline object. It has not been built...")
 
         if extra is None:
             extra = self.extra
@@ -120,6 +118,9 @@ class UniSpline(Spline):
 
                 if upp_ids.any():
                     p[upp_ids] = upper_extr(t[upp_ids])
+
+        else:
+            raise ValueError(f"Wrong value for extra argument ({extra}).")
 
         if p.shape[0] == 1:
             return p.ravel()
