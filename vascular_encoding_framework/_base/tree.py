@@ -1,25 +1,35 @@
-__all__ = [
-    "Tree",
-]
+from __future__ import annotations
 
 from copy import deepcopy
+from typing import Generic, Type, TypeVar
 
 from ..messages import error_message, warning_message
 from .node import Node
+from .value_typed_dict import ValueTypedDict
+
+_TT = TypeVar("_TT")
 
 
-class Tree(dict):
+class Tree(ValueTypedDict[_TT], Generic[_TT]):
     """
     Abstract class for trees.
 
     It inherits from dictionary structure so its easier to get-set items.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, _node_type: Type[_TT] = Node) -> None:
         """Tree constructor."""
         super().__init__()
         # This way we allow more than one tree to be hold. Actually more like a
         # forest...
+
+        if not issubclass(_node_type, Node):
+            raise ValueError(
+                f"Expecting a subclass of Node. Provided {_node_type.__name__} is not."
+            )
+
+        self._node_type: Type[_TT] = _node_type
+
         self.roots: set = set()
         return
 
@@ -39,34 +49,33 @@ class Tree(dict):
 
         return outstr
 
+    def pop(self, key: str) -> _TT:
+        nd = self[key]
+        self.remove(key)
+        return nd
+
+    def __or__(self, *args, **kwargs) -> None:
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute __or__.")
+
+    def __ior__(self, *args, **kwargs) -> None:
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute __ior__.")
+
     def enumerate(self):
         """Get a list with the id of stored items."""
         return list(self.keys())
 
     def __setitem__(self, __key, nd: Node) -> None:
-        # Checking it has parent and children attributes. Since Nones are
-        # admitted, attribute_checker is not well suited.
-        for att in ["parent", "children"]:
-            if not hasattr(nd, att):
-                error_message(
-                    f"Aborted insertion of node with id: {__key}. It has no {att} attribute."
-                )
-                return
-
-        if nd.parent is not None and nd.parent not in self.keys():
-            error_message(
-                f"Aborted insertion of node with id: {__key}. Its parent {nd.parent} does not belong to the tree."
+        if not isinstance(nd, self._node_type):
+            raise TypeError(
+                f"Aborted insertion element: {__key}. Object of type {type(nd).__name__} given, "
+                + f"only {self._node_type.__name__} elements are accepted."
             )
-            return
 
         if not isinstance(__key, str):
-            warning_message(
-                f"node {__key} has been set with a non-string key. This may turn in troubles..."
-            )
+            raise TypeError(f"Provided {__key} must be a string.")
+
         if __key != nd.id:
-            warning_message(
-                f"node id attribute is {nd.id} and node id in tree has been set as {__key}."
-            )
+            raise ValueError(f"Provided key ({__key}) does not match the id attribute ({nd.id}).")
 
         super().__setitem__(__key, nd)
 

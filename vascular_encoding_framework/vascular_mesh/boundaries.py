@@ -395,7 +395,7 @@ class Boundaries(Tree):
     """A class containing the boundaries inheriting structure from Tree class."""
 
     def __init__(self, hierarchy=None) -> None:
-        super().__init__()
+        Tree.__init__(self=self, _node_type=Boundary)
 
         if hierarchy is not None:
             self.graft(Tree.from_hierarchy_dict(hierarchy=hierarchy))

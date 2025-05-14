@@ -15,11 +15,13 @@ if TYPE_CHECKING:
     from ..vascular_mesh import VascularMesh
 
 
-class VascularAnatomyEncoding(Tree, Encoding, VascularMeshing, SpatialObject):
+class VascularAnatomyEncoding(
+    Tree[VesselAnatomyEncoding], Encoding, VascularMeshing, SpatialObject
+):
     """Vascular anatomy encoding class."""
 
     def __init__(self):
-        Tree.__init__(self=self)
+        Tree.__init__(self=self, _node_type=VesselAnatomyEncoding)
 
         self.kind = ["uncoupled"]
         self._hyperparameters = []

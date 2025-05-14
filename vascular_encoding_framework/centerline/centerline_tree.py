@@ -12,20 +12,17 @@ from .parallel_transport import ParallelTransport
 from .path_extractor import extract_centerline_path
 
 
-class CenterlineTree(Tree, SpatialObject):
+class CenterlineTree(Tree[Centerline], SpatialObject):
     """Class for the centerline of branched vascular geometries."""
+
+    def __init__(self):
+        Tree.__init__(self=self, _node_type=Centerline)
 
     def __setitem__(self, __key, cl: Centerline) -> None:
         """
         Set items as in dictionaries. However, to belong to a CenterlineTree
         requires consistency in the adapted frames.
         """
-        # Checking it has parent attribute.
-        if not hasattr(cl, "parent"):
-            error_message(
-                f"Aborted insertion of branch with id: {__key}. It has no parent attribute. Not even None."
-            )
-            return
 
         if cl.parent is not None:
             cl.set_data(join_t=self[cl.parent].get_projection_parameter(cl(cl.t0), method="scalar"))
