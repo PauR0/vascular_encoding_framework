@@ -6,7 +6,7 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import KDTree
 
-from .._base import Encoding, SpatialObject, Tree, check_specific
+from .._base import EncodingTree, SpatialObject, check_specific
 from .remesh import VascularMeshing
 from .vessel_encoding import VesselAnatomyEncoding
 
@@ -15,16 +15,11 @@ if TYPE_CHECKING:
     from ..vascular_mesh import VascularMesh
 
 
-class VascularAnatomyEncoding(
-    Tree[VesselAnatomyEncoding], Encoding, VascularMeshing, SpatialObject
-):
+class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshing, SpatialObject):
     """Vascular anatomy encoding class."""
 
     def __init__(self):
-        Tree.__init__(self=self, _node_type=VesselAnatomyEncoding)
-
-        self.kind = ["uncoupled"]
-        self._hyperparameters = []
+        EncodingTree.__init__(self=self, _node_type=VesselAnatomyEncoding)
 
     def encode_vascular_mesh(
         self,
@@ -326,19 +321,6 @@ class VascularAnatomyEncoding(
 
         return vsc_enc
 
-    def get_hyperparameters(self) -> dict[str, Any]:
-        """
-        Get the dict containing the hyperparameters of the VascularAnatomyEncoding object.
-
-        Returns
-        -------
-        hp : dict[str, Any]
-            The json serializable dictionary with the hyperparameters of the encoding.
-        """
-
-        self._hyperparameters = list(self.keys())
-        return super().get_hyperparameters(**self)
-
     def set_hyperparameters(self, hp: dict[str, Any]):
         """
         Set the hyperparameters of a VascularAnatomyEncoding object.
@@ -356,38 +338,9 @@ class VascularAnatomyEncoding(
         get_hyperparameters
         """
 
-        def set_branch_hp(bid):
-            vsl_enc = self[bid] if bid in self else VesselAnatomyEncoding()
-            vsl_enc.set_hyperparameters(hp=hp[bid])
-            self[bid] = vsl_enc
-
-            for cid in vsl_enc.children:
-                set_branch_hp(cid)
-
-        for rid, _hp in hp.items():
-            # Hierarchy is stored in vsl_enc centerline hp
-            if _hp["centerline"]["parent"] is None:
-                set_branch_hp(rid)
-
-        return
-
-    def get_feature_vector_length(self):
-        """
-        Return the length of the feature vector.
-
-        The length of a VascularAnatomyEncoding feature vector is the sum of the length of all
-        the VesselAnatomyEncoding feature vectors contained in it.
-
-        Returns
-        -------
-        n : int
-            The length of the centerline feature vector.
-        """
-        n = 0
-        for vsl_enc in self.values():
-            n += vsl_enc.get_feature_vector_length()
-
-        return n
+        # Hierarchy is stored in vsl_enc centerline hp
+        roots = {rid for rid, _hp in hp.items() if _hp["centerline"]["parent"] is None}
+        super().set_hyperparameters(hp=hp, roots=roots)
 
     def to_feature_vector(self, mode="full") -> np.ndarray:
         """
@@ -415,31 +368,23 @@ class VascularAnatomyEncoding(
         VesselAnatomyEncoding.to_feature_vector
         VesselAnatomyEncoding.from_feature_vector
         """
+        return super().to_feature_vector(mode=mode)
 
-        fv = []
-
-        def append_fv(vid):
-            fv.append(self[vid].to_feature_vector(mode=mode))
-            for cid in sorted(self[vid].children):
-                append_fv(cid)
-
-        for rid in sorted(self.roots):
-            append_fv(rid)
-
-        fv = np.concatenate(fv)
-        return fv
-
-    @staticmethod
-    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray) -> VascularAnatomyEncoding:
+    def from_feature_vector(
+        self, fv: np.ndarray, hp: dict[str, Any] = None
+    ) -> VascularAnatomyEncoding:
         """
         Build a VascularAnatomyEncoding object from a feature vector.
 
+        > Note that while hyperparameters argument is optional it must have been previously set or
+        passed.
+
         Parameters
         ----------
-        hp : dict[str, Any]
-            The hyperparameter dictionary for the VascularAnatomyEncoding object.
         fv : np.ndarray
             The feature vector.
+        hp : dict[str, Any], optional
+            The hyperparameter dictionary for the VascularAnatomyEncoding object.
 
         Returns
         -------
@@ -452,32 +397,7 @@ class VascularAnatomyEncoding(
         set_hyperparameters
         to_feature_vector
         """
-
-        vsc_enc = VascularAnatomyEncoding()
-        vsc_enc.set_hyperparameters(hp=hp)
-        n = vsc_enc.get_feature_vector_length()
-        if len(fv) != n:
-            raise ValueError(
-                "Cannot build a VascularAnatomyEncoding object from feature vector. Expected a"
-                + f"feature vector of length {n} and the one provided has {len(fv)} elements."
-            )
-
-        ini = 0
-
-        def extract_vessel_fv(vid):
-            nonlocal ini
-            vsl_enc: VesselAnatomyEncoding = vsc_enc[vid]
-            end = ini + vsl_enc.get_feature_vector_length()
-            vsl_enc.update_from_feature_vector(fv=fv[ini:end])
-            ini = end
-
-            for cid in sorted(vsl_enc.children):
-                extract_vessel_fv(cid)
-
-        for rid in sorted(vsc_enc.roots):
-            extract_vessel_fv(rid)
-
-        return vsc_enc
+        return super().from_feature_vector(fv=fv, hp=hp)
 
     def translate(self, t):
         """

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pyvista as pv
 
-from .._base import SpatialObject, Tree, check_specific
+from .._base import EncodingTree, SpatialObject, check_specific
 from ..messages import error_message
 from ..utils.spatial import normalize, radians_to_degrees
 from .centerline import Centerline
@@ -12,11 +14,11 @@ from .parallel_transport import ParallelTransport
 from .path_extractor import extract_centerline_path
 
 
-class CenterlineTree(Tree[Centerline], SpatialObject):
+class CenterlineTree(EncodingTree[Centerline], SpatialObject):
     """Class for the centerline of branched vascular geometries."""
 
     def __init__(self):
-        Tree.__init__(self=self, _node_type=Centerline)
+        EncodingTree.__init__(self=self, _node_type=Centerline)
 
     def __setitem__(self, __key, cl: Centerline) -> None:
         """
@@ -24,7 +26,7 @@ class CenterlineTree(Tree[Centerline], SpatialObject):
         requires consistency in the adapted frames.
         """
 
-        if cl.parent is not None:
+        if cl.parent is not None and cl._spl is not None:
             cl.set_data(join_t=self[cl.parent].get_projection_parameter(cl(cl.t0), method="scalar"))
             v1 = ParallelTransport.parallel_rotation(
                 t0=self[cl.parent].get_tangent(cl.join_t),
@@ -222,7 +224,7 @@ class CenterlineTree(Tree[Centerline], SpatialObject):
 
         return self[cl_id].cartesian_to_vcs(p=p)
 
-    def to_multiblock(self, add_attributes=False):
+    def to_multiblock(self, add_attributes: bool = False) -> pv.MultiBlock:
         """
         Return a pyvista MultiBlock with the centerline branches as pyvista PolyData objects.
 
@@ -248,7 +250,7 @@ class CenterlineTree(Tree[Centerline], SpatialObject):
         return mb
 
     @staticmethod
-    def from_multiblock(mb):
+    def from_multiblock(mb: pv.MultiBlock):
         """
         Make a CenterlineTree object from a pyvista MultiBlock made polydatas.
 
@@ -290,7 +292,12 @@ class CenterlineTree(Tree[Centerline], SpatialObject):
 
     @staticmethod
     def from_multiblock_paths(
-        paths, n_knots=10, curvature_penatly=1, graft_rate=0.5, force_extremes=True, **kwargs
+        paths,
+        n_knots=10,
+        curvature_penatly=1,
+        graft_rate=0.5,
+        force_extremes=True,
+        **kwargs,
     ) -> CenterlineTree:
         """
         Create a CenterlineTree from a pyvista MultiBlock made polydatas with
@@ -390,6 +397,33 @@ class CenterlineTree(Tree[Centerline], SpatialObject):
                 add_to_tree(rid)
 
         return cl_tree
+
+    def from_feature_vector(self, fv: np.ndarray, hp: dict[str, Any] = None) -> CenterlineTree:
+        """
+        Build an CenterlineTree object from a feature vector.
+
+        > Note that while hyperparameters argument is optional it must have been previously set or
+        passed.
+
+        Parameters
+        ----------
+        fv : np.ndarray
+            The centelrine tree feature vector.
+        hp : dict[str, Any], optional
+            The hyperparameter dictionary for the  centerline tree object.
+
+        Returns
+        -------
+        self : CenterlineTree
+            The object itself with the elements updated/built with the fv.
+
+        See Also
+        --------
+        get_hyperparameters
+        set_hyperparameters
+        to_feature_vector
+        """
+        return super().from_feature_vector(fv=fv, hp=hp)
 
     def translate(self, t):
         """
