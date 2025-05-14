@@ -460,9 +460,9 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         vsl_enc.set_centerline(cl)
 
         wall = vsl_mb["wall"]
-        radius = Radius.from_feature_vector(
-            hp={p: v for p, v in wall.user_dict["radius"].items() if p != "feature vector"},
+        radius = Radius().from_feature_vector(
             fv=np.array(wall.user_dict["radius"]["feature vector"]),
+            hp={p: v for p, v in wall.user_dict["radius"].items() if p != "feature vector"},
         )
         vsl_enc.set_data(radius=radius)
 
@@ -628,40 +628,22 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         n = self.centerline.get_feature_vector_length() + self.radius.get_feature_vector_length()
         return n
 
-    def update_from_feature_vector(self, fv):
-        """
-        Update the attributes of the VesselAnatomyEncoding object with those provided in a feature
-        vector.
-
-        To create a new VesselAnatomyEncoding object see `from_feature_vector` static method.
-
-
-        Parameters
-        ----------
-        fv : np.ndarray or array-like (N,)
-            The feature vector with the metadata array at the beginning.
-
-        See Also
-        --------
-        from_feature_vector
-        to_feature_vector
-        """
-
-        cfv, rfv = self.split_feature_vector(fv)
-        self.centerline.set_parameters(build=True, coeffs=cfv.reshape(-1, 3))
-        self.radius.set_parameters(build=True, coeffs=rfv)
-
-    @staticmethod
-    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray) -> VesselAnatomyEncoding:
+    def from_feature_vector(
+        self, fv: np.ndarray, hp: dict[str, Any] = None
+    ) -> VesselAnatomyEncoding:
         """
         Build a VesselAnatomyEncoding object from a full feature vector.
 
+        > Note that while hyperparameters argument is optional it must have been previously set or
+        passed.
+
+
         Parameters
         ----------
-        hp : dict[str, Any]
-            The hyperparameter dictionary.
         fv : np.ndarray (N,)
             The feature vector.
+        hp : dict[str, Any], optional
+            The hyperparameter dictionary.
 
         Returns
         -------
@@ -674,10 +656,13 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         to_feature_vector
         """
 
-        vsl_enc = VesselAnatomyEncoding()
-        vsl_enc.set_hyperparameters(hp)
-        vsl_enc.update_from_feature_vector(fv=fv)
-        return vsl_enc
+        if hp is not None:
+            self.set_hyperparameters(hp)
+
+        cfv, rfv = self.split_feature_vector(fv)
+        self.centerline.set_parameters(build=True, coeffs=cfv.reshape(-1, 3))
+        self.radius.set_parameters(build=True, coeffs=rfv)
+        return self
 
     def translate(self, t):
         """

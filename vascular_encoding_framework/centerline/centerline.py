@@ -42,6 +42,7 @@ class Centerline(Curve, Node, Encoding):
             "n_samples",
             "v1_0",
         ]
+        Encoding.__init__(self=self)
 
     def __str__(self):
         """Return the node data of the centerline as string."""
@@ -397,8 +398,7 @@ class Centerline(Curve, Node, Encoding):
 
         return self.coeffs.ravel()
 
-    @staticmethod
-    def from_feature_vector(fv, hp=None) -> Centerline:
+    def from_feature_vector(self, fv, hp=None) -> Centerline:
         """
         Build a Centerline object from a feature vector.
 
@@ -424,18 +424,16 @@ class Centerline(Curve, Node, Encoding):
         get_hyperparameters
         """
 
-        cl = Centerline()
-
         if hp is not None:
-            cl.set_hyperparameters(hp)
+            self.set_hyperparameters(hp)
 
-        l = cl.get_feature_vector_length()
+        l = self.get_feature_vector_length()
         if len(fv) != l:
             raise ValueError(
                 "Cannot build a Centerline object from feature vector."
                 + f"Expected n_knots+(k+1)={l} coefficients and {len(fv)} were provided."
             )
 
-        cl.set_parameters(build=True, coeffs=fv.reshape(-1, 3))
+        self.set_parameters(build=True, coeffs=fv.reshape(-1, 3))
 
-        return cl
+        return self

@@ -122,21 +122,19 @@ class Radius(BiSpline, Encoding):
 
         return self.coeffs.ravel()
 
-    @staticmethod
-    def from_feature_vector(hp: dict[str, Any], fv: np.ndarray):
+    def from_feature_vector(self, fv: np.ndarray, hp: dict[str, Any] = None):
         """
         Build a Radius object from a feature vector.
 
-        Note that in order to build the Radius, the feature vector must start with the metadata
-        array or it must be passed with the md argument. Read more about the metadata array at
-        get_metadata method docs.
+        > Note that while hyperparameters argument is optional it must have been previously set or
+        passed.
 
         Parameters
         ----------
-        hp : dict[str, Any], optional
-            The hyperparameter dictionary.
         fv : np.ndarray (N,)
             The feature vector with the metadata at the beginning.
+        hp : dict[str, Any], optional
+            The hyperparameter dictionary.
 
         Returns
         -------
@@ -149,10 +147,10 @@ class Radius(BiSpline, Encoding):
         get_metadata
         """
 
-        rd = Radius()
-        rd.set_hyperparameters(hp)
+        if hp is not None:
+            self.set_hyperparameters(hp)
 
-        r, k = (rd.n_knots_x + rd.kx + 1), (rd.n_knots_y + rd.ky + 1)
+        r, k = (self.n_knots_x + self.kx + 1), (self.n_knots_y + self.ky + 1)
         rk = r * k
         if len(fv) != rk:
             raise ValueError(
@@ -160,9 +158,9 @@ class Radius(BiSpline, Encoding):
                 + f"((tx+kx+1) * (ty+ky+1)) coefficients and {len(fv)} were provided."
             )
 
-        rd.set_parameters(build=True, coeffs=np.array(fv))
+        self.set_parameters(build=True, coeffs=np.array(fv))
 
-        return rd
+        return self
 
     @staticmethod
     def from_points(points, tau_knots, theta_knots, laplacian_penalty=1.0, cl=None, debug=False):
