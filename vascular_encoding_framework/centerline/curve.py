@@ -710,7 +710,7 @@ class Curve(UniSpline, SpatialObject):
             poly.user_dict["k"] = self.k
             poly.user_dict["n_knots"] = self.n_knots
             poly.user_dict["coeffs"] = self.coeffs.tolist()
-            poly.user_dict["extrapolation"] = self.extra
+            poly.user_dict["extrapolation"] = self.extrapolation
 
         return poly
 

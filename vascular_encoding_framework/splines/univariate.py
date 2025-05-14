@@ -22,7 +22,7 @@ class UniSpline(Spline):
         self.knots: np.ndarray = None
         self.coeffs: np.ndarray = None  # Shape (3, n_knots+k+1)
         self.n_knots: int = None
-        self.extra: Literal["linear", "constant"] = "linear"
+        self.extrapolation: Literal["linear", "constant"] = "linear"
 
         self._spl: BSpline = None
 
@@ -58,7 +58,7 @@ class UniSpline(Spline):
             raise AttributeError("Can't evaluate spline object. It has not been built...")
 
         if extra is None:
-            extra = self.extra
+            extra = self.extrapolation
 
         if extra == "constant":
             tt = np.clip(t, a_min=self.t0, a_max=self.t1)
