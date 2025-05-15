@@ -5,7 +5,7 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from .._base import attribute_checker, attribute_setter
-from ..messages import computing_message, done_message, error_message
+from ..messages import computing_message, done_message
 from ..vascular_mesh import VascularMesh
 
 
@@ -47,13 +47,12 @@ class CenterlineDomainExtractor(ABC):
 class Seekers(CenterlineDomainExtractor):
     """
     Centerline domain extractor based on the seekers approach.
-    According to the grass fire equation the surface inward normal
-    is a good estimation for finding the centerline. Experimentally
-    we found that the midpoint between any given point in the wall
-    and its projection by ray trace using the inward normal is a robust,
-    and fast approximation of the centerline locus. The benefit of this
-    method against others is that it does not require a closed surface,
-    as long as the normals are pointing inward.
+
+    According to the grass fire equation the surface inward normal is a good estimation for finding
+    the centerline. Experimentally we found that the midpoint between any given point in the wall
+    and its projection by ray trace using the inward normal is a robust, and fast approximation of
+    the centerline locus. The benefit of this method against others is that it does not require a
+    closed surface, as long as the normals are pointing inward.
 
     Caveats: optimality of the centerline is not warranted.
     """
@@ -122,11 +121,12 @@ class Seekers(CenterlineDomainExtractor):
 
     def check_seekers_direction(self, n_tests=50):
         """
-        Ensure the seekers directions point inwards. This method requires mesh to
-        be a closed surface to work properly. It works by performing a step of the
-        seekers algorithm with a reduced number of points (controlled by n_tests).
-        Then if the number of points falling outside the mesh surface is greater than
-        those inside, the normals are flipped.
+        Ensure the seekers directions point inwards.
+
+        This method requires mesh to be a closed surface to work properly. It works by performing a
+        step of the seekers algorithm with a reduced number of points (controlled by n_tests). Then
+        if the number of points falling outside the mesh surface is greater than those inside, the
+        normals are flipped.
         """
 
         eps = self.mesh.length * self.eps
@@ -264,11 +264,10 @@ class Seekers(CenterlineDomainExtractor):
 
 class Flux(CenterlineDomainExtractor):
     """
-    Centerline domain extractor based on the flux approach. Theoretically
-    the centerline geometric locus corresponds with the divergence null
-    region of the gradient of the function distance to boundary or wall.
-    Which is approximated by a flux estimation following:
-    http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf.
+    Centerline domain extractor based on the flux approach. Theoretically the centerline geometric
+    locus corresponds with the divergence null region of the gradient of the function distance to
+    boundary or wall. Which is approximated by a flux estimation following:
+        http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf.
 
     Caveats: The surface must be a closed surface!
 
@@ -317,8 +316,8 @@ class Flux(CenterlineDomainExtractor):
 
     def compute_voxelization(self, update=True) -> pv.UnstructuredGrid:
         """
-        Compute the discretization of the inner volume of a closed surface by
-        sampling the bounding box with sx, sy and sz spacing and rejecting outside points.
+        Compute the discretization of the inner volume of a closed surface by sampling the bounding
+        box with sx, sy and sz spacing and rejecting outside points.
         """
 
         if not attribute_checker(self, atts=["mesh"], info="Cannot voxelize mesh."):
@@ -350,9 +349,9 @@ class Flux(CenterlineDomainExtractor):
         """
         Extract the centerline domain with flux method.
 
-        This method runs the centerline domain extraction based on a threshold over
-        the flux (http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf) computed
-        over a voxelization of the vascular volume.
+        This method runs the centerline domain extraction based on a threshold over the flux
+        (http://www.cim.mcgill.ca/~shape/publications/cvpr00.pdf) computed over a voxelization of
+        the vascular volume.
 
         Returns
         -------
@@ -442,18 +441,18 @@ def extract_centerline_domain(
         params["method"] = "seekers"
 
     if params["method"] not in ["seekers", "flux"]:
-        error_message(
-            f"Can't extract centerline domain, method argument must be in {{'seekers', 'flux'}}, the passed is {params['method']}."
+        raise ValueError(
+            "Wrong value for method argument must be in {{'seekers', 'flux'}}, "
+            + f"given is {params['method']}."
         )
-        return False
 
     if params["method"] == "seekers":
         alg = Seekers()
     elif params["method"] == "flux":
         alg = Flux()
     else:
-        print("How the hell have we arrived here?")
-        return False
+        raise Exception("How the hell have we arrived here?")
+
     alg.debug = debug
 
     update = True
