@@ -5,7 +5,6 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from .._base import attribute_checker, attribute_setter
-from ..messages import error_message
 from ..vascular_mesh import Boundaries, VascularMesh
 
 
@@ -151,8 +150,10 @@ class CenterlinePathExtractor:
 
     def set_vascular_mesh(self, vm, check_radius=True, update_boundaries=True):
         """
-        Set the vascular domain. If check_radius is True, self.centerline_domain
-        is not None, and self.radius is None, then self.radius is computed.
+        Set the vascular domain.
+
+        If check_radius is True, self.centerline_domain is not None, and self.radius is None, then
+        self.radius is computed.
 
         Parameters
         ----------
@@ -173,30 +174,30 @@ class CenterlinePathExtractor:
 
     def set_centerline_domain(self, cntrln_dmn, check_fields=True, check_radius=True):
         """
-        Set the centerline domain. If cd is a pv.PolyData, the radius field
-        if searched in the fields defined on the point_data.
+        Set the centerline domain.
+
+        If cd is a pv.PolyData, the radius field if searched in the fields defined on the
+        point_data.
 
         Parameters
         ----------
         cntrln_dmn : np.ndarray | pv.DataSet
-            The centerline domain. It can be a numpy array in shape (N,3)
-            or a pyvista object (PolyData, UnstructuredGrid...) with
-            the points attribute.
+            The centerline domain. It can be a numpy array in shape (N,3) or a pyvista object
+            (PolyData, UnstructuredGrid...) with the points attribute.
         check_fields : bool, opt.
-            If cntrln_dmn is a pyvista object and check_fields is True,
-            the point_data attribute of cntrln_dmn checked looking for the
-            radius field.
+            If cntrln_dmn is a pyvista object and check_fields is True, the point_data attribute of
+            cntrln_dmn checked looking for the radius field.
         check_radius : bool
             Whether to check for radius existence and compute it if required.
         """
 
         if isinstance(cntrln_dmn, np.ndarray):
             if cntrln_dmn.shape[0] != 3:
-                error_message(
+                raise ValueError(
                     f"Unable to set an array with shape {cntrln_dmn.shape} as centerline domain. "
                     + " Centerline domain must be a list of points. Its shape must be (3, N)"
                 )
-                return False
+
             self.centerline_domain = cntrln_dmn
 
         elif isinstance(cntrln_dmn, pv.DataSet):
@@ -241,8 +242,8 @@ class CenterlinePathExtractor:
 
     def remove_from_centerline_domain_by_id(self, ids, update_kdt=True):
         """
-        Remove points from centerline domain according to their index. Then linked
-        attributes such as the radius or the domain kdt are updated.
+        Remove points from centerline domain according to their index. Then linked attributes such
+        as the radius or the domain kdt are updated.
 
         Parameters
         ----------
@@ -264,14 +265,11 @@ class CenterlinePathExtractor:
 
     def add_point_to_centerline_domain(self, p, where="end", update_kdt=True):
         """
-        Append a point to the centerline domain updating the radius and inverse radius arrays.
-        If an array with dimensions (N, 3), the N points are appended. The argument where can
-        be used to decide if inserting the point(s) in the beginning of the lists (ini) or at
-        the end (end).
+        Append a point to the centerline domain updating the radius and inverse radius arrays. If an
+        array with dimensions (N, 3), the N points are appended. The argument where can be used to
+        decide if inserting the point(s) in the beginning of the lists (ini) or at the end (end).
 
-        WARNING: Using this method changes the indices of inlets and outlets in the arrays.
-        Hence, it should be used with caution!!
-
+        > WARNING: Using this method changes the indices of inlets and outlets in the arrays.
 
         Parameters
         ----------
@@ -319,10 +317,10 @@ class CenterlinePathExtractor:
                 else:
                     ind = list(range(n_old, n_old + len(p)))
             else:
-                error_message(
-                    "Wrong argument for where in add_point_to_centerline_domain method. Available options are {'ini', 'end'}."
+                raise ValueError(
+                    "Wrong argument for where in add_point_to_centerline_domain method. "
+                    + "Available options are {'ini', 'end'}."
                 )
-                return False
 
             # We update the centerline domain list and the ones in
             # correspondence (radius and inverse_radius)
@@ -337,11 +335,10 @@ class CenterlinePathExtractor:
 
             return ind
 
-        error_message(
-            "Trying to insert a point into centerline's domain with bad shape."
+        raise ValueError(
+            "Trying to insert a point into centerline's domain with wrong shape."
             + "Accepted shapes are (3,) or (N,3)"
         )
-        return False
 
     def compute_kdt(self):
         """Compute the KDTree using the available points."""
@@ -351,9 +348,9 @@ class CenterlinePathExtractor:
         """
         Assume the hierarchy defined by the boundaries of a vascular mesh.
 
-        If force_tangent is true, and "node" key/attribute is present,
-        points at distance radius from center are removed, and eight points
-        are inserted as center +t*radius*normal with t in linspace(-1,1,8).
+        If force_tangent is true, and "node" key/attribute is present, points at distance radius
+        from center are removed, and eight points are inserted as center +t*radius*normal with t in
+        linspace(-1,1,8).
 
 
 
@@ -384,9 +381,9 @@ class CenterlinePathExtractor:
     def set_boundaries(self, bndrs, force_tangent=False, copy=True):
         """
         Set the boundary hierarchy to compute the centerline paths.
-        If hierarchy is set paths are first computed from children to
-        parents. Then, the id_paths are arranged according to mode and
-        reverse.
+
+        If hierarchy is set paths are first computed from children to parents. Then, the id_paths
+        are arranged according to mode and reverse.
 
         Ex. Ex. hierarchy = {"1" : {"parent"     : None,
                                     "center"   : [ x1, y1, z1],
@@ -486,10 +483,7 @@ class CenterlinePathExtractor:
         return False
 
     def _compose_id_paths(self):
-        """
-        Arrange the id_path attribute according to the policy established in the
-        mode attribute.
-        """
+        """Arrange the id_path attribute according to the mode attribute."""
 
         if not attribute_checker(
             self,
@@ -497,7 +491,7 @@ class CenterlinePathExtractor:
             info="wrong mode chosen to extract centerline paths...",
             opts=[["i2o", "j2o"]],
         ):
-            return False
+            raise ValueError
 
         def arrange_path(bid):
             if self.boundaries[bid].parent is not None:
@@ -505,10 +499,11 @@ class CenterlinePathExtractor:
                 # Junction id in cl_domain
                 joint = self.boundaries[bid].id_path[0]
                 if joint not in self.boundaries[pid].id_path:
-                    error_message(
-                        f"At node {bid} cant find joint id in parent's path (parent id {pid}). Something has crashed during path extraction..."
+                    raise RuntimeError(
+                        f"At node {bid} cant find joint id in parent's path (parent id {pid})."
+                        + " Something has crashed during path extraction..."
                     )
-                    return
+
                 jid = self.boundaries[pid].id_path.index(joint)
 
                 if self.mode == "i2o":
@@ -527,11 +522,10 @@ class CenterlinePathExtractor:
 
     def compute_paths(self):
         """
-        Compute the paths from each outlet to the inlet. The path computation
-        is based on an implementation of the minimum cost path A* algorithm,
-        however, since the heuristic is set to 0 the algorithm is effectively
-        Dijkstra's. The stopping criteria is the reach of the inlet, or a
-        previously transited path.
+        Compute the paths from each outlet to the inlet. The path computation is based on an
+        implementation of the minimum cost path A* algorithm, however, since the heuristic is set to
+        0 the algorithm is effectively Dijkstra's. The stopping criteria is the reach of the inlet,
+        or a previously transited path.
         """
 
         if self.debug:
@@ -550,8 +544,10 @@ class CenterlinePathExtractor:
             p.show()
 
         if not self._check_boundary_hierarchy():
-            error_message(
-                "Can't compute paths between boundaries. All the boundaries are roots and none have children. At least there must be a parent-children boundary."
+            raise ValueError(
+                "Can't compute paths, no hierarchy defined between boundaries."
+                + "All the boundaries are roots and none have children. At least there must be a "
+                + "parent-children boundary."
             )
             return
 
@@ -571,8 +567,9 @@ class CenterlinePathExtractor:
                     ends=parent_path,
                 )
                 if not id_path:
-                    error_message(
-                        f"Could not found path between boundaries {bid} and {pid}. This may happen due to a too small adjacency_ratio or a too sparse centerline domain..."
+                    raise RuntimeError(
+                        f"Could not found path between boundaries {bid} and {pid}. This may happen"
+                        + "due to a too small adjacency_ratio or a too sparse centerline domain..."
                     )
                 self.boundaries[bid].set_data(to_numpy=False, id_path=id_path)
             for cid in self.boundaries[bid].children:
@@ -627,6 +624,7 @@ class CenterlinePathExtractor:
     def _cost(self, current, neigh):
         """
         We defined the cost as the inverse of the radius field.
+
         Only the arriving node radius is taking into account.
         """
         return self.inverse_radius[neigh]
@@ -635,8 +633,8 @@ class CenterlinePathExtractor:
         """
         Get the neighbors of node n.
 
-        The neighbors are points at a certain distance proportional to the radius of the point.
-        As long as the adjacency factor is below 1, it preserves the topology of the vascular segment.
+        The neighbors are points at a certain distance proportional to the radius of the point. As
+        long as the adjacency factor is below 1, it preserves the topology of the vascular segment.
         """
 
         neighs = self.domain_kdt.query_ball_point(
@@ -662,7 +660,7 @@ class CenterlinePathExtractor:
         return neighs
 
 
-def extract_centerline_path(vmesh, cl_domain, params, debug=False):
+def extract_centerline_path(vmesh, cl_domain, params, debug=False) -> pv.MultiBlock:
     """
     Compute the discrete centerline path of a vascular mesh based on a discretization of the lumen.
 
@@ -681,14 +679,13 @@ def extract_centerline_path(vmesh, cl_domain, params, debug=False):
     vmesh : VascularMesh
         The VascularMesh object where centerline path is to be computed.
     cntrln_dmn : np.ndarray | pv.DataSet
-        The lumen discretization. It can be a numpy array in shape (N,3)
-        or a pyvista object (PolyData, UnstructuredGrid...) with
-        the points attribute. Additionally if the point_data 'radius' exists
-        the computation is skipped.
+        The lumen discretization. It can be a numpy array in shape (N,3) or a pyvista object (
+        PolyData, UnstructuredGrid...) with the points attribute. Additionally if the point_data
+        'radius' exists the computation is skipped.
     params : dict
-        A dictionary with the parameters for the path extraction. The keys of
-        the dictionaries have to be as the attributes defined in the constructor
-        of the CenterlinePathExtractor object. Other dictionary entries are ignored.
+        A dictionary with the parameters for the path extraction. The keys of the dictionaries have
+        to be as the attributes defined in the constructor of the CenterlinePathExtractor object.
+        Other dictionary entries are ignored.
     debug : bool, optional
         Default False. Whether to run path extraction in debug mode.
 
