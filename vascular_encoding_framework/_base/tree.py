@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Generic, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from ..messages import error_message, warning_message
 from .node import Node
@@ -30,7 +30,6 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
 
         self._node_type: Type[_TT] = _node_type
 
-        self.roots: set = set()
         return
 
     def __str__(self):
@@ -60,6 +59,18 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
     def __ior__(self, *args, **kwargs) -> None:
         raise AttributeError(f"{self.__class__.__name__} object has no attribute __ior__.")
 
+    @property
+    def roots(self) -> set[str]:
+        """Uptade the attribute roots to contain only nodes with None as parent."""
+        return {k for k, v in self.items() if v.parent is None}
+
+    @roots.setter
+    def _set_roots(self, r: Any) -> None:
+        warning_message(
+            "WARNING: Setting roots has no effect.Roots are now a property, not an attribute."
+        )
+        return
+
     def enumerate(self):
         """Get a list with the id of stored items."""
         return list(self.keys())
@@ -79,9 +90,7 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
 
         super().__setitem__(__key, nd)
 
-        if nd.parent is None:
-            self.roots.add(__key)
-        else:
+        if nd.parent is not None:
             self[nd.parent].add_child(__key)
 
     def graft(self, tr, gr_id=None):
@@ -123,16 +132,12 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
         # Children are now roots
         for child in self[k].children:
             self[child].parent = None
-            self.roots.add(child)
 
-        # If k is a root remove from roots set, otherwise remove it from parent
-        # children set.
-        if self[k].parent is None:
-            self.roots.discard(k)
-        else:
+        # If has a parent remove it from parent children set.
+        if self[k].parent is not None:
             self[self[k].parent].remove_child(k)
 
-        return super().pop(__key=k)
+        return super().pop(key=k)
 
     def prune(self, k):
         """
@@ -184,8 +189,7 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
 
         for nid, ndata in data.items():
             self[nid].set_data(**ndata)
-            if nid in self.roots and self[nid].parent is not None:
-                self.roots.remove(nid)
+
         self.is_consistent()
 
     def is_consistent(self):
@@ -251,10 +255,6 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
         if self[new_id].parent in self:
             self[self[new_id].parent].remove_child(old_id)
             self[self[new_id].parent].add_child(new_id)
-
-        elif self[new_id].parent is None:
-            self.roots.remove(old_id)
-            self.roots.add(new_id)
 
         for cid in self[new_id].children:
             self[cid].parent = new_id
