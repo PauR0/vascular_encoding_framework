@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pyvista as pv
@@ -223,6 +223,38 @@ class CenterlineTree(EncodingTree[Centerline], SpatialObject):
 
         return self[cl_id].cartesian_to_vcs(p=p)
 
+    def plot_adapted_frame(
+        self,
+        vmesh: pv.PolyData = None,
+        plotter: pv.Plotter = None,
+        scale: float = None,
+        show: bool = True,
+    ):
+        """
+        Plot the parallel transported frame.
+
+        Parameters
+        ----------
+        vmesh : VascularMesh or pv.PolyData
+            The vascular mesh used to compute the centerline.
+        plotter : pv.Plotter
+            Default None. If passed, parallel_transport is displayed there.
+        scale : float, opt
+            By default no scale is applied. The scale of the arrows used to plot the adapted frame
+            vectors.
+        show : bool, opt
+            Default True. Whether to show the plot or not.
+        """
+
+        if plotter is None:
+            plotter = pv.Plotter()
+
+        for i, cl in enumerate(self.values()):
+            if i == len(self) - 1:
+                cl.plot_adapted_frame(vmesh=vmesh, plotter=plotter, scale=scale, show=show)
+            else:
+                cl.plot_adapted_frame(plotter=plotter, scale=scale, show=False)
+
     def to_multiblock(self, add_attributes: bool = False) -> pv.MultiBlock:
         """
         Return a pyvista MultiBlock with the centerline branches as pyvista PolyData objects.
@@ -290,11 +322,13 @@ class CenterlineTree(EncodingTree[Centerline], SpatialObject):
 
     @staticmethod
     def from_multiblock_paths(
-        paths,
-        n_knots=10,
-        curvature_penatly=1,
-        graft_rate=0.5,
-        force_extremes=True,
+        paths: pv.MultiBlock,
+        n_knots: int = 10,
+        curvature_penatly: float = 1.0,
+        graft_rate: float = 0.5,
+        force_extremes: bool | Literal["ini", "end"] = True,
+        pt_mode="project",
+        p=None,
         **kwargs,
     ) -> CenterlineTree:
         """
@@ -375,8 +409,8 @@ class CenterlineTree(EncodingTree[Centerline], SpatialObject):
                 curvature_penalty=check_specific(
                     kwargs, nid, "curvature_penalty", curvature_penatly
                 ),
-                pt_mode=check_specific(kwargs, nid, "pt_mode", "project"),
-                p=check_specific(kwargs, nid, "p", None),
+                pt_mode=check_specific(kwargs, nid, "pt_mode", pt_mode),
+                p=check_specific(kwargs, nid, "p", p),
             )
 
             cl.id = nid

@@ -73,7 +73,13 @@ class Centerline(Curve, Node, Encoding):
         return np.array((tau, theta, rho))
 
     def vcs_to_cartesian(
-        self, tau: float, theta: float, rho: float, grid=False, gridded=False, full_output=False
+        self,
+        tau: float,
+        theta: float,
+        rho: float,
+        grid=False,
+        gridded=False,
+        full_output=False,
     ):
         """
         Given a point expressed in Vessel Coordinate System (VCS), this method
@@ -129,6 +135,52 @@ class Centerline(Curve, Node, Encoding):
             return p, tau, theta, rho
 
         return p
+
+    def plot_adapted_frame(
+        self,
+        vmesh: pv.PolyData = None,
+        plotter: pv.Plotter = None,
+        scale: float = 1,
+        show: bool = True,
+    ):
+        """
+        Plot the parallel transported frame.
+
+        Parameters
+        ----------
+        vmesh : pv.PolyData
+            The vascular mesh used to compute the centerline.
+        plotter : pv.Plotter
+            Default None. If passed, parallel_transport is displayed there.
+        scale : float, opt
+            By default no scale is applied. The scale of the arrows used to plot the adapted frame
+            vectors.
+        show : bool, opt
+            Default True. Whether to show the plot or not.
+        """
+
+        if plotter is None:
+            plotter = pv.Plotter()
+
+        if vmesh is not None:
+            plotter.add_mesh(vmesh, opacity=0.5, color="w")
+
+        pdt = self.to_polydata()
+
+        if scale is None:
+            scale = pdt.length / 50
+
+        tgts = pdt.glyph(orient="tangent", scale=False, factor=scale)
+        plotter.add_mesh(tgts, color="r")
+
+        v1 = pdt.glyph(orient="v1", scale=False, factor=scale)
+        plotter.add_mesh(v1, color="g")
+
+        v2 = pdt.glyph(orient="v2", scale=False, factor=scale)
+        plotter.add_mesh(v2, color="b")
+
+        if show:
+            plotter.show()
 
     def to_polydata(self, tau_res=None, add_attributes=False):
         """
@@ -217,7 +269,11 @@ class Centerline(Curve, Node, Encoding):
         return Centerline().from_polydata(poly)
 
     def trim(
-        self, tau_0: float, tau_1: float = None, trim_knots: bool = False, n_samps: int = 100
+        self,
+        tau_0: float,
+        tau_1: float = None,
+        trim_knots: bool = False,
+        n_samps: int = 100,
     ) -> Centerline:
         """
         Trim the centerline from tau_0 to tau_1 and return the new segment as a Centerline object.
@@ -367,7 +423,9 @@ class Centerline(Curve, Node, Encoding):
 
         """
         attribute_checker(
-            self, ["n_knots", "k"], info="Can't compute the Centerline feature vector length."
+            self,
+            ["n_knots", "k"],
+            info="Can't compute the Centerline feature vector length.",
         )
 
         l = 3 * (self.n_knots + self.k + 1)
