@@ -2,7 +2,6 @@ import numpy as np
 import pyvista as pv
 
 from ..centerline import Centerline, CenterlineTree
-from ..messages import *
 
 
 def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
@@ -18,7 +17,8 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
     plotter : pv.Plotter
         Default None. If passed, parallel_transport is displayed there.
     scale : float, opt
-        By default no scale is applied. The scale of the arrows used to plot the adapted frame vectors.
+        By default no scale is applied. The scale of the arrows used to plot the adapted frame
+        vectors.
     show : bool, opt
         Default True. Whether to show the plot or not.
 
@@ -57,8 +57,7 @@ def plot_adapted_frame(cntrln, vmesh=None, plotter=None, scale=1, show=True):
             plot_cl_pl(cntrln[rid])
 
     else:
-        error_message("The argument cntrln must be an instance of Centerline or CenterlineTree.")
-        return
+        raise ValueError("The argument cntrln must be an instance of Centerline or CenterlineTree.")
 
     if vmesh is not None:
         plotter.add_mesh(vmesh, opacity=0.5, color="w")
@@ -90,8 +89,7 @@ def plot_open_boundary_ids(poly, plotter=None, show=True):
         plotter = pv.Plotter()
 
     if poly.is_manifold:
-        warning_message("No boundary edges found.")
-        return plotter
+        raise ValueError("The provided PolyData has no boundaries in it.")
 
     boundaries = poly.extract_feature_edges(
         boundary_edges=True, non_manifold_edges=False, feature_edges=False, manifold_edges=False
