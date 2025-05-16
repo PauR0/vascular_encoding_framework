@@ -1,5 +1,6 @@
 __all__ = [
     "check_specific",
+    "filter_specific",
     "broadcast_kwargs",
     "is_sequence",
     "is_numeric",
@@ -8,6 +9,7 @@ __all__ = [
     "attribute_setter",
 ]
 
+from copy import deepcopy
 from typing import Any
 
 import numpy as np
@@ -44,6 +46,45 @@ def check_specific(params: dict, nid: str, arg: str, default: Any):
         return params[nid][arg]
     except KeyError:
         return default
+
+
+def filter_specific(params: dict, nid: str, exclude: list[str] = None) -> dict:
+    """
+    Resolve the priority of the parameters for a given id.
+
+    Essentially consist in checking if for a parameter p in params, there's a node specific value
+    given and set it right.
+
+
+    Parameters
+    ----------
+    parms: dict
+        A dictionary typically, the kwargs from another function.
+    nid: str
+        The id of a node element for which to sort the parameters.
+    exclude: list[str], optional
+        Name of node-specific elements not to be included in the resulting dictionary.
+
+
+    Returns
+    -------
+    out_params : dict
+        The dictionary with the sorted ou parameters.
+    """
+
+    # There's no node-specific parameter
+    out_params = deepcopy(params)
+    if nid not in params:
+        return out_params
+
+    if not isinstance(params[nid], dict):
+        raise ValueError(
+            f"Wrong type for specific arguments. Expected dict, passed {params[nid].__class__.__name__}"
+        )
+
+    exclude = [] if exclude is None else exclude
+    out_params.update({k: deepcopy(v) for k, v in out_params[nid].items() if k not in exclude})
+    return out_params
 
 
 def broadcast_kwargs(**kwargs) -> dict[str, np.ndarray]:
@@ -153,9 +194,9 @@ def is_numeric(obj) -> bool:
 
 def is_arrayable(seq) -> bool:
     """
-    Check whether a sequence is all numeric and safe to be casted it to a numpy array.
-    This function is used to parse float list as numpy arrays but preventing strings and
-    other actual arrayable functions to be a numpy array.
+    Check whether a sequence is all numeric and safe to be casted it to a numpy array. This function
+    is used to parse float list as numpy arrays but preventing strings and other actual arrayable
+    functions to be a numpy array.
 
     Parameters
     ----------

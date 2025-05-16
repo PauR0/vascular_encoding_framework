@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pyvista as pv
 
+from ..._base import check_specific, filter_specific
 from .cross_sections import CrossSectionScheme, get_cross_section
 
 if TYPE_CHECKING:
@@ -114,10 +115,7 @@ class VesselMeshing(ABC):
         return cs
 
     def make_ribbon(
-        self: VesselAnatomyEncoding,
-        theta: float,
-        tau_res: int,
-        rho_res: int,
+        self: VesselAnatomyEncoding, theta: float, tau_res: int, rho_res: int
     ) -> pv.PolyData:
         """
         Make a triangulated ribbon section along the centerline.
@@ -143,13 +141,7 @@ class VesselMeshing(ABC):
 
         taus = np.linspace(self.centerline.t0, self.centerline.t1, tau_res)
         for i, t in enumerate(taus):
-            pts.append(
-                self.points_along_radius(
-                    tau=t,
-                    theta=theta,
-                    rho_res=rho_res,
-                )
-            )
+            pts.append(self.points_along_radius(tau=t, theta=theta, rho_res=rho_res))
 
             tau.append([t] * pts[-1].shape[0])
             c = self.centerline(t)
@@ -405,8 +397,15 @@ class VascularMeshing(ABC):
             Default None. If passed, the cross section is generated for the given branch, otherwise
             the cross section is generated at each branch.
         **kwargs
-            Scheme specific arguments such as the 'r' in ogrid, or the prismatic layers
-            parameters can be passed as keyword arguments.
+            Keyword arguments can be used for two purposes:
+            - Set cross section scheme parameters. For example, if the argument scheme == 'ogrid',
+            the parameter r=0.9 can be passed as well as prismatic layers parameters.
+            - Set branch specific parameters. For example, if you have a vascular domain with two
+            branches "B0" and "B1", whose radial function notably differ, you may pass the
+            arguments: B0={theta_res=60}, B1={theta_res=20}.
+
+            Both this approaches can be combined to obtain completely different branch specific
+            grids
 
         Returns
         -------
@@ -422,7 +421,11 @@ class VascularMeshing(ABC):
         return pv.MultiBlock(
             {
                 bid: self[bid].make_cross_section(
-                    scheme=scheme, tau=tau, theta_res=theta_res, rho_res=rho_res, **kwargs
+                    scheme=check_specific(kwargs, bid, "scheme", scheme),
+                    tau=check_specific(kwargs, bid, "tau", tau),
+                    theta_res=check_specific(kwargs, bid, "theta_res", theta_res),
+                    rho_res=check_specific(kwargs, bid, "rho_res", rho_res),
+                    **filter_specific(kwargs, bid),
                 )
                 for bid in self
             }
@@ -434,6 +437,7 @@ class VascularMeshing(ABC):
         tau_res: int,
         rho_res: int,
         bid: str | None = None,
+        **kwargs,
     ) -> pv.PolyData | pv.MultiBlock:
         """
         Make a triangulated ribbon section along the centerline.
@@ -449,6 +453,10 @@ class VascularMeshing(ABC):
         bid : str | None
             Default None. If passed, the cross section is generated for the given branch, otherwise
             the cross section is generated at each branch.
+        **kwargs
+            Keyword arguments can be used to set branch specific parameters. For example, if you
+            have a vascular domain with two branches "B0" and "B1", whose length notably differ, you
+            may pass the arguments: B0={tau_res=100}, B1={tau_res=20}.
 
         Returns
         -------
@@ -458,18 +466,14 @@ class VascularMeshing(ABC):
         """
 
         if bid is not None and bid in self:
-            return self[bid].make_ribbon(
-                theta=theta,
-                tau_res=tau_res,
-                rho_res=rho_res,
-            )
+            return self[bid].make_ribbon(theta=theta, tau_res=tau_res, rho_res=rho_res)
 
         return pv.MultiBlock(
             {
                 bid: self[bid].make_ribbon(
-                    theta=theta,
-                    tau_res=tau_res,
-                    rho_res=rho_res,
+                    theta=check_specific(kwargs, bid, "theta", theta),
+                    tau_res=check_specific(kwargs, bid, "tau_res", tau_res),
+                    rho_res=check_specific(kwargs, bid, "rho_res", rho_res),
                 )
                 for bid in self
             }
@@ -482,6 +486,7 @@ class VascularMeshing(ABC):
         radius: float = 1,
         normalized=True,
         bid: str | None = None,
+        **kwargs,
     ) -> pv.PolyData | pv.MultiBlock:
         """
         Make a surface along centerline somehow parallel to the wall.
@@ -499,6 +504,10 @@ class VascularMeshing(ABC):
         bid : str | None
             Default None. If passed, the cross section is generated for the given branch, otherwise
             the cross section is generated at each branch.
+        **kwargs
+            Keyword arguments can be used to set branch specific parameters. For example, if you
+            have a vascular domain with two branches "B0" and "B1", whose length notably differ,
+            you may pass the arguments: B0={tau_res=100}, B1={tau_res=20}.
 
         Returns
         -------
@@ -507,18 +516,15 @@ class VascularMeshing(ABC):
 
         if bid is not None and bid in self:
             return self[bid].make_tube(
-                tau_res=tau_res,
-                theta_res=theta_res,
-                radius=radius,
-                normalized=normalized,
+                tau_res=tau_res, theta_res=theta_res, radius=radius, normalized=normalized
             )
 
         return pv.MultiBlock(
             {
                 bid: self[bid].make_tube(
-                    tau_res=tau_res,
-                    theta_res=theta_res,
-                    radius=radius,
+                    tau_res=check_specific(kwargs, bid, "tau_res", tau_res),
+                    theta_res=check_specific(kwargs, bid, "theta_res", theta_res),
+                    radius=check_specific(kwargs, bid, "radius", radius),
                     normalized=normalized,
                 )
                 for bid in self
@@ -561,9 +567,15 @@ class VascularMeshing(ABC):
             the cross section is generated at each branch.
 
         **kwargs
-            Cross section scheme parameters can be passed as keyword arguments, for example, if the
-            argument scheme == 'ogrid', the parameter r=0.9 can be passed. Prismatic layers can also
-            be passed using kwargs.
+            Keyword arguments can be used for two purposes:
+            - Set cross section scheme parameters. For example, if the argument scheme == 'ogrid',
+            the parameter r=0.9 can be passed as well as prismatic layers parameters.
+            - Set branch specific parameters. For example, if you have a vascular domain with two
+            branches "B0" and "B1", whose length notably differ, you may pass the arguments:
+            B0={tau_res=100}, B1={tau_res=20}.
+
+            Both this approaches can be combined to obtain completely different branch specific
+            grids.
 
         Returns
         -------
@@ -587,12 +599,16 @@ class VascularMeshing(ABC):
             {
                 bid: self[bid].make_volume_mesh(
                     bid=bid,
-                    tau_res=tau_res,
-                    theta_res=theta_res,
-                    rho_res=rho_res,
-                    scheme=scheme,
+                    tau_res=check_specific(kwargs, bid, "tau_res", tau_res),
+                    theta_res=check_specific(kwargs, bid, "theta_res", theta_res),
+                    rho_res=check_specific(kwargs, bid, "rho_res", rho_res),
+                    scheme=check_specific(kwargs, bid, "scheme", scheme),
                     cs=cs,
-                    **kwargs,
+                    **filter_specific(
+                        kwargs,
+                        bid,
+                        exclude=["tau_res", "theta_res", "rho_res", "scheme"],
+                    ),
                 )
                 for bid in self
             }

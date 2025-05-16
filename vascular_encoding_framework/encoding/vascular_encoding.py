@@ -103,9 +103,8 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         """
         Encode a vascular mesh decoupling each branch as an independent vessel.
 
-        Although using this method returns independent branches, the encoding keeps
-        the track of the vessel junctions by mean of the vessel coordinates of the
-        inlet in the parent branch.
+        Although using this method returns independent branches, the encoding keeps the track of the
+        vessel junctions by mean of the vessel coordinates of the inlet in the parent branch.
 
         Parameters
         ----------
@@ -195,11 +194,10 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
             Whether to project the inlet points to closest points on parent mesh.
 
         kwargs : dict, optional
-            By means of the kwargs, branch-specific parameters can be used by passing
-            a dictionary with them. For instance, let us assume that exists a branch
-            with id 'B1' which is shorter, and the general longitudinal resolution is
-            a bit excessive, then we can pass an extra argument B1={'tau_resolution'=20}
-            and only 20 points will be used on that branch.
+            By means of the kwargs, branch-specific parameters can be used by passing a dictionary
+            with them. For instance, let us assume that exists a branch with id 'B1' which is
+            shorter, and the general longitudinal resolution is a bit excessive, then we can pass an
+            extra argument B1={'tau_resolution'=20} and only 20 points will be used on that branch.
 
         Returns
         -------
@@ -242,7 +240,7 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         return vmesh
 
     def to_multiblock(
-        self, add_attributes: bool = True, tau_res: int = 100, theta_res: int = 50
+        self, add_attributes: bool = True, tau_res: int = 100, theta_res: int = 50, **kwargs
     ) -> pv.MultiBlock:
         """
         Make a multiblock composed of other multiblocks from each encoded vessel of the vascular
@@ -256,6 +254,12 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         tau_res, theta_res : int, optional
             The resolution to build all the vessel walls. Defaulting to make_surface_mesh method
             default values.
+        **kwargs
+            tau_res and theta_res arguments can be provided per branch using the kwargs. Given a
+            branch with id Bk belonging to the vascular anatomy encoding object, to set specific
+            discretization parameters for the branch Bk, one can pass the argument
+            Bk={theta_res:20}, setting the angular resolution to 20 for Bk and assuming the default
+            values for the rest of the parameters.
 
         Returns
         -------
@@ -274,7 +278,9 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         vsc_mb = pv.MultiBlock()
         for vid, vsl_enc in self.items():
             vsc_mb[vid] = vsl_enc.to_multiblock(
-                add_attributes=add_attributes, tau_res=tau_res, theta_res=theta_res
+                add_attributes=add_attributes,
+                tau_res=check_specific(kwargs, vid, "tau_res", tau_res),
+                theta_res=check_specific(kwargs, vid, "theta_res", theta_res),
             )
 
         return vsc_mb
