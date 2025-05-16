@@ -185,8 +185,8 @@ class VascularMesh(pv.PolyData, SpatialObject):
 
     def compute_open_boundaries(self, overwrite=False):
         """
-        Compute the open boundary edges and build a Boundaries object with no hierarchy.
-        If boundaries attribute is None or overwrite is True, boundaries attribute is set as the
+        Compute the open boundary edges and build a Boundaries object with no hierarchy. If
+        boundaries attribute is None or overwrite is True, boundaries attribute is set as the
         computed boundaries.
 
         Parameters
@@ -208,7 +208,7 @@ class VascularMesh(pv.PolyData, SpatialObject):
 
         rid = bnds.get_array("RegionId", preference="point")
         for i in np.unique(rid):
-            ii = str(int(i))
+            ii = f"B{i:d}"
 
             b = bnds.extract_points(rid == i).extract_surface(pass_pointid=False, pass_cellid=False)
             b = triangulate_cross_section(b)
@@ -354,8 +354,7 @@ class VascularMesh(pv.PolyData, SpatialObject):
         s : float
             The scaling factor.
         update_kdt : bool, optional.
-            Default True. Whether to update the kdt for query distances on
-            mesh points
+            Default True. Whether to update the kdt for query distances on mesh points
         """
 
         super().scale(s, inplace=True)
@@ -436,8 +435,8 @@ class VascularMesh(pv.PolyData, SpatialObject):
     @staticmethod
     def from_closed_mesh_and_centerline(cmesh, cl_tree, debug=False):
         """
-        Given a closed vascular mesh, and a CenterlineTree object. This function approximate
-        the cross section of each boundary using the tangent of the centerline at the extrema.
+        Given a closed vascular mesh, and a CenterlineTree object. This function approximate the
+        cross section of each boundary using the tangent of the centerline at the extrema.
 
         Parameters
         ----------
