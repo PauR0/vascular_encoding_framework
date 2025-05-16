@@ -99,8 +99,8 @@ class Curve(UniSpline, SpatialObject):
         Build the adapted frame.
 
         If mode == 'project':
-            - If a point is passed, the vector p-c(t0) is projected onto the normal plane
-              at t0 and used as initial condition for parallel transport.
+            - If a point is passed, the vector p-c(t0) is projected onto the normal plane at t0 and
+            used as initial condition for parallel transport.
             - If no point is passed, the mass center of the curve is used as p.
 
         if mode == 'as_is':
@@ -696,6 +696,7 @@ class Curve(UniSpline, SpatialObject):
         poly = polyline_from_points(points)
 
         poly["params"] = params
+        poly["tangent"] = self.tangent(params)
         poly["v1"] = self.v1(params)
         poly["v2"] = self.v2(params)
 
