@@ -217,15 +217,12 @@ class CenterlinePathExtractor:
     def compute_radius_fields(self):
         """Compute radius field using KDTree attribute in VascularMesh."""
 
-        if not attribute_checker(self, ["vmesh"], info="Cant compute radius field."):
-            return False
-
-        if not attribute_checker(
+        attribute_checker(self, ["vmesh"], info="Cant compute radius field.")
+        attribute_checker(
             self.vmesh,
             ["kdt"],
             info="Cant compute radius field. The vascular mesh provided has no kdt",
-        ):
-            return False
+        )
 
         self.radius = self.vmesh.kdt.query(self.centerline_domain)[0]
         self.inverse_radius = 1 / self.radius
@@ -318,7 +315,7 @@ class CenterlinePathExtractor:
                     ind = list(range(n_old, n_old + len(p)))
             else:
                 raise ValueError(
-                    "Wrong argument for where in add_point_to_centerline_domain method. "
+                    "Wrong value for where argument in add_point_to_centerline_domain method. "
                     + "Available options are {'ini', 'end'}."
                 )
 
@@ -367,14 +364,10 @@ class CenterlinePathExtractor:
         """
 
         if vm is None:
-            if not attribute_checker(
-                self, ["vmesh"], info="no VascularMesh has been passed and..."
-            ):
-                return
+            attribute_checker(self, ["vmesh"], info="no VascularMesh has been passed and...")
             vm = self.vmesh
 
-        if not attribute_checker(vm, ["boundaries"], info="can't compute hierarchy from vmesh."):
-            return
+        attribute_checker(vm, ["boundaries"], info="can't compute hierarchy from vmesh.")
 
         self.set_boundaries(bndrs=vm.boundaries, force_tangent=force_tangent, copy=copy)
 
@@ -485,13 +478,12 @@ class CenterlinePathExtractor:
     def _compose_id_paths(self):
         """Arrange the id_path attribute according to the mode attribute."""
 
-        if not attribute_checker(
+        attribute_checker(
             self,
             ["mode"],
             info="wrong mode chosen to extract centerline paths...",
             opts=[["i2o", "j2o"]],
-        ):
-            raise ValueError
+        )
 
         def arrange_path(bid):
             if self.boundaries[bid].parent is not None:

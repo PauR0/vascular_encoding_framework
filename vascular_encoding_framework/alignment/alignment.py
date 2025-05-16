@@ -7,7 +7,6 @@ import numpy as np
 import pyvista as pv
 
 from .._base import Encoding, attribute_checker, attribute_setter
-from ..messages import error_message
 from ..utils.spatial import decompose_transformation_matrix, transform_point_array
 
 
@@ -102,19 +101,20 @@ def as_an_array(obj):
     """
 
     if not isinstance(obj, (np.ndarray, pv.DataObject, Encoding)):
-        error_message(
+        raise ValueError(
             "Wrong type passed. Available typer are {np.ndarray, pv.DataObject, Encoding}."
         )
-        return None
 
     if isinstance(obj, np.ndarray):
         if len(obj.shape) != 2:
-            error_message(
-                f"Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})"
+            raise ValueError(
+                "Wrong shape for the array. Expected a 3D point array with shape (N,3) and the "
+                + f"provided has shape ({obj.shape})"
             )
         elif obj.shape[1] != 3:
-            error_message(
-                f"Wrong shape for the array. Expected a 3D point array with shape (N,3) and the provided has shape ({obj.shape})"
+            raise ValueError(
+                "Wrong shape for the array. Expected a 3D point array with shape (N,3) and the "
+                + f"provided has shape ({obj.shape})"
             )
         return obj
 
@@ -144,10 +144,9 @@ def as_a_polydata(obj):
     """
 
     if not isinstance(obj, (np.ndarray, pv.DataObject, Encoding)):
-        error_message(
+        raise ValueError(
             "Wrong type passed. Available types are {np.ndarray, pv.DataObject, Encoding}."
         )
-        return None
 
     if isinstance(obj, np.ndarray):
         return pv.PolyData(obj)
@@ -228,16 +227,17 @@ class Alignment(ABC):
         """
 
         if not isinstance(points, (np.ndarray, pv.DataObject, Encoding)):
-            error_message(
-                f"Wrong type for points argument. Available types are {np.ndarray, pv.DataObjects, Encoding} and passed was: {type(points)}"
+            raise ValueError(
+                "Wrong type for points argument. Available types are "
+                + f"{np.ndarray, pv.DataObjects, Encoding} and passed was: {type(points)}"
             )
             return None
 
         if isinstance(points, np.ndarray) and points.shape[1] != 3:
-            error_message(
-                "Wrong shape passed can't apply transformation. Point arrays muy be in shape (N, 3)."
+            raise ValueError(
+                "Wrong shape passed can't apply transformation. Point arrays muy be in shape "
+                + "(N, 3)."
             )
-            return None
 
         if isinstance(points, np.ndarray):
             points = transform_point_array(
@@ -291,10 +291,9 @@ class IterativeClosestPoint(Alignment):
 
         """
 
-        if not attribute_checker(
+        attribute_checker(
             obj=self, atts=["source", "target"], info="Can't compute ICP alignment..."
-        ):
-            return
+        )
 
         _source = as_a_polydata(self.source)
         _target = as_a_polydata(self.target)
@@ -335,10 +334,9 @@ class RigidProcrustesAlignment(Alignment):
 
         """
 
-        if not attribute_checker(
+        attribute_checker(
             obj=self, atts=["source", "target"], info="Can't compute RigidProcrustes alignment..."
-        ):
-            return
+        )
 
         _source = as_an_array(self.source)
         _target = as_an_array(self.target)

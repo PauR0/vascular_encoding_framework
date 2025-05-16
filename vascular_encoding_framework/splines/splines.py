@@ -80,7 +80,8 @@ def get_uniform_knot_vector(xb, xe, n, mode="complete", k=3, ext=None):
 
     else:
         raise ValueError(
-            f"Wrong value ({mode}) for mode argument. The options are {{'internal', 'complete', 'extended', 'periodic'}}. "
+            f"Wrong value ({mode}) for mode argument. "
+            + "The options are {'internal', 'complete', 'extended', 'periodic'}. "
         )
 
     return t

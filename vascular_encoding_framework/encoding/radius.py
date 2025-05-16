@@ -94,12 +94,12 @@ class Radius(BiSpline, Encoding):
 
         """
 
-        if not attribute_checker(
+        attribute_checker(
             self,
             ["n_knots_x", "n_knots_y", "kx", "ky"],
             info="Cannot compute the Radius feature vector length.",
-        ):
-            return None
+        )
+
         rk = (self.n_knots_x + self.kx + 1) * (self.n_knots_y + self.ky + 1)
         return rk
 

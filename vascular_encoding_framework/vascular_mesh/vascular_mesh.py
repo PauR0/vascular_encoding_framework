@@ -3,7 +3,6 @@ import pyvista as pv
 from scipy.spatial import KDTree
 
 from .._base import SpatialObject, attribute_setter
-from ..messages import error_message
 from ..utils.geometry import approximate_cross_section, extract_section, triangulate_cross_section
 from ..utils.spatial import compose_transformation_matrix, compute_ref_from_points
 from .boundaries import Boundaries, Boundary
@@ -93,10 +92,6 @@ class VascularMesh(pv.PolyData, SpatialObject):
             Default is None. If passed boundaries are saved with at the given path.
 
         """
-
-        if self.boundaries is None and not self.n_points:
-            error_message("There is no data to be saved....")
-            return
 
         if self.n_points:
             super().save(filename=fname, binary=binary, **kwargs)
@@ -263,8 +258,7 @@ class VascularMesh(pv.PolyData, SpatialObject):
         """
 
         if self.boundaries is None:
-            error_message(f"can't plot boundary ids, boundaries attribute is {self.boundaries}")
-            return
+            raise AttributeError("Can't plot boundary ids, boundaries attribute is None")
 
         p = pv.Plotter()
         p.add_mesh(self, color="w")

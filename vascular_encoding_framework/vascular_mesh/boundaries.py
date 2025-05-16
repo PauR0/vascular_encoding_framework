@@ -293,7 +293,7 @@ class Boundary(Node):
         If points attribute is not None, build a pyvista PolyData object with them. If
         faces are not None, they are also added to PolyData.
 
-        TODO: Add node attributes as field data.
+        TODO: Add node attributes to user_dict.
 
         Returns
         -------
@@ -301,8 +301,7 @@ class Boundary(Node):
             The polydata containing the Boundaries.
         """
 
-        if not attribute_checker(self, atts=["points", "faces"]):
-            return None
+        attribute_checker(self, atts=["points", "faces"])
 
         poly = pv.PolyData()
         if self.points is not None:

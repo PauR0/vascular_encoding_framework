@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Generic, Type, TypeVar
+from typing import Generic, Type, TypeVar
 
-from ..messages import error_message, warning_message
+from ..messages import warning_message
 from .node import Node
 from .value_typed_dict import ValueTypedDict
 
@@ -63,13 +63,6 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
     def roots(self) -> set[str]:
         """Uptade the attribute roots to contain only nodes with None as parent."""
         return {k for k, v in self.items() if v.parent is None}
-
-    @roots.setter
-    def _set_roots(self, r: Any) -> None:
-        warning_message(
-            "WARNING: Setting roots has no effect.Roots are now a property, not an attribute."
-        )
-        return
 
     def enumerate(self):
         """Get a list with the id of stored items."""
@@ -207,7 +200,8 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
             if node.parent is not None:
                 if nid not in self[node.parent].children:
                     warning_message(
-                        f"Inconsistency found: {nid} has {node.parent} as parent, but it is not in its children set."
+                        f"Inconsistency found: {nid} has {node.parent} as parent, but it is not in "
+                        + "its children set."
                     )
                     out = False
         return out
@@ -246,8 +240,7 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
         """
 
         if new_id in self:
-            error_message(f"{new_id} is already present. Cant rename {old_id} to {new_id}.")
-            return
+            raise ValueError(f"{new_id} is already present. Cant rename {old_id} to {new_id}.")
 
         self[old_id].id = new_id
         self[new_id] = self.pop(old_id)
@@ -309,13 +302,12 @@ class Tree(ValueTypedDict[_TT], Generic[_TT]):
 
         roots = [nid for nid, node in hierarchy.items() if node["parent"] in [None, "None"]]
 
-        def add_node(nid):  # , children, parent=None, **kwargs):
+        def add_node(nid):
             for k in Node().__dict__:
                 if k not in hierarchy[nid]:
-                    error_message(
+                    raise ValueError(
                         f"cant build hierarchy base on dict. Node {nid} has no entry for {k}"
                     )
-                    return False
 
             n = Node()
             n.id = nid

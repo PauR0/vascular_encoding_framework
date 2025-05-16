@@ -366,10 +366,10 @@ class Centerline(Curve, Node, Encoding):
             The length of the centerline feature vector.
 
         """
-        if not attribute_checker(
-            self, ["n_knots", "k"], info="Cannot compute the Centerline feature vector length."
-        ):
-            return None
+        attribute_checker(
+            self, ["n_knots", "k"], info="Can't compute the Centerline feature vector length."
+        )
+
         l = 3 * (self.n_knots + self.k + 1)
         return l
 

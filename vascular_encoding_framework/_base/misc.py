@@ -14,8 +14,6 @@ from typing import Any
 
 import numpy as np
 
-from ..messages import error_message
-
 
 def check_specific(params: dict, nid: str, arg: str, default: Any):
     """
@@ -222,9 +220,9 @@ def is_arrayable(seq) -> bool:
     return True
 
 
-def attribute_checker(obj, atts, info=None, opts=None) -> bool:
+def attribute_checker(obj, atts, info=None, opts=None) -> None:
     """
-    Check if attribute has been set and print error message.
+    Check if attribute has been set otherwise raise an AttributeError.
 
     Parameters
     ----------
@@ -238,29 +236,25 @@ def attribute_checker(obj, atts, info=None, opts=None) -> bool:
     opts : List[Any], optional.
         Default None. A list containing accepted values for attribute.
 
-    Returns
-    -------
-        True if all the attributes are different to None or in provided options.
-        False otherwise.
+    Raises
+    ------
+        AttributeError
+            If the attributes are None, or not in opts.
     """
 
+    if info is None:
+        info = ""
     if opts is None:
         for att in atts:
             if getattr(obj, att) is None:
-                if info is not None:
-                    error_message(info=f"{info}. Attribute {att} is {getattr(obj, att)}....")
-                return False
+                raise AttributeError(f"{info}. Attribute {att} is {getattr(obj, att)}....")
 
     else:
         for att, opt in zip(atts, opts):
             if getattr(obj, att) not in opt:
-                if info is not None:
-                    error_message(
-                        info=f"{info}. Attribute {att} is {getattr(obj, att)}, and it must be in [{opt}]...."
-                    )
-                return False
-
-    return True
+                raise ValueError(
+                    f"{info}. Attribute {att} is {getattr(obj, att)}, and it must be in [{opt}]...."
+                )
 
 
 def attribute_setter(obj, **kwargs):

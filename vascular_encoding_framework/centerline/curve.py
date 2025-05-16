@@ -8,7 +8,6 @@ from scipy.optimize import minimize, minimize_scalar
 from scipy.spatial import KDTree
 
 from .._base import SpatialObject, attribute_checker
-from ..messages import error_message
 from ..splines import UniSpline, uniform_penalized_spline
 from ..utils.geometry import polyline_from_points
 from ..utils.spatial import compute_ref_from_points, normalize
@@ -137,15 +136,14 @@ class Curve(UniSpline, SpatialObject):
 
         elif mode == "as_is":
             if p is None:
-                error_message(f"Cannot build parallel transport with mode: {mode} and p: {p}")
+                raise ValueError(f"Cannot build parallel transport with mode: {mode} and p: {p}")
 
             else:
                 v0 = p
         else:
-            error_message(
+            raise ValueError(
                 f"Wrong mode passed: mode = {mode}. Available options are {'project', 'as_is'}."
             )
-            return False
 
         v = ParallelTransport.compute_parallel_transport_along_curve(curve=self, v0=v0)
         return v
@@ -203,8 +201,9 @@ class Curve(UniSpline, SpatialObject):
                 if self.v1.v0 is not None:
                     self.v1 = self.compute_parallel_transport(p=self.v1.v0, mode="as_is")
                 else:
-                    error_message(
-                        f"Wrong usage of compute_adapted_frame. No p {(p)} has been passed but self.v1 is a ParallelTransport object with v0 == None."
+                    raise ValueError(
+                        f"Wrong usage of compute_adapted_frame. No p {(p)} has been passed but "
+                        + "self.v1 is a ParallelTransport object with v0 == None."
                     )
         else:
             self.v1 = self.compute_parallel_transport(mode=mode, p=p)
@@ -376,10 +375,7 @@ class Curve(UniSpline, SpatialObject):
             The v2 vector of the adapted frame.
         """
 
-        if not attribute_checker(
-            self, ["tangent", "v1", "v2"], info="Cant compute adapted frame: "
-        ):
-            return False
+        attribute_checker(self, ["tangent", "v1", "v2"], info="Cant compute adapted frame: ")
 
         t_ = self.get_tangent(t)
         v1 = self.v1(t)
@@ -749,10 +745,9 @@ class Curve(UniSpline, SpatialObject):
         atts = ["t0", "t1", "k", "n_knots", "coeffs", "extrapolation"]
         for att in atts:
             if att not in poly.user_dict:
-                error_message(
-                    f"Could not find attribute: {att} in polydata. Wont build curve object"
+                raise AttributeError(
+                    f"Could not find attribute: {att} in polydata. Can't build curve object"
                 )
-                return None
 
         for att in atts:
             value = poly.user_dict[att]

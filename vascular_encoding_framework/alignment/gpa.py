@@ -53,17 +53,16 @@ class GeneralizedProcrustesAlignment:
         Warning: This method overwrites the existing alignment attribute and its current parameter.
         """
 
-        if not attribute_checker(
+        attribute_checker(
             self, ["alignment_method"], info="Cannot set alignment.", opts=[["procrustes", "ICP"]]
-        ):
-            return
+        )
 
         if self.alignment_method == "ICP":
             self.alignment = IterativeClosestPoint()
         elif self.alignment_method == "procrustes":
             self.alignment = RigidProcrustesAlignment()
         else:
-            error_message("Something must've gone wrong before getting to this point.")
+            raise RuntimeError("Unexpected error.")
 
         if self.alignment_params is not None:
             self.alignment.set_parameters(**self.alignment_params)
@@ -81,18 +80,16 @@ class GeneralizedProcrustesAlignment:
                 The mean point set.
         """
 
-        if not attribute_checker(self, atts=["data_set"], info="Can't compute mean shape."):
-            return None
+        attribute_checker(self, atts=["data_set"], info="Can't compute mean shape.")
 
         return np.mean([as_an_array(v) for _, v in self.data_set.items()], axis=0)
 
     def run(self):
         """Compute the GPA over the data set."""
 
-        if not attribute_checker(
-            self, ["alignment", "data_set"], info="Cant run Generalized Procrustes Alignment."
-        ):
-            return
+        attribute_checker(
+            self, ["alignment", "data_set"], info="Can't run GeneralizedProcrustesAlignment."
+        )
 
         if isinstance(self.reference_id, int):
             if self.reference_id >= len(self.data_set):

@@ -129,8 +129,7 @@ class UniSpline(Spline):
 
     def build(self):
         """Build the spline object internal attributes."""
-        if not attribute_checker(self, ["k", "n_knots", "coeffs"], info="cant build splines."):
-            return False
+        attribute_checker(self, ["k", "n_knots", "coeffs"], info="cant build splines.")
 
         if self.knots is None:
             self.knots = get_uniform_knot_vector(self.t0, self.t1, self.n_knots, mode="complete")

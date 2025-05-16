@@ -6,7 +6,6 @@ import numpy as np
 import pyvista as pv
 
 from .._base import EncodingTree, SpatialObject, check_specific
-from ..messages import error_message
 from ..utils.spatial import normalize, radians_to_degrees
 from .centerline import Centerline
 from .domain_extractors import extract_centerline_domain
@@ -270,10 +269,9 @@ class CenterlineTree(EncodingTree[Centerline], SpatialObject):
         """
 
         if not mb.is_all_polydata:
-            error_message(
+            raise ValueError(
                 "Can't make CenterlineTree. Some elements of the MultiBlock are not PolyData type."
             )
-            return None
 
         cl_dict = {cid: Centerline().from_polydata(poly=mb[cid]) for cid in mb.keys()}
         roots = [cid for cid, cl in cl_dict.items() if cl.parent in [None, "None"]]
@@ -337,10 +335,9 @@ class CenterlineTree(EncodingTree[Centerline], SpatialObject):
         """
 
         if not paths.is_all_polydata:
-            error_message(
+            raise ValueError(
                 "Can't make CenterlineTree. Some elements of the MultiBlock are not PolyData type "
             )
-            return None
 
         cl_tree = CenterlineTree()
 

@@ -2,7 +2,6 @@ import numpy as np
 from scipy.interpolate import BivariateSpline
 
 from .._base import Spline, attribute_checker
-from ..messages import error_message
 from .splines import get_uniform_knot_vector
 
 
@@ -43,12 +42,12 @@ class BiSpline(Spline):
 
     def build(self):
         """Build the spline object internal attributes."""
-        if not attribute_checker(self, ["kx", "ky", "coeffs"], info="cant build splines."):
-            return False
+        attribute_checker(self, ["kx", "ky", "coeffs"], info="cant build splines.")
 
         if self.knots_x is None and self.n_knots_x is None:
-            error_message(
-                "cant build bivariate splines. The knots and amount of knots for the first (x) parameter is None"
+            raise AttributeError(
+                "Cant build bivariate splines. The knots and amount of knots for the first (x)"
+                + " parameter is None"
             )
         elif self.knots_x is None and self.n_knots_x is not None:
             mode = "complete"
@@ -57,8 +56,9 @@ class BiSpline(Spline):
             self.knots_x = get_uniform_knot_vector(self.x0, self.x1, self.n_knots_x, mode=mode)
 
         if self.knots_y is None and self.n_knots_y is None:
-            error_message(
-                "cant build bivariate splines. The knots and amount of knots for the second parameter (y) is None"
+            raise AttributeError(
+                "Cant build bivariate splines. The knots and amount of knots for the second "
+                + " parameter (y) is None"
             )
         elif self.knots_y is None and self.n_knots_y is not None:
             mode = "complete"

@@ -91,12 +91,11 @@ class Seekers(CenterlineDomainExtractor):
                 The seekers initial position.
         """
 
-        if not attribute_checker(
+        attribute_checker(
             obj=self,
             atts=["mesh", "reduction_rate"],
-            info="Cannot compute initial seekers position.",
-        ):
-            return False
+            info="Can't compute initial seekers position.",
+        )
 
         self.seekers = (
             self.mesh.decimate(target_reduction=self.reduction_rate, attribute_error=False)
@@ -192,8 +191,7 @@ class Seekers(CenterlineDomainExtractor):
 
         """
 
-        if not attribute_checker(self, atts=["mesh"], info="Cannot run seekers."):
-            return False
+        attribute_checker(self, atts=["mesh"], info="Can't run seekers.")
 
         if self.seekers is None:
             self.compute_seekers_initial_positions()
@@ -320,8 +318,7 @@ class Flux(CenterlineDomainExtractor):
         box with sx, sy and sz spacing and rejecting outside points.
         """
 
-        if not attribute_checker(self, atts=["mesh"], info="Cannot voxelize mesh."):
-            return False
+        attribute_checker(self, atts=["mesh"], info="Can't voxelize mesh.")
 
         s = [self.dx, self.dy, self.dz]
         if None not in s:
@@ -360,8 +357,7 @@ class Flux(CenterlineDomainExtractor):
         """
 
         computing_message("centerline domain extraction using the flux...")
-        if not attribute_checker(self, atts=["mesh"], info="Cannot run seekers."):
-            return False
+        attribute_checker(self, atts=["mesh"], info="Can't run seekers.")
 
         if self.mesh_kdt is None:
             self.compute_mesh_kdt()

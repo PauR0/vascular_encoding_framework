@@ -82,13 +82,11 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         """
 
-        if not attribute_checker(self, atts=["centerline"], info="cant compute VCS."):
-            return False
+        attribute_checker(self, atts=["centerline"], info="Cant compute VCS.")
 
         tau, theta, rho = self.centerline.cartesian_to_vcs(p=p, method=method)
         if rho_norm:
-            if not attribute_checker(self, atts=["radius"], info="cant compute normalized VCS."):
-                return False
+            attribute_checker(self, atts=["radius"], info="cant compute normalized VCS.")
             rho /= self.radius(tau, theta)
 
         return np.array((tau, theta, rho))
@@ -209,8 +207,7 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
         if cl is not None:
             self.set_centerline(cl=cl)
 
-        if not attribute_checker(self, ["centerline"], info="cannot extract Vessel from tree."):
-            return False
+        attribute_checker(self, ["centerline"], info="Can't extract Vessel from tree.")
 
         if "Normals" not in vmesh.point_data:
             vmesh.compute_normals(inplace=True)
@@ -396,12 +393,11 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
 
         """
 
-        if not attribute_checker(
+        attribute_checker(
             self,
             ["centerline", "radius"],
-            info=f"Cannot convert vessel anatomy encoding {self.id} multiblock.",
-        ):
-            return None
+            info=f"Can't convert vessel anatomy encoding {self.id} to multiblock.",
+        )
 
         vsl_mb = pv.MultiBlock()
         vsl_mb["centerline"] = self.centerline.to_polydata(
@@ -618,12 +614,11 @@ class VesselAnatomyEncoding(Node, Encoding, VesselMeshing, SpatialObject):
             The length of the centerline feature vector.
         """
 
-        if not attribute_checker(
+        attribute_checker(
             self,
             ["centerline", "radius"],
             info="Cannot compute the VesselAnatomyEncoding feature vector length.",
-        ):
-            return None
+        )
 
         n = self.centerline.get_feature_vector_length() + self.radius.get_feature_vector_length()
         return n
