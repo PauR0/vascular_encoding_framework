@@ -413,7 +413,7 @@ class VascularMesh(pv.PolyData, SpatialObject):
         colls[col_mesh.field_data["ContactCells"]] = False
         open_vmesh = col_mesh.extract_cells(colls).extract_largest().extract_surface()
 
-        vmesh = VascularMesh(p=open_vmesh)
+        vmesh = VascularMesh(p=open_vmesh, compute_boundaries=False)
         vmesh.closed = cmesh
         vmesh.boundaries = boundaries
 
