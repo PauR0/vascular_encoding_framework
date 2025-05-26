@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 import numpy as np
@@ -397,9 +399,7 @@ class Boundaries(Tree):
         Tree.__init__(self=self, _node_type=Boundary)
 
         if hierarchy is not None:
-            self.graft(Tree.from_hierarchy_dict(hierarchy=hierarchy))
-            for i, n in self.items():
-                self[i] = Boundary(nd=n)
+            self.graft(Boundaries.from_dict(bds=hierarchy))
 
     def to_dict(self, compact=True, serialize=True):
         """
@@ -485,13 +485,41 @@ class Boundaries(Tree):
         return mb
 
     @staticmethod
-    def from_dict(bds_dict):
+    def from_dict(bds: dict[str, dict]) -> Boundaries:
         """
-        Define Boundary entries from a dictionary.
+        Create a Boundaries object from a dictionary.
+
+        The dictionary must contain the Boundary objects as dictionaries themselves. Each
+        boundary-dict must have the entries id, parent, and children.
+
+        > Note that children must be an iterable of 'ids' that will be turned into a set,
+        duplications of children ids are disregarded.
+
+        In the following example, a Boundaries object is created with a root node with id '1', with
+        a child node '2', and whose center is at (x1,y1,z1). The node '2', has a child '0', its
+        parent is '1', and its center is (x2,y2,z2). Finally, node '0', has no children, its parent
+        is '2' and its center is (x0,y0,z0).
+
+        hierarchy = {"1" : {"id"       : "1"
+                            "parent"   : None,
+                            "center"   : [ x1, y1, z1],
+                            "children" : {"2"}
+                           }
+                     "2" : {"id"       : "2"
+                            "parent"   : '1',
+                            "center"   : [ x2, y2, z2],
+                            "children" : {"0"}
+                           }
+                     "0" : {"id"       : "0",
+                            "parent"   : '2',
+                            "center"   : [ x0, y0, z0],
+                            "children" : {}
+                           }
+                    }
 
         Parameters
         ----------
-        bds_dict : dict
+        bds : dict
             A python dictionary composed with Boundary dicts as
             "k" : boundary_dict.
 
@@ -500,10 +528,28 @@ class Boundaries(Tree):
         :py:meth:`to_dict`
         """
 
-        boundaries = Boundaries(bds_dict)
-        for i, nd in boundaries.items():
-            if not isinstance(nd, Boundary):
-                boundaries[i] = Boundary(nd)
+        boundaries = Boundaries()
+
+        roots = [nid for nid, node in bds.items() if node["parent"] in [None, "None"]]
+
+        def add_boundary(nid):
+            # Node attributes are required
+            for k in Node().__dict__:
+                if k not in bds[nid]:
+                    raise ValueError(
+                        f"Can't build Boundaries object from dictionary. Boundary {nid} has no {k}"
+                    )
+
+            n = boundaries._node_type()
+            n.id = nid
+            n.set_data(**bds[nid])
+            boundaries[n.id] = n
+            for cid in n.children:
+                add_boundary(nid=cid)
+            return True
+
+        for rid in roots:
+            add_boundary(nid=rid)
 
         return boundaries
 
@@ -529,7 +575,7 @@ class Boundaries(Tree):
 
         See Also
         --------
-            :py:meth:`save`
+        save
         """
 
         fname_, ext = os.path.splitext(fname)
