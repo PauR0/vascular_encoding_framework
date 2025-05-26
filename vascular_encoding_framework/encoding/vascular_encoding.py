@@ -28,83 +28,15 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         tau_knots: int = 15,
         theta_knots: int = 15,
         laplacian_penalty: float = 1.0,
-        **kwargs,
-    ) -> VascularAnatomyEncoding:
-        """
-        Encode a VascularMesh using a centerline tree.
-
-        This method encodes the vascular mesh as it currently is. This may lead to redundance in
-        the encoding coefficients if centerline children branches are born at the centerline father
-        rather than being born at the surface of the parent's vessel wall.
-
-        Parameters
-        ----------
-            vmesh : VascularMesh
-                The vascular surface to encode.
-
-            cl_tree : CenterlineTree
-                The centerlines of the vascular surface.
-
-            tau_knots, theta_knots : int, optional
-                Default value is 15 for both. The amount of internal knots in for each component of
-                the radius function.
-
-            laplacian_penalty : float, optional
-                Default 1.0.
-
-            **kwargs : dict
-                The above described parameters can be provided per vessel using the kwargs. Say
-                there exist a Vessel whose id is AUX, to set specific parameters AUX, one can pass
-                the argument AUX={tau_knots}, to set a specific amount of knots and assuming the
-                default values on the other parameters.
-
-        Returns
-        -------
-            self : VascularAnatomyEncoding
-                The vascular mesh encoded in a VascularAnatomyEncoding object.
-
-        See Also
-        --------
-        encode_vascular_mesh_decoupling
-
-        """
-
-        def encode_and_add_vessel(bid):
-            nonlocal tau_knots, theta_knots, laplacian_penalty
-            vsl_enc = VesselAnatomyEncoding()
-            vsl_enc.set_centerline(cl=cl_tree[bid])
-            vsl_mesh = vsl_enc.extract_vessel_from_network(vmesh=vmesh)
-            vsl_enc.encode_vessel_mesh(
-                vsl_mesh=vsl_mesh,
-                tau_knots=check_specific(kwargs, bid, "tau_knots", tau_knots),
-                theta_knots=check_specific(kwargs, bid, "theta_knots", theta_knots),
-                laplacian_penalty=check_specific(
-                    kwargs, bid, "laplacian_penalty", laplacian_penalty
-                ),
-            )
-
-            for cid in vsl_enc.children:
-                encode_and_add_vessel(cid)
-
-        for rid in cl_tree.roots:
-            encode_and_add_vessel(rid)
-
-    def encode_vascular_mesh_decoupling(
-        self,
-        vmesh: VascularMesh,
-        cl_tree: CenterlineTree,
-        tau_knots: int = 15,
-        theta_knots: int = 15,
-        laplacian_penalty: float = 1.0,
         insertion: float = 1.0,
+        uncouple: bool = True,
         debug: bool = False,
         **kwargs,
     ) -> VascularAnatomyEncoding:
         """
-        Encode a vascular mesh decoupling each branch as an independent vessel.
+        Encode a Vascular Mesh.
 
-        Although using this method returns independent branches, the encoding keeps the track of the
-        vessel junctions by mean of the vessel coordinates of the inlet in the parent branch.
+        TODO: Extend documentation.
 
         Parameters
         ----------
@@ -118,12 +50,15 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
             Default 1.0.
         insertion : float, optional
             Default 1.0.
+        uncouple: bool, optional
+            Default True. Whether to encode from parent-child interserction or at the cross section
+            of the junction.
         debug : bool, optional
             A mode running mode that display plots of the process.
         **kwargs : dict
             The above described parameters can be provided per vessel using the kwargs. Say there
             exist a Vessel whose id is AUX, to set specific parameters AUX, one can pass the
-            argument AUX={tau_knots}, to set a specific amount of knots and assuming the default
+            argument AUX={tau_knots:50}, to set a specific amount of knots and assuming the default
             values on the other parameters.
 
         Returns
@@ -147,10 +82,10 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
             cl = cl.trim(tau_0=tau_)
             return cl
 
-        def decouple_and_encode_vessel(bid):
-            nonlocal tau_knots, theta_knots, laplacian_penalty
+        def extract_and_encode_vessel(bid):
+            nonlocal tau_knots, theta_knots, laplacian_penalty, uncouple
             cl = cl_tree[bid]
-            if cl.parent is not None:
+            if cl.parent is not None and check_specific(kwargs, bid, "uncouple", uncouple):
                 cl = remove_centerline_graft(bid)
 
             ve = VesselAnatomyEncoding()
@@ -168,10 +103,10 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
 
             self[bid] = ve
             for cid in cl.children:
-                decouple_and_encode_vessel(bid=cid)
+                extract_and_encode_vessel(bid=cid)
 
         for rid in cl_tree.roots:
-            decouple_and_encode_vessel(bid=rid)
+            extract_and_encode_vessel(bid=rid)
 
         return self
 
@@ -460,7 +395,17 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
             ve.rotate(r)
 
 
-def encode_vascular_mesh(vmesh: VascularMesh, cl_tree: CenterlineTree, params: dict, debug: bool):
+def encode_vascular_mesh(
+    vmesh: VascularMesh,
+    cl_tree: CenterlineTree,
+    tau_knots: int = 15,
+    theta_knots: int = 15,
+    laplacian_penalty: float = 1.0,
+    insertion: float = 1.0,
+    uncouple: bool = True,
+    debug: bool = False,
+    **kwargs,
+):
     """
     Encode a vascular mesh using the provided parameters.
 
@@ -470,8 +415,22 @@ def encode_vascular_mesh(vmesh: VascularMesh, cl_tree: CenterlineTree, params: d
         The vascular mesh to be encoded.
     cl_tree : CenterlineTree
         The centerline tree of the vascular mesh.
-    params : dict
-        A dictionary containing all the parameters to compute the encoding.
+    tau_knots, theta_knots : int
+        The amount of internal knots in for each component of the radius function.
+    laplacian_penalty : float, optional
+        Default 1.0.
+    insertion : float, optional
+        Default 1.0.
+    uncouple: bool, optional
+        Default True. Whether to encode from parent-child interserction or at the cross section
+        of the junction.
+    debug : bool, optional
+        A mode running mode that display plots of the process.
+    **kwargs : dict
+        The above described parameters can be provided per vessel using the kwargs. Say there
+        exist a Vessel whose id is AUX, to set specific parameters AUX, one can pass the
+        argument AUX={tau_knots:50}, to set a specific amount of knots and assuming the default
+        values on the other parameters.
 
     Returns
     -------
@@ -481,16 +440,16 @@ def encode_vascular_mesh(vmesh: VascularMesh, cl_tree: CenterlineTree, params: d
 
     vsc_enc = VascularAnatomyEncoding()
 
-    if params["method"] == "decoupling":
-        vsc_enc.encode_vascular_mesh_decoupling(vmesh, cl_tree, debug=debug, **params)
-
-    elif params["method"] == "at_joint":
-        vsc_enc.encode_vascular_mesh(vmesh, cl_tree, **params)
-
-    else:
-        raise ValueError(
-            "Wrong value for encoding method argument."
-            + f"Available options are {{'decoupling', 'at_joint'}} and given is {params['method']}"
-        )
+    vsc_enc.encode_vascular_mesh(
+        vmesh,
+        cl_tree,
+        tau_knots=tau_knots,
+        theta_knots=theta_knots,
+        laplacian_penalty=laplacian_penalty,
+        insertion=insertion,
+        uncouple=uncouple,
+        debug=debug,
+        **kwargs,
+    )
 
     return vsc_enc
