@@ -383,10 +383,14 @@ def uniform_penalized_bivariate_spline(
         X, Y = np.meshgrid(xx, yy)
 
         fg = plt.figure()
-        ax = fg.add_subplot(111, projection="3d")
-        ax.scatter(x, y, z, label="Data set")
+        ax1 = fg.add_subplot(121, projection="3d")
+        ax1.scatter(x, y, z, c=z, label="Data set")
+
+        ax2 = fg.add_subplot(122, projection="3d")
         Z = bispl(X, Y, grid=False)
-        ax.plot_surface(X, Y, Z, linewidth=0, color="r", label="bispl")
+        ax2.plot_surface(X, Y, Z, linewidth=0, color="r", label="bispl", alpha=0.9)
+        ax2.scatter(x, y, z, c=z, label="Data set")
+        plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0)
         plt.show()
 
     return bispl
