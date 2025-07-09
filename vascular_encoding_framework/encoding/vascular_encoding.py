@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pyvista as pv
-from scipy.spatial import KDTree
 
 from .._base import EncodingTree, SpatialObject, check_specific
 from .remesh import VascularMeshing
@@ -72,15 +71,31 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         """
 
         def remove_centerline_graft(bid):
-            nonlocal insertion
+            nonlocal insertion, debug
             cl: Centerline = cl_tree[bid]
             pve: VesselAnatomyEncoding = self[cl.parent]
             tau = pve.compute_centerline_intersection(cl, mode="parameter")
-            r = vmesh.kdt.query(cl(tau))[0] * check_specific(kwargs, bid, "insertion", insertion)
+            d = vmesh.kdt.query(cl(tau))[0]
+            r = d * check_specific(kwargs, bid, "insertion", insertion)
             # Traveling a radius distance towards inlet
             tau_ = cl.travel_distance_parameter(-1 * r, tau)
-            cl = cl.trim(tau_0=tau_)
-            return cl
+            new_cl = cl.trim(tau_0=tau_)
+            if debug:
+                p = pv.Plotter()
+                p.add_mesh(vmesh, opacity=0.5, color="w")
+                p.add_mesh(pve.make_tube(tau_res=100, theta_res=50), opacity=0.5, color="b")
+                p.add_mesh(cl(tau_), render_points_as_spheres=True, point_size=20, color="g")
+                cl_line = (
+                    cl.to_polydata(tau_res=100)
+                    .threshold(value=tau, scalars="params", invert=True)
+                    .extract_surface()
+                    .tube(radius=d / 20)
+                )
+                p.add_mesh(cl_line, color="k")
+                p.add_mesh(new_cl.to_polydata(tau_res=100).tube(radius=d / 20), color="g")
+                p.add_mesh(pve.centerline.to_polydata(tau_res=100).tube(radius=d / 20), color="k")
+                p.show()
+            return new_cl
 
         def extract_and_encode_vessel(bid):
             nonlocal tau_knots, theta_knots, laplacian_penalty, uncouple
@@ -109,70 +124,6 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
             extract_and_encode_vessel(bid=rid)
 
         return self
-
-    def make_triangulated_surface_mesh(
-        self,
-        tau_res: int = 100,
-        theta_res: int = 50,
-        join_at_surface: bool = False,
-        **kwargs,
-    ) -> pv.PolyData:
-        """
-        Make a triangle mesh of the encoded vascular network.
-
-        Parameters
-        ----------
-        tau_res, theta_res : int, optional
-            The amount of points to use for longitudinal and angular discretization
-
-        join_at_surface : bool, optional
-            Whether to project the inlet points to closest points on parent mesh.
-
-        kwargs : dict, optional
-            By means of the kwargs, branch-specific parameters can be used by passing a dictionary
-            with them. For instance, let us assume that exists a branch with id 'B1' which is
-            shorter, and the general longitudinal resolution is a bit excessive, then we can pass an
-            extra argument B1={'tau_resolution'=20} and only 20 points will be used on that branch.
-
-        Returns
-        -------
-        vmesh : pv.PolyData
-            The reconstructed wall meshes for each encoded vessel. Note that at current
-            state, meshes are not "sewed" together.
-        """
-
-        vmesh = pv.PolyData()
-
-        def append_vessel(vid):
-            nonlocal vmesh
-            ve = self[vid]
-
-            if ve.parent is not None:
-                vsl = ve.tube(
-                    tau_res=check_specific(kwargs, vid, "tau_res", tau_res),
-                    theta_resolution=check_specific(kwargs, vid, "theta_res", theta_res),
-                )
-
-                if check_specific(kwargs, vid, "join_at_surface", join_at_surface):
-                    kdt = KDTree(vmesh.points)
-                    ids = vsl["tau"] == vsl["tau"].min()
-                    _, sids = kdt.query(vsl.points[ids])
-                    vsl.points[ids] = vmesh.points[sids]
-                vmesh += vsl
-            else:
-                vsl = ve.tube(
-                    tau_resolution=check_specific(kwargs, vid, "tau_res", tau_res),
-                    theta_resolution=check_specific(kwargs, vid, "theta_res", theta_res),
-                )
-                vmesh += vsl
-
-            for cid in ve.children:
-                append_vessel(cid)
-
-        for rid in self.roots:
-            append_vessel(rid)
-
-        return vmesh
 
     def to_multiblock(
         self, add_attributes: bool = True, tau_res: int = 100, theta_res: int = 50, **kwargs
