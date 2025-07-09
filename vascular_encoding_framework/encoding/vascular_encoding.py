@@ -51,7 +51,7 @@ class VascularAnatomyEncoding(EncodingTree[VesselAnatomyEncoding], VascularMeshi
         insertion : float, optional
             Default 1.0.
         uncouple: bool, optional
-            Default True. Whether to encode from parent-child interserction or at the cross section
+            Default True. Whether to encode from parent-child intersection or at the cross section
             of the junction.
         debug : bool, optional
             A mode running mode that display plots of the process.
@@ -422,7 +422,7 @@ def encode_vascular_mesh(
     insertion : float, optional
         Default 1.0.
     uncouple: bool, optional
-        Default True. Whether to encode from parent-child interserction or at the cross section
+        Default True. Whether to encode from parent-child intersection or at the cross section
         of the junction.
     debug : bool, optional
         A mode running mode that display plots of the process.

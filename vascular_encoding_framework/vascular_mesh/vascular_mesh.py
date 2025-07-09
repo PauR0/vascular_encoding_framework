@@ -251,7 +251,7 @@ class VascularMesh(pv.PolyData, SpatialObject):
         print_data : bool, optional
             Default False. Whether to print boundary data in the terminal.
         edge_color : str, optional
-            Default red. A pyvsta-compatible color.
+            Default red. A pyvista-compatible color.
         line_width : int
             Default None. Defaulting to pyvista's default.
 
@@ -261,7 +261,7 @@ class VascularMesh(pv.PolyData, SpatialObject):
             raise AttributeError("Can't plot boundary ids, boundaries attribute is None")
 
         p = pv.Plotter()
-        p.add_mesh(self, color="w")
+        p.add_mesh(self, color="w", opacity=0.9)
         p.add_point_labels(
             np.array([b.center for _, b in self.boundaries.items()]), self.boundaries.enumerate()
         )
