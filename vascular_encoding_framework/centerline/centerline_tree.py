@@ -8,9 +8,7 @@ import pyvista as pv
 from .._base import EncodingTree, SpatialObject, check_specific
 from ..utils.spatial import normalize, radians_to_degrees
 from .centerline import Centerline
-from .domain_extractors import extract_centerline_domain
 from .parallel_transport import ParallelTransport
-from .path_extractor import extract_centerline_path
 
 
 class CenterlineTree(EncodingTree[Centerline], SpatialObject):
@@ -508,43 +506,3 @@ class CenterlineTree(EncodingTree[Centerline], SpatialObject):
 
         for _, cl in self.items():
             cl.rotate(r)
-
-
-def extract_centerline(
-    vmesh, params, params_domain=None, params_path=None, debug=False
-) -> CenterlineTree:
-    """
-    Compute the CenterlineTree of a provided a VascularMesh object with properly defined boundaries.
-
-    Parameters
-    ----------
-    vmesh : VascularMesh
-        The VascularMesh object where centerline is to be computed.
-    params : dict
-        The parameters for the spline approximation for each boundary, together with the grafting
-        rate and tangent forcing parameters.
-    params_domain : dict, opt
-        The parameters for the domain extraction algorithm. More information about it in the
-        domain_extractors module.
-    params_path : dict
-        The parameters for the path extraction algorithm. More information about it in the
-        path_extractor module.
-    debug : bool, opt
-        Defaulting to False. Running in debug mode shows some plots at certain steps.
-
-
-    Returns
-    -------
-    cl_tree : CenterlineTree
-        The computed Centerline
-    """
-
-    cl_domain = extract_centerline_domain(vmesh=vmesh, params=params_domain, debug=debug)
-    cl_paths = extract_centerline_path(vmesh=vmesh, cl_domain=cl_domain, params=params_path)
-    cl_tree = CenterlineTree.from_multiblock_paths(
-        cl_paths,
-        knots=params["knots"],
-        graft_rate=params["graft_rate"],
-        force_extremes=params["force_extremes"],
-    )
-    return cl_tree
