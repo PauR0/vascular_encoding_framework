@@ -22,18 +22,17 @@ class GeneralizedProcrustesAlignment:
     the encoding...
     """
 
-    def __init__(self):
-        self.data_set: dict[str : np.ndarray | pv.DataObject] = None
+    def __init__(self, data_set: dict[str, np.ndarray | pv.DataObject | Encoding]):
+        self.data_set: dict[str, np.ndarray | pv.DataObject | Encoding] = data_set
 
         self.alignment_method: Literal["procrustes", "ICP"] = "procrustes"
         self.alignment_params: dict[str:Any] = None
         self.alignment: Alignment = None
 
-        self.data_set: dict[str : np.ndarray | pv.DataObject | Encoding] = None
         self.n_iters: int = 3
         # The key (or its index) of the shape to use in the
-        self.reference_id: int | str = 0
         # first iteration as the mean shape.
+        self.reference_id: int | str = 0
         self.build_alignment()
 
     def set_parameters(self, build=True, **kwargs):

@@ -122,7 +122,7 @@ def as_an_array(obj):
         return obj.points
 
     if isinstance(obj, Encoding):
-        return obj.to_feature_vector(mode="centerline", add_metadata=False).reshape(-1, 3)
+        return obj.to_feature_vector(mode="centerline").reshape(-1, 3)
 
 
 def as_a_polydata(obj):
